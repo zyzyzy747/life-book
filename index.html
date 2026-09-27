@@ -1,0 +1,3624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="生活手账">
+<meta name="theme-color" content="#0B0D13">
+<title>生活手账</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9J2cnIHgxPScwJyB5MT0nMCcgeDI9JzEnIHkyPScxJz48c3RvcCBvZmZzZXQ9JzAnIHN0b3AtY29sb3I9JyM3QjhDRkYnLz48c3RvcCBvZmZzZXQ9JzEnIHN0b3AtY29sb3I9JyNCMDZCRkYnLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzI0JyBmaWxsPSd1cmwoI2cpJy8+PGcgZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmJyBzdHJva2Utd2lkdGg9JzgnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHJlY3QgeD0nMjYnIHk9JzIwJyB3aWR0aD0nNDgnIGhlaWdodD0nNjAnIHJ4PScxMScvPjxwYXRoIGQ9J000MSAzMHY0MCcvPjxwYXRoIGQ9J001MSA2Mmw3IDcgMTUtMTYnLz48L2c+PC9zdmc+">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0B0D13;--bg-2:#11141C;
+  --card:rgba(255,255,255,.045);--card-hi:rgba(255,255,255,.075);
+  --line:rgba(255,255,255,.08);--line-hi:rgba(255,255,255,.16);
+  --text:#EAECF2;--text-2:#A2A9B8;--text-3:#6E7686;
+  --brand:#7B8CFF;--brand-2:#B06BFF;
+  --brand-rgb:123,140,255;--brand2-rgb:176,107,255;
+  --grad:linear-gradient(135deg,var(--brand),var(--brand-2));
+  --out:#FF6B6B;--in:#35D99B;--pink:#FF7BB0;--amber:#FFB454;--cyan:#4FD1E0;
+  --r:18px;--r-sm:14px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+
+/* ===== 主题（个性化：覆盖品牌色，其余层级保持不变） ===== */
+[data-theme="aurora"]{--brand:#7B8CFF;--brand-2:#B06BFF;--brand-rgb:123,140,255;--brand2-rgb:176,107,255}
+[data-theme="ocean"] {--brand:#5AA9FF;--brand-2:#2E6BF6;--brand-rgb:90,169,255;--brand2-rgb:46,107,246}
+[data-theme="peach"] {--brand:#FF8FA3;--brand-2:#FF6FB5;--brand-rgb:255,143,163;--brand2-rgb:255,111,181}
+[data-theme="forest"]{--brand:#5BE095;--brand-2:#22C3A6;--brand-rgb:91,224,149;--brand2-rgb:34,195,166}
+[data-theme="sunset"]{--brand:#FFB454;--brand-2:#FF7A59;--brand-rgb:255,180,84;--brand2-rgb:255,122,89}
+[data-theme="ink"]   {--brand:#A9B2C2;--brand-2:#6E7686;--brand-rgb:169,178,194;--brand2-rgb:110,118,134}
+
+/* ===== 个性化设置控件 ===== */
+.theme-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.theme-dot{aspect-ratio:1;border-radius:14px;border:2px solid transparent;transition:transform .16s,border-color .16s}
+.theme-dot.on{border-color:#fff}
+.theme-dot:active{transform:scale(.93)}
+.cat-edit{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.cat-x{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(255,255,255,.07);border-radius:9px;font-size:12px;color:var(--text-2)}
+.cat-x em{font-style:normal;color:var(--text-3);font-size:15px;line-height:1}
+
+/* ===== 月份切换 ===== */
+.month-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.month-nav{width:44px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:17px;flex:0 0 auto}
+.month-nav:active{background:var(--card-hi)}
+.month-nav:disabled{opacity:.28}
+.month-cur{flex:1;text-align:center;font-size:15px;font-weight:700}
+
+/* ===== 降低动效偏好（系统开启时关闭动画） ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(880px 520px at 12% -8%, rgba(var(--brand-rgb),.14), transparent 62%),
+    radial-gradient(700px 420px at 105% 2%, rgba(var(--brand2-rgb),.11), transparent 58%);
+  background-attachment:fixed;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;outline:none}
+select option{background:#161A24;color:var(--text)}
+a{color:var(--brand);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+#root{min-height:100%}
+
+/* ===== Header ===== */
+.hd{
+  position:sticky;top:0;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(var(--safe-top) + 13px) 18px 12px;
+  background:rgba(11,13,19,.72);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  border-bottom:1px solid var(--line);
+}
+.brand{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.brand em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand.hi{line-height:1.25}
+.brand .hi-t{display:block;font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:.02em}
+.avatar{
+  width:34px;height:34px;border-radius:50%;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:700;font-size:14px;flex:0 0 auto;
+  box-shadow:0 4px 14px rgba(var(--brand-rgb),.3);
+}
+.avatar:active{transform:scale(.93)}
+.avatar svg{width:19px;height:19px;stroke-width:2}
+/* 自定义头像：图片铺满圆形，皮肤立绘按脸部位置取景 */
+.avatar,.me-avatar{overflow:hidden}
+.av-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.av-img.skin{object-position:50% 20%}
+.view{flex:1;padding:16px 16px calc(146px + var(--safe-bottom));max-width:680px;margin:0 auto;width:100%}
+.view>*{animation:fade .26s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Tab bar ===== */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;display:flex;
+  background:rgba(11,13,19,.82);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-bottom));z-index:20;
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--text-3);font-size:10.5px;transition:color .18s}
+.tab .pill{width:44px;height:27px;border-radius:14px;display:flex;align-items:center;justify-content:center;transition:background .18s}
+.tab svg{width:21px;height:21px;stroke-width:1.7}
+.tab.active{color:#fff}
+.tab.active .pill{background:rgba(var(--brand-rgb),.18)}
+.tab:active .pill{background:rgba(255,255,255,.07)}
+
+/* ===== Login ===== */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{
+  width:100%;max-width:390px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:24px;padding:30px 24px 26px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+.login-logo{
+  width:56px;height:56px;border-radius:18px;background:var(--grad);margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(var(--brand-rgb),.35);
+}
+.login-logo svg{width:26px;height:26px;stroke:#fff;stroke-width:7;stroke-linecap:round}
+.login-title{font-size:23px;font-weight:700;text-align:center;letter-spacing:-.02em}
+.login-sub{color:var(--text-3);font-size:13px;text-align:center;margin-top:5px;margin-bottom:24px}
+.login-tabs{display:flex;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;margin-bottom:20px;gap:2px}
+.login-tab{flex:1;padding:8px 4px;border-radius:9px;color:var(--text-3);font-size:13px;text-align:center;transition:.18s}
+.login-tab.active{background:rgba(255,255,255,.09);color:#fff;font-weight:600}
+
+/* ===== Form ===== */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--text-3);margin-bottom:7px;padding-left:2px}
+.inp,.field input,.field textarea,.field select{
+  width:100%;padding:13px 14px;background:rgba(255,255,255,.05);
+  border:1px solid var(--line);border-radius:13px;font-size:15px;transition:.16s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:rgba(var(--brand-rgb),.55);background:rgba(var(--brand-rgb),.07);
+}
+.field textarea{resize:vertical;min-height:88px;line-height:1.6}
+/* 正文够长才写得舒服：起步就 8 行左右，写多了自己往上长（上限半屏，再多就内部滚动） */
+.field textarea.grow{min-height:158px;resize:none;overflow:hidden}
+.field-row{display:flex;gap:10px;align-items:flex-end}
+.field-row .field{flex:1;min-width:0}
+.btn{
+  width:100%;padding:14px;border-radius:14px;background:var(--grad);color:#fff;
+  font-weight:600;font-size:15px;box-shadow:0 8px 22px rgba(var(--brand-rgb),.28);
+  transition:transform .12s,opacity .12s;margin-top:4px;
+}
+.btn:active{transform:scale(.985);opacity:.9}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn-ghost{
+  width:100%;padding:13px;border-radius:14px;border:1px solid var(--line-hi);
+  color:var(--text-2);font-size:15px;background:rgba(255,255,255,.03);margin-top:10px;
+}
+.btn-ghost.danger{color:var(--out);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.06)}
+.btn-text{padding:8px;color:var(--text-3);font-size:13px}
+.btn-text:active{color:var(--text)}
+.btn-code{
+  padding:13px 15px;background:rgba(255,255,255,.06);border:1px solid var(--line-hi);
+  border-radius:13px;color:var(--brand);font-size:13px;white-space:nowrap;flex:0 0 auto;margin-bottom:14px;
+}
+.btn-code:disabled{color:var(--text-3);cursor:not-allowed}
+.msg{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:13px;display:none;line-height:1.5}
+.msg.show{display:block}
+.msg.err{background:rgba(255,107,107,.13);color:#FFB3B3;border:1px solid rgba(255,107,107,.22)}
+.msg.ok{background:rgba(53,217,155,.13);color:#8DF0C6;border:1px solid rgba(53,217,155,.22)}
+
+/* ===== Section / Card ===== */
+.sec{font-size:12px;color:var(--text-3);margin:20px 2px 10px;font-weight:600;letter-spacing:.03em}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:15px 16px;margin-bottom:10px;
+}
+.card-tap:active{background:var(--card-hi)}
+.row{display:flex;align-items:center;gap:10px}
+.row .grow{flex:1;min-width:0}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.amt-out{color:var(--out);font-weight:700;font-size:17px}
+.amt-in{color:var(--in);font-weight:700;font-size:17px}
+.muted{color:var(--text-3)}
+.dim{color:var(--text-2)}
+.tag{display:inline-block;padding:3px 9px;background:rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:var(--text-2);margin:0 5px 5px 0}
+.mood{font-size:19px;margin-right:6px}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+
+/* ===== Hero (今日) ===== */
+.hero{
+  background:linear-gradient(140deg, rgba(var(--brand-rgb),.24), rgba(var(--brand2-rgb),.10) 60%, rgba(255,255,255,.04));
+  border:1px solid rgba(var(--brand-rgb),.26);border-radius:22px;padding:20px 20px 18px;margin-bottom:6px;
+}
+.hero-label{font-size:12px;color:rgba(234,236,242,.72);letter-spacing:.04em}
+.hero-num{font-size:36px;font-weight:800;letter-spacing:-.03em;margin:4px 0 14px;color:#fff}
+.hero-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 8px;border-top:1px solid rgba(255,255,255,.12);padding-top:13px}
+.hero-grid .k{display:block;font-size:11px;color:var(--text-3);margin-bottom:2px}
+.hero-grid .v{font-size:15px;font-weight:700}
+
+/* ===== Stats ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+.stat .label{font-size:12px;color:var(--text-3)}
+.stat .value{font-size:21px;font-weight:700;margin-top:3px;letter-spacing:-.01em}
+.stat .sub{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* ===== Check-in (今日状态) ===== */
+.check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.check{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 10px;text-align:center}
+.check .ico{font-size:20px;display:block;margin-bottom:5px}
+.check .ico svg{width:21px;height:21px;display:block;margin:0 auto 6px;color:var(--text-3);stroke-width:1.8}
+.check.on .ico svg{color:var(--in)}
+.check .t{font-size:11px;color:var(--text-3);margin-bottom:3px}
+.check .v{font-size:14px;font-weight:700}
+.check.on{border-color:rgba(53,217,155,.35);background:rgba(53,217,155,.09)}
+.check.on .v{color:var(--in)}
+.check.off .v{color:var(--text-3)}
+
+/* ===== Quick ===== */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.quick{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 4px;text-align:center;color:var(--text-2);font-size:11px;transition:.14s;
+}
+.quick:active{background:var(--card-hi);transform:scale(.97)}
+.quick .ico{width:24px;height:24px;display:block;margin:0 auto 6px;color:var(--brand)}
+.quick svg{width:24px;height:24px;display:block;margin:0 auto 7px;color:var(--brand);stroke-width:1.8}
+
+/* ===== FAB ===== */
+.fab{
+  position:fixed;right:17px;bottom:calc(78px + var(--safe-bottom));
+  width:52px;height:52px;border-radius:17px;background:var(--grad);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 26px rgba(var(--brand-rgb),.36);z-index:15;transition:transform .12s;
+}
+.fab svg{width:24px;height:24px;stroke-width:2.2}
+.fab:active{transform:scale(.92)}
+
+/* ===== Modal ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:40;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{
+  width:100%;max-width:680px;background:#14171F;
+  border-top-left-radius:24px;border-top-right-radius:24px;border:1px solid var(--line);
+  padding:8px 18px calc(20px + var(--safe-bottom) + var(--kb,0px));
+  max-height:calc(92vh - var(--kb,0px));overflow-y:auto;animation:slideUp .26s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 0 14px}
+.modal-title{font-size:17px;font-weight:700}
+.btn-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);color:var(--text-2);font-size:17px;display:flex;align-items:center;justify-content:center}
+.grab{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:8px auto 0}
+
+/* ===== Charts ===== */
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px;margin-bottom:6px}
+.chart-title{font-size:12px;color:var(--text-3);margin:0 4px 8px}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-variant-numeric:tabular-nums}
+.chart-legend{display:flex;gap:16px;justify-content:center;margin-top:4px;font-size:11px;color:var(--text-3)}
+.chart-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.bar-stack{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:grid;grid-template-columns:58px 1fr 66px;align-items:center;gap:9px;font-size:12px}
+.bar-track{height:9px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;background:var(--grad)}
+.bar-row .nm{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .vl{text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;font-size:11px}
+
+/* ===== Segmented control ===== */
+.seg{display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;height:34px;border-radius:9px;font-size:13px;color:var(--text-2);font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button.on{background:var(--grad);color:#fff}
+.seg button svg{width:15px;height:15px}
+
+/* ===== Streak / 徽章 ===== */
+.streak{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,rgba(255,180,84,.16),rgba(255,122,89,.06));border:1px solid rgba(255,180,84,.28);border-radius:var(--r);padding:14px 16px;margin-bottom:6px}
+.streak .flame{color:var(--amber);flex:0 0 auto}
+.streak .flame svg{width:27px;height:27px;stroke-width:1.7;display:block}
+.streak .big{font-size:25px;font-weight:800;color:var(--amber);letter-spacing:-.02em;line-height:1.1}
+.streak .lb{font-size:11px;color:var(--text-3);margin-top:1px}
+.streak .side{margin-left:auto;text-align:right;font-size:11px;color:var(--text-3);line-height:1.65}
+.badge-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.badge{text-align:center;padding:11px 2px;border-radius:14px;background:var(--card);border:1px solid var(--line);opacity:.34}
+.badge.got{opacity:1;border-color:rgba(255,180,84,.42);background:rgba(255,180,84,.11)}
+.badge .n{font-size:16px;font-weight:800;color:var(--amber);letter-spacing:-.02em}
+.badge .d{font-size:9px;color:var(--text-3);margin-top:2px}
+
+/* ===== Search ===== */
+.search{position:relative;margin-bottom:12px}
+.search input{width:100%;padding-left:36px;padding-right:34px}
+.search .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3);pointer-events:none}
+.search .si svg{width:100%;height:100%;display:block}
+.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text-3);font-size:13px;display:flex;align-items:center;justify-content:center}
+mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
+
+/* ===== Steps ===== */
+.step-hero{background:linear-gradient(140deg,rgba(79,209,224,.2),rgba(91,224,149,.07) 60%,rgba(255,255,255,.04));border:1px solid rgba(79,209,224,.26);border-radius:22px;padding:17px 20px 16px;margin-bottom:6px;transition:transform .12s}
+.step-hero:active{transform:scale(.99)}
+.step-top{display:flex;align-items:baseline;justify-content:space-between}
+.step-num{font-size:33px;font-weight:800;letter-spacing:-.03em;color:#fff}
+.step-track{height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:11px}
+.step-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--in))}
+.step-hint{font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.6}
+.step-calib{margin-top:8px;border-top:1px solid rgba(255,255,255,.09);padding-top:7px}
+.step-calib .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
+/* 步数卡里的「距离 / 消耗」—— 按步数折算出来的，UI 上必须写明是估算 */
+.step-extra{display:flex;align-items:flex-end;gap:26px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09)}
+.step-extra .m{display:flex;flex-direction:column;gap:3px}
+.step-extra .m i{font-style:normal;font-size:11px;color:var(--text-3)}
+.step-extra .m b{font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.step-extra .m b em{font-style:normal;font-size:11px;font-weight:600;color:var(--text-3);margin-left:3px}
+.step-extra .adj{margin-left:auto}
+.step-extra .adj .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
+
+/* ===== 宠物 / 签到 ===== */
+.pet-card{
+  position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;
+  background:linear-gradient(135deg,rgba(255,123,176,.17),rgba(var(--brand-rgb),.08) 62%,rgba(255,255,255,.03));
+  border:1px solid rgba(255,123,176,.28);border-radius:22px;padding:13px 16px 14px;margin-bottom:6px;
+  transition:transform .12s
+}
+.pet-card:active{transform:scale(.99)}
+.pet-stage{position:relative;flex:0 0 auto;width:100px;height:100px;display:flex;align-items:center;justify-content:center}
+.pet-stage::before{
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,140,190,.4),rgba(255,140,190,0) 68%);
+  animation:breathe 3.6s ease-in-out infinite
+}
+.pet-img{position:relative;width:100%;height:100%;object-fit:contain;animation:float 3.8s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(255,110,165,.34))}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes breathe{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
+.pet-info{flex:1;min-width:0}
+.pet-head{display:flex;align-items:center;gap:7px}
+.pet-name{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv-chip{flex:0 0 auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(255,123,176,.22);color:var(--pink)}
+.pet-sub{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
+.pet-sub b{color:var(--pink);font-weight:700}
+.exp-track{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:9px}
+.exp-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9EC4,#FF6FA8);transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.pet-tip{font-size:10.5px;color:var(--text-3);margin-top:6px}
+/* 宠物卡上的换装入口 */
+.pet-dress{margin-left:auto;flex:0 0 auto;font-size:10px;font-weight:600;color:var(--pink);background:rgba(255,123,176,.14);border:1px solid rgba(255,123,176,.32);border-radius:99px;padding:2px 9px;line-height:1.5}
+.pet-dress:active{background:rgba(255,123,176,.26)}
+/* 换皮光晕：跟着皮肤换色调 */
+.pet-stage.skin-xinghong::before{background:radial-gradient(circle,rgba(255,168,205,.46),rgba(255,168,205,0) 68%)}
+.pet-stage.skin-xingshi::before{background:radial-gradient(circle,rgba(158,126,255,.44),rgba(158,126,255,0) 68%)}
+.pet-stage.skin-wedding::before{background:radial-gradient(circle,rgba(186,214,255,.44),rgba(186,214,255,0) 68%)}
+/* 换装选择 */
+.skins{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.skin{border-radius:16px;background:var(--card);border:1px solid var(--line);padding:10px 4px 9px;text-align:center;opacity:.5;transition:opacity .16s,border-color .16s,background .16s}
+.skin img{width:100%;height:84px;object-fit:contain;display:block}
+.skin .sn{font-size:11px;color:var(--text-2);margin-top:5px;font-weight:600;letter-spacing:-.01em}
+.skin .st{font-size:9px;color:var(--text-3);margin-top:2px}
+.skin.on{opacity:1;border-color:rgba(255,123,176,.5);background:rgba(255,123,176,.1)}
+.skin.on .sn{color:var(--pink)}
+
+/* 签到日历 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:11px}
+.cal .d{aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--text-3);border:1px solid transparent}
+.cal .d.on{background:linear-gradient(135deg,#FF9EC4,#FF6FA8);color:#fff;font-weight:700}
+.cal .d.today{border-color:rgba(255,158,196,.85)}
+.cal .d.mute{opacity:.35}
+
+/* 进化路线 */
+.evo{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:11px}
+.evo .e{text-align:center;padding:9px 2px 7px;border-radius:15px;background:var(--card);border:1px solid var(--line);opacity:.38}
+.evo .e.got{opacity:1;border-color:rgba(255,123,176,.42);background:rgba(255,123,176,.1)}
+.evo .e img{width:46px;height:46px;object-fit:contain;display:block;margin:0 auto 5px}
+.evo .e .n{font-size:9.5px;color:var(--text-3);line-height:1.35}
+.evo .e.got .n{color:var(--pink);font-weight:600}
+
+/* Toast
+   ⭐ 收起位必须"几何上一定出屏"：旧写法是 top:66px+safe-top 配 translateY(-190%)，
+   而 toast 有两三行（标题 + 换行后的说明）时高度约 68px，-190% 只上移 129px，
+   顶部起点又是 66px + 安全区 ⇒ 底部还剩三四十像素留在屏幕最顶端，
+   变成一条挂在状态栏上、只有刷新页面才会消失的"胶囊"（还正好挡住状态栏）。
+   现在改成 top:0 + translateY(calc(-100% - 24px))：无论自身多高、安全区多大都在屏外；
+   再加 visibility/pointer-events —— 光靠 opacity 是挡不住点击的。 */
+.toast{
+  position:fixed;left:50%;top:0;transform:translate(-50%,calc(-100% - 24px));
+  opacity:0;visibility:hidden;pointer-events:none;
+  background:rgba(26,20,32,.97);border:1px solid rgba(255,123,176,.38);color:#fff;
+  padding:10px 17px 10px 13px;border-radius:99px;font-size:13px;font-weight:600;z-index:120;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);
+  transition:transform .34s cubic-bezier(.2,.9,.3,1),opacity .2s ease,visibility .34s;
+  display:flex;align-items:center;gap:9px;max-width:92vw
+}
+.toast.show{transform:translate(-50%,calc(var(--safe-top) + 66px));opacity:1;visibility:visible;pointer-events:auto}
+.toast img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
+.toast .tt{line-height:1.35}
+.toast .tt i{display:block;font-style:normal;font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:1px}
+/* 自动同步结果条：手机端自动化打开本页（?steps=…&a=1）时显示，一眼就能看到结果 */
+/* 收起位同样用 translateY(-100% - 30px)：只要 top 参与定位，安全区一大就可能漏一条在屏顶 */
+.sync-bar{
+  position:fixed;left:14px;right:14px;top:0;z-index:70;
+  display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:17px;
+  color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  box-shadow:0 12px 30px rgba(0,0,0,.42);
+  font-size:13.5px;font-weight:700;line-height:1.4;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(calc(-100% - 30px));
+  transition:opacity .26s,transform .3s cubic-bezier(.2,.8,.3,1),visibility .3s;
+}
+.sync-bar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(calc(var(--safe-top) + 10px))}
+.sync-bar .ico{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.24)}
+.sync-bar .ico svg{width:17px;height:17px}
+.sync-bar i{display:block;font-style:normal;font-size:11px;font-weight:500;opacity:.88;margin-top:2px}
+
+/* ===== Empty / Loader ===== */
+.empty{text-align:center;padding:52px 16px;color:var(--text-3);font-size:13px;line-height:1.7}
+.empty .ico{font-size:40px;margin-bottom:12px;opacity:.5}
+.loader{display:inline-block;width:15px;height:15px;border:2px solid var(--line-hi);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== Profile (我的) ===== */
+.me-hero{text-align:center;padding:26px 16px 22px}
+.me-avatar{
+  width:72px;height:72px;border-radius:50%;background:var(--grad);margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:700;
+  box-shadow:0 12px 32px rgba(var(--brand-rgb),.35);
+}
+.me-avatar svg{width:34px;height:34px;stroke-width:1.9}
+.me-avatar:active{transform:scale(.95)}
+.me-avatar{cursor:pointer;transition:transform .16s}
+/* 头像选择器 */
+.av-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 2px}
+.av-opt{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 6px 9px;text-align:center;transition:border-color .16s,background .16s}
+.av-opt.on{border-color:var(--brand);background:rgba(var(--brand-rgb),.1)}
+.av-opt.on .av-name{color:var(--brand)}
+.av-thumb{width:52px;height:52px;margin:0 auto 7px;border-radius:50%;overflow:hidden;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff}
+.av-thumb svg{width:24px;height:24px;stroke-width:2}
+.av-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.av-name{font-size:11.5px;color:var(--text-2);line-height:1.3}
+/* 文件选择：把透明 input 铺满整块按钮区域。
+   用户点到的一定是 file 控件本身 = 浏览器眼中的"真用户手势"，
+   WebView / 微信里才不会因为「JS 调的 click() 没有用户激活」而静默失效。
+   注意 ⛔ 不能用 display:none —— 隐藏掉的 input 点了不弹选择器。 */
+.file-pick{position:relative;overflow:hidden;display:block;cursor:pointer}
+.file-pick>input[type=file]{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+/* ===== 标签选择器（随手记）===== */
+.tagpick{display:flex;flex-wrap:wrap;gap:8px}
+.tchip{
+  padding:8px 13px;border-radius:11px;border:1px solid var(--line-hi);
+  background:rgba(255,255,255,.04);color:var(--text-2);font-size:13px;line-height:1.2;transition:.15s;
+}
+.tchip.on{background:rgba(var(--brand-rgb),.18);border-color:rgba(var(--brand-rgb),.6);color:#fff;font-weight:600}
+.tchip.add{border-style:dashed;color:var(--brand)}
+.tchip.mgr{border-style:dashed;color:var(--text-3)}
+.tchip.mgr.on{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.5);border-style:solid;color:#fff}
+/* 管理态：每个标签里长出一个小 ×（只从"候选池"里去掉，历史记录不动） */
+.tchip{position:relative}
+.tagpick.mgr .tchip:not(.add):not(.mgr){padding-right:29px}
+.tagpick.mgr .tchip.on{opacity:.75}
+.tchip .tx{
+  display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;border-radius:50%;background:var(--out);color:#fff;
+  font-size:11px;line-height:16px;text-align:center;font-style:normal;font-weight:700;
+}
+.tagpick.mgr .tchip .tx{display:block}
+.taghint{display:none;font-size:11.5px;color:var(--text-3);margin-top:9px;line-height:1.6}
+.taghint.show{display:block}
+.tagnew{display:none;gap:8px;margin-top:10px;align-items:center}
+.tagnew.show{display:flex}
+.tagnew input{flex:1;min-width:0}
+.tagnew button{
+  padding:13px 16px;border-radius:13px;background:var(--grad);color:#fff;
+  font-size:13px;font-weight:600;flex:0 0 auto;
+}
+/* 列表页标签筛选条 */
+.tagbar{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch}
+.tagbar::-webkit-scrollbar{display:none}
+.filter{
+  flex:0 0 auto;padding:7px 13px;border-radius:99px;border:1px solid var(--line-hi);
+  font-size:12px;color:var(--text-2);background:rgba(255,255,255,.03);transition:.15s;
+}
+.filter.on{background:rgba(var(--brand-rgb),.2);border-color:rgba(var(--brand-rgb),.55);color:#fff;font-weight:600}
+/* 同步说明里的步骤与代码 */
+.sy-ver{
+  font-size:12.5px;color:var(--text-2);background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin:2px 0 12px;
+}
+.sy-steps{margin:0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)}
+.sy-steps li{margin-bottom:4px}
+.sy-steps b{color:var(--text)}
+.sy-steps code{background:rgba(127,127,127,.16);padding:1px 5px;border-radius:5px;font-size:11.5px;word-break:break-all}
+/* 步数同步说明页 */
+.sy-t{display:block;font-size:13px;font-weight:700;color:var(--text);margin:17px 0 7px}
+.sy-t em{font-style:normal;display:inline-flex;width:19px;height:19px;border-radius:50%;background:var(--grad);color:#fff;font-size:11.5px;align-items:center;justify-content:center;margin-right:7px;vertical-align:2px}
+.sy-p{font-size:12.5px;line-height:1.85;color:var(--text-2);margin:0 0 5px}
+.sy-p b{color:var(--text)}
+.sy-p .k{background:rgba(127,127,127,.16);padding:1px 6px;border-radius:5px;font-size:11.5px;color:var(--text)}
+.sy-p a{color:var(--brand-2);font-weight:700;text-decoration:none}
+.sy-url{font-size:11.5px;word-break:break-all}
+.me-email{font-size:16px;font-weight:600;word-break:break-all}
+.me-meta{font-size:12px;color:var(--text-3);margin-top:5px}
+.me-list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.me-item{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line)}
+.me-item:last-child{border-bottom:none}
+.me-item:active{background:var(--card-hi)}
+.me-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px}
+.me-ico svg{width:17px;height:17px}
+.me-txt{flex:1;min-width:0}
+.me-txt .t{font-size:14.5px}
+.me-txt .s{font-size:11.5px;color:var(--text-3);margin-top:1px}
+.me-arrow{color:var(--text-3);font-size:15px}
+.me-count{font-size:13px;font-weight:700;color:var(--brand)}
+.note{font-size:11.5px;color:var(--text-3);text-align:center;padding:6px 20px 0;line-height:1.7}
+hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600;background:rgba(var(--brand-rgb),.16);color:var(--brand)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="sdk.index.global.js"></script>
+<script>
+/* ================= publicConfig ================= */
+const publicConfig = {
+  endpoint: "https://life-book-18142.app.workbuddy.host",
+  publishableKey: "wbpk_rNbl7ifg3tiySQP4RmKgHZ_bxn8qSSVGoeSroeVoCVWnO800uIGLPy1"
+};
+
+/* ================= Icons ================= */
+const S = (p) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+const ICONS = {
+  home:    S('<path d="M3 10.4 12 3.2l9 7.2"/><path d="M5.5 9.2V20.5h13V9.2"/><path d="M10 20.5v-5h4v5"/>'),
+  expense: S('<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h13A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/><path d="M3 10.5h18"/><circle cx="16.5" cy="14.6" r="1.2" fill="currentColor" stroke="none"/>'),
+  diary:   S('<path d="M5 4.6A2.6 2.6 0 0 1 7.6 2H19.5v18H7.6A2.6 2.6 0 0 0 5 22.6z"/><path d="M5 19.2A2.6 2.6 0 0 1 7.6 16.6H19.5"/><path d="M9 6.5h6"/>'),
+  life:    S('<path d="M12 2.8l2 5.4 5.4 2-5.4 2-2 5.4-2-5.4L4.6 10l5.4-2z"/><path d="M18.6 15.6l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z"/>'),
+  sport:   S('<path d="M13.2 2.5 5 13.4h5.6L9.4 21.5 19 10.4h-5.8z"/>'),
+  health:  S('<path d="M12 20.4S4.6 15.7 4.6 10.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.4 2.4c0 5.3-7.4 10-7.4 10z"/>'),
+  plus:    S('<path d="M12 5v14M5 12h14"/>'),
+  lock:    S('<rect x="4.5" y="10.5" width="15" height="10" rx="3"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9"/>'),
+  mail:    S('<rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 7.3 5.4a1.6 1.6 0 0 0 1.9 0L20.2 7"/>'),
+  shield:  S('<path d="M12 3 20 6v5.5c0 4.6-3.4 7.9-8 9.5-4.6-1.6-8-4.9-8-9.5V6z"/><path d="m9 12 2.2 2.2L15.3 10"/>'),
+  out:     S('<path d="M15 4.5h2.5A2.5 2.5 0 0 1 20 7v10a2.5 2.5 0 0 1-2.5 2.5H15"/><path d="M11 8l-4 4 4 4"/><path d="M7 12h9"/>'),
+  chart:   S('<path d="M4 20V9.5"/><path d="M10 20V4.5"/><path d="M16 20v-7"/><path d="M21 20H3.5"/>'),
+  info:    S('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/>'),
+  user:    S('<circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20.2a7.4 7.4 0 0 1 14.4 0"/>'),
+  search:  S('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>'),
+  flame:   S('<path d="M12 3s4.6 3.4 4.6 7.4a4.6 4.6 0 0 1-9.2 0c0-1.3.5-2.4 1.1-3.3"/><path d="M12 21a6 6 0 0 0 6-6c0-1.6-.6-3-1.5-4.2"/><path d="M12 21a6 6 0 0 1-6-6c0-1.3.4-2.5 1.1-3.5"/>'),
+  shoe:    S('<path d="M3 16.5V11l4.5-1.5 2.5 2 3-1 1.5-2.5 4 1.5c1 .4 1.6 1.3 1.6 2.3v4.7a1.5 1.5 0 0 1-1.5 1.5h-14A1.5 1.5 0 0 1 3 16.5Z"/><path d="M8.5 9.5 10 6l2.5 1"/>'),
+  list:    S('<path d="M8.5 6H20"/><path d="M8.5 12H20"/><path d="M8.5 18H20"/><circle cx="4" cy="6" r="1.1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.1" fill="currentColor" stroke="none"/>'),
+  paw:     S('<circle cx="6.4" cy="9.6" r="1.9"/><circle cx="10.6" cy="6.3" r="1.9"/><circle cx="15.2" cy="6.4" r="1.9"/><circle cx="18.4" cy="9.8" r="1.9"/><path d="M12.2 11.6c2.8 0 4.7 2.1 4.7 4.2 0 2-1.7 3-3.3 2.5-.9-.3-2-.3-2.9 0-1.6.5-3.3-.5-3.3-2.5 0-2.1 1.9-4.2 4.8-4.2Z"/>'),
+  sparkle: S('<path d="M11.4 3.4l1.8 4.9 4.9 1.8-4.9 1.8-1.8 4.9-1.8-4.9L4.7 10l4.9-1.8Z"/><path d="M18.2 14.4l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9Z"/>'),
+  check:   S('<path d="M4.8 12.7 9.7 17.6 19.4 6.6"/>')
+};
+
+/* ================= State ================= */
+let cloud = null;
+let currentUser = null;
+let activeTab = "home";
+const state = { expense: [], diary: [], life: [], sport: [], health: [], steps: [], activeDays: null, diaryQ: '', expView: 'list', pet: null, petLoadedDate: '', todayCheckin: null, checkinDays: null, streakNow: 0, justChecked: null, pendingSteps: null };
+
+/* ================= Helpers ================= */
+const $ = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => [...p.querySelectorAll(s)];
+const pad2 = (n) => String(n).padStart(2, '0');
+// 全部用本地时间，避免 UTC 在东八区凌晨算错日期
+const localDateStr = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const todayStr = () => localDateStr();
+const monthStr = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
+// 当月区间 [start, end)——用下月 1 号做开区间上界，避免 "-31" 在 30 天月份非法
+function monthRange(d = new Date()) {
+  const y = d.getFullYear(), m = d.getMonth();
+  const next = new Date(y, m + 1, 1);
+  return { start: `${y}-${pad2(m+1)}-01`, end: `${next.getFullYear()}-${pad2(next.getMonth()+1)}-01` };
+}
+const fmtMoney = (n) => { n = Number(n) || 0; return (n < 0 ? '-' : '') + Math.abs(n).toFixed(2); };
+const fmtDate = (s) => {
+  if (!s) return '';
+  const p = String(s).slice(0,10).split('-');
+  if (p.length !== 3) return String(s);
+  return `${Number(p[1])}月${Number(p[2])}日`;
+};
+const escapeHtml = (s) => (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const showMsg = (el, msg, kind='err') => { el.textContent = msg; el.className = 'msg show ' + kind; };
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const errMsg = (e) => (e && e.message) ? e.message : (e ? String(e) : '出错了');
+
+/* ================= 图表 / 连续打卡 / 搜索（通用） ================= */
+// 柱状图。rows: [{label, a, b?}]；dual=true 时 a/b 并排双色
+function barChartSVG(rows, opt = {}) {
+  const dual = !!opt.dual;
+  const W = 340, H = opt.h || 118, plotH = H - 26, padX = 8;
+  const max = Math.max(1, ...rows.map(r => Math.max(Number(r.a) || 0, dual ? (Number(r.b) || 0) : 0)));
+  const n = Math.max(1, rows.length);
+  const slot = (W - padX * 2) / n;
+  const bw = Math.min(dual ? 13 : 20, slot * (dual ? 0.36 : 0.5));
+  const yOf = (v) => {
+    const raw = (Math.max(0, Number(v) || 0) / max) * plotH;
+    const h = raw > 0 ? Math.max(2, raw) : 0;
+    return { h, y: plotH - h };
+  };
+  let out = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">`;
+  out += `<line x1="${padX}" y1="${plotH}" x2="${W - padX}" y2="${plotH}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;
+  rows.forEach((r, i) => {
+    const cx = padX + slot * i + slot / 2;
+    const A = yOf(r.a);
+    if (dual) {
+      const B = yOf(r.b);
+      if (A.h) out += `<rect x="${(cx - bw - 1.5).toFixed(1)}" y="${A.y.toFixed(1)}" width="${bw.toFixed(1)}" height="${A.h.toFixed(1)}" rx="3" fill="var(--out)"/>`;
+      if (B.h) out += `<rect x="${(cx + 1.5).toFixed(1)}" y="${B.y.toFixed(1)}" width="${bw.toFixed(1)}" height="${B.h.toFixed(1)}" rx="3" fill="var(--in)"/>`;
+    } else if (A.h) {
+      out += `<rect x="${(cx - bw / 2).toFixed(1)}" y="${A.y.toFixed(1)}" width="${bw.toFixed(1)}" height="${A.h.toFixed(1)}" rx="3" fill="${opt.color || 'var(--brand)'}"/>`;
+    }
+    out += `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="var(--text-3)">${escapeHtml(r.label)}</text>`;
+    if (opt.showVal && Number(r.a) > 0) {
+      out += `<text x="${(dual ? cx - bw / 2 - 1.5 : cx).toFixed(1)}" y="${(A.y - 3).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="var(--text-3)">${escapeHtml(opt.fmt ? opt.fmt(r.a) : String(r.a))}</text>`;
+    }
+  });
+  return out + '</svg>';
+}
+
+// 横向条形列表：rows [{label, v}]，右侧显示 fmt(v, pct)
+function hbarList(rows, opt = {}) {
+  const max = Math.max(1, ...rows.map(r => Number(r.v) || 0));
+  const total = rows.reduce((s, r) => s + (Number(r.v) || 0), 0);
+  return '<div class="bar-stack">' + rows.map(r => {
+    const v = Math.max(0, Number(r.v) || 0);
+    const pct = total ? (v / total * 100) : 0;
+    return `<div class="bar-row">
+      <span class="nm">${escapeHtml(r.label)}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${(v / max * 100).toFixed(1)}%"></span></span>
+      <span class="vl">${escapeHtml(opt.fmt ? opt.fmt(v, pct) : String(v))}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function dayGap(a, b) {
+  const pa = String(a).split('-').map(Number), pb = String(b).split('-').map(Number);
+  return Math.round((new Date(pb[0], pb[1] - 1, pb[2]) - new Date(pa[0], pa[1] - 1, pa[2])) / 86400000);
+}
+// 当前连续天数：今天没记就从昨天算（今天仍有机会续上）
+function currentStreak(set) {
+  if (!set || !set.size) return 0;
+  const d = new Date();
+  if (!set.has(localDateStr(d))) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while (set.has(localDateStr(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function longestStreak(set) {
+  const arr = [...(set || [])].sort();
+  let best = 0, cur = 0, prev = null;
+  arr.forEach(s => {
+    cur = (prev && dayGap(prev, s) === 1) ? cur + 1 : 1;
+    if (cur > best) best = cur;
+    prev = s;
+  });
+  return best;
+}
+const MILESTONES = [3, 7, 14, 30, 100];
+
+// 截取匹配位置附近的片段，让搜索结果看得见关键词上下文
+function excerpt(text, q, len = 72) {
+  const t = String(text || '');
+  if (!q) return t.slice(0, len).replace(/\n/g, ' ');
+  const i = t.toLowerCase().indexOf(String(q).toLowerCase());
+  if (i < 0) return t.slice(0, len).replace(/\n/g, ' ');
+  const s = Math.max(0, i - 18);
+  return (s > 0 ? '…' : '') + t.slice(s, s + len).replace(/\n/g, ' ') + ((s + len) < t.length ? '…' : '');
+}
+
+// 搜索高亮：先转义再替换，避免注入
+function highlight(text, q) {
+  const t = escapeHtml(text || '');
+  const k = (q || '').trim();
+  if (!k) return t;
+  const esc = escapeHtml(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try { return t.replace(new RegExp(esc, 'gi'), m => `<mark>${m}</mark>`); } catch (e) { return t; }
+}
+
+// 汇总「哪些天有过记录」——用于连续打卡
+async function fetchActiveDays() {
+  const d = new Date(); d.setDate(d.getDate() - 120);
+  const since = localDateStr(d);
+  const names = ['expense', 'diary', 'life', 'sport', 'health', 'steps'];
+  const res = await Promise.all(names.map(t =>
+    cloud.database.from(t).select('record_date').gte('record_date', since).limit(5000)
+      .then(r => ({ data: r.data, error: r.error }), e => ({ data: null, error: e }))
+  ));
+  const set = new Set();
+  res.forEach(r => (r.data || []).forEach(x => { if (x && x.record_date) set.add(String(x.record_date).slice(0, 10)); }));
+  return set;
+}
+/* ================= 自定义头像 ================= */
+// 云端 profile.avatar 的值：'' 默认 | 'upload' 自己上传的图 | 'skin:<皮肤id>' 用伙伴立绘
+let avatarVal = '';
+let avatarURL = '';           // avatarVal==='upload' 时解析出的可显示地址（签名 URL）
+let avatarBusy = false;
+
+const avatarStoragePath = () => {
+  const uid = (currentUser && (currentUser.id || currentUser.sub)) || '';
+  return uid ? cloud.storage.userPath(uid, 'avatars/avatar.webp') : '';
+};
+const skinAvatarSrc = (sid) => `pet/pet_${(PET_SKINS.find(s => s.id === sid) || PET_SKINS[0]).id}_4_grown.webp`;
+
+// 头像内容：有自定义就用图，否则回退邮箱首字母 / 人形图标
+function avatarInner(email) {
+  if (avatarVal === 'upload' && avatarURL) return `<img class="av-img" src="${avatarURL}" alt="">`;
+  if (avatarVal.indexOf('skin:') === 0) return `<img class="av-img skin" src="${skinAvatarSrc(avatarVal.slice(5))}" alt="">`;
+  const c = ((email || '').trim()[0] || '');
+  return /[a-zA-Z]/.test(c) ? c.toUpperCase() : ICONS.user;
+}
+// 只重画两处头像容器，不整页重绘
+function paintAvatar() {
+  const h = avatarInner((currentUser && currentUser.email) || '');
+  const a = document.getElementById('btn-me'); if (a) a.innerHTML = h;
+  const b = document.querySelector('.me-avatar'); if (b) b.innerHTML = h;
+}
+async function resolveAvatarURL() {
+  avatarURL = '';
+  try {
+    const r = await cloud.storage.createSignedUrl(avatarStoragePath(), 3600);
+    avatarURL = (r && r.data && r.data.signedUrl) || '';
+  } catch (e) { avatarURL = ''; }
+}
+// 启动时：先用本机缓存秒出，再对齐云端
+async function loadAvatar() {
+  avatarVal = LS.get('avatar', '') || '';
+  if (avatarVal === 'upload') await resolveAvatarURL();
+  try {
+    const r = await cloud.database.from('profile').select('avatar').limit(1).maybeSingle();
+    if (r && !r.error && r.data) {
+      const v = r.data.avatar || '';
+      if (v !== avatarVal) {
+        avatarVal = v;
+        LS.set('avatar', v);
+        if (v === 'upload') await resolveAvatarURL(); else avatarURL = '';
+      }
+    }
+  } catch (e) { /* 表不可用时保持本机缓存 */ }
+  paintAvatar();
+}
+async function setAvatar(v) {
+  const prev = avatarVal;
+  avatarVal = v;
+  if (v === 'upload') await resolveAvatarURL(); else avatarURL = '';
+  LS.set('avatar', v);
+  const q = await cloud.database.from('profile').select('id').limit(1).maybeSingle();
+  const row = (q && !q.error && q.data) || null;
+  const res = row && row.id
+    ? await cloud.database.from('profile').update({ avatar: v, updated_at: new Date().toISOString() }).eq('id', row.id).select()
+    : await cloud.database.from('profile').insert({ avatar: v }).select();
+  if (res.error) { avatarVal = prev; LS.set('avatar', prev); paintAvatar(); throw res.error; }
+  paintAvatar();
+}
+// 居中裁成正方 + 缩小，避免把原图（可能几 MB）直接传上去
+function squareBlob(file, size) {
+  return new Promise((resolve, reject) => {
+    const u = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const s = Math.min(img.width, img.height);
+        const sx = (img.width - s) / 2;
+        const sy = Math.max(0, Math.min(img.height - s, (img.height - s) * 0.18)); // 略偏上，保住脸
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = size;
+        cv.getContext('2d').drawImage(img, sx, sy, s, s, 0, 0, size, size);
+        cv.toBlob(b => { URL.revokeObjectURL(u); b ? resolve(b) : reject(new Error('图片处理失败')); }, 'image/webp', 0.92);
+      } catch (e) { URL.revokeObjectURL(u); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(u); reject(new Error('图片读取失败，换一张试试')); };
+    img.src = u;
+  });
+}
+// 头像变了只刷新受影响的地方：顶栏/我的页头像就地重画。
+// 不要用 renderApp()+switchTab() —— renderApp 内部的 renderHome() 是异步的，
+// 会在之后完成并把 #view 覆盖掉，导致跳转失效（踩过）。
+function afterAvatarChanged() {
+  closeModal();
+  paintAvatar();
+  if (activeTab === 'me') renderProfile();
+}
+async function uploadAvatar(file) {
+  if (avatarBusy) return;
+  avatarBusy = true;
+  try {
+    if (!file || !/^image\//.test(file.type || '')) throw new Error('请选择图片文件');
+    if (file.size > 12 * 1024 * 1024) throw new Error('图片太大，请选 12MB 以内的');
+    const blob = await squareBlob(file, 256);
+    const res = await cloud.storage.upload(avatarStoragePath(), blob, {
+      contentType: blob.type || 'image/webp', cacheControl: '3600', upsert: true
+    });
+    if (res.error) throw res.error;
+    await setAvatar('upload');
+    afterAvatarChanged();
+    toast('头像已更新', '已存到云端，换设备登录也在');
+  } catch (e) {
+    alert(e && e.message ? e.message : '上传失败，检查网络后重试');
+    paintAvatar();
+  } finally { avatarBusy = false; }
+}
+function openAvatarPicker() {
+  const up = avatarVal === 'upload';
+  openModal(`
+    <div class="av-grid">
+      <label class="av-opt file-pick ${up ? 'on' : ''}" id="av-up">
+        <div class="av-thumb">${up && avatarURL ? `<img src="${avatarURL}" alt="">` : ICONS.plus}</div>
+        <div class="av-name">上传图片</div>
+        <input type="file" id="av-file" accept="image/*">
+      </label>
+      ${PET_SKINS.map(s => `
+      <button class="av-opt ${avatarVal === 'skin:' + s.id ? 'on' : ''}" data-skin="${s.id}">
+        <div class="av-thumb"><img src="${skinAvatarSrc(s.id)}" alt="" style="object-position:50% 20%"></div>
+        <div class="av-name">${s.name}</div>
+      </button>`).join('')}
+    </div>
+    <div class="note" style="text-align:left;padding:12px 2px 8px">
+      上传的图片会压成 256×256 存进云端文件（原图不上传），换设备登录也在；选伙伴皮肤直接借立绘，不占空间。
+    </div>
+    ${avatarVal ? '<button class="btn-ghost danger" id="av-reset">恢复默认（邮箱首字母）</button>' : ''}`);
+  setModalTitle('我的头像');
+  // 这里不再用 $('#av-up').onclick = () => input.click()：
+  // 铺满整块区域的透明 input 自己就会吃到点击，走的是浏览器原生激活路径，最稳。
+  const avIn = $('#av-file');
+  avIn.onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadAvatar(f); };
+  watchFilePick(avIn);
+  $$('.av-opt[data-skin]').forEach(b => b.onclick = async () => {
+    try { await setAvatar('skin:' + b.dataset.skin); afterAvatarChanged(); toast('头像已更新', '用的是伙伴立绘'); }
+    catch (e) { alert(errMsg(e)); }
+  });
+  const rs = $('#av-reset');
+  if (rs) rs.onclick = async () => {
+    try {
+      const p = avatarStoragePath();
+      await setAvatar('');
+      if (p) { try { await cloud.storage.remove([p]); } catch (e) {} }
+      afterAvatarChanged(); toast('已恢复默认头像');
+    } catch (e) { alert(errMsg(e)); }
+  };
+}
+
+/* ================= 本地个性化设置 ================= */
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('lb_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('lb_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+
+const THEMES = [
+  { id:'aurora', name:'极光紫', c:'linear-gradient(135deg,#7B8CFF,#B06BFF)' },
+  { id:'ocean',  name:'深海蓝', c:'linear-gradient(135deg,#5AA9FF,#2E6BF6)' },
+  { id:'peach',  name:'蜜桃粉', c:'linear-gradient(135deg,#FF8FA3,#FF6FB5)' },
+  { id:'forest', name:'森野绿', c:'linear-gradient(135deg,#5BE095,#22C3A6)' },
+  { id:'sunset', name:'落日橙', c:'linear-gradient(135deg,#FFB454,#FF7A59)' },
+  { id:'ink',    name:'石墨灰', c:'linear-gradient(135deg,#A9B2C2,#6E7686)' }
+];
+
+function applyTheme(id) {
+  document.documentElement.dataset.theme = THEMES.some(t => t.id === id) ? id : 'aurora';
+  const hex = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim();
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta && hex) meta.setAttribute('content', hex);
+}
+const getNick = () => (LS.get('nick', '') || '').trim();
+const greeting = () => {
+  const h = new Date().getHours();
+  if (h < 6) return '夜深了'; if (h < 11) return '早上好';
+  if (h < 14) return '中午好'; if (h < 18) return '下午好';
+  if (h < 23) return '晚上好'; return '夜深了';
+};
+// 记账分类：内置 + 用户自定义追加
+const BASE_CATS = ['餐饮','交通','购物','日用','住房','医疗','娱乐','学习','社交','人情','其他'];
+const getCats = () => BASE_CATS.concat(LS.get('cats', []).filter(c => !BASE_CATS.includes(c)));
+
+function countdown(btn) {
+  let n = 60;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  const t = setInterval(() => {
+    n--;
+    btn.textContent = n + 's';
+    if (n <= 0) { clearInterval(t); btn.disabled = false; btn.textContent = orig; }
+  }, 1000);
+}
+
+/* ================= Init ================= */
+function initCloud() {
+  if (window.WorkBuddyCloud) {
+    cloud = WorkBuddyCloud.createWorkBuddyCloud({
+      endpoint: publicConfig.endpoint,
+      publishableKey: publicConfig.publishableKey
+    });
+    return true;
+  }
+  return false;
+}
+
+async function boot() {
+  applyTheme(LS.get('theme', 'aurora'));
+  // 手机快捷指令带来的 ?steps=8321：先收下，等登录后自动落库
+  const sp = readStepsParam();
+  if (sp) { state.pendingSteps = sp; LS.set('pendingSteps', sp); clearStepsParam(); }
+  let tries = 0;
+  while (!initCloud() && tries < 50) { await sleep(100); tries++; }
+  if (!cloud) {
+    $('#root').innerHTML = '<div class="empty" style="padding-top:80px">SDK 加载失败，请检查网络后刷新</div>';
+    return;
+  }
+  try {
+    const { data: session } = await cloud.auth.getSession();
+    if (session && session.user) { currentUser = session.user; renderApp(); return; }
+  } catch(e) { console.warn('getSession', e); }
+  renderLogin();
+  cloud.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      ['expense','diary','life','sport','health'].forEach(k => state[k] = []);
+      renderLogin();
+    } else if (session && session.user) {
+      currentUser = session.user;
+      renderApp();
+    }
+  });
+}
+
+/* ================= Login ================= */
+function renderLogin() {
+  $('#root').innerHTML = `
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="login-logo">${ICONS.plus}</div>
+        <div class="login-title">生活<em>手账</em></div>
+        <div class="login-sub">记账 · 日记 · 生活 · 运动 · 健康</div>
+        <div class="login-tabs">
+          <div class="login-tab active" data-tab="pwd">密码登录</div>
+          <div class="login-tab" data-tab="otp">验证码</div>
+          <div class="login-tab" data-tab="signup">注册</div>
+        </div>
+        <div id="pwd" class="pane">
+          <div class="field"><label>邮箱</label><input id="pwd-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="field"><label>密码</label><input id="pwd-pass" type="password" placeholder="登录密码" autocomplete="current-password"></div>
+          <button class="btn" id="pwd-submit">登录</button>
+          <div style="text-align:center;margin-top:6px"><button class="btn-text" id="to-reset">忘记密码？</button></div>
+        </div>
+        <div id="otp" class="pane" style="display:none">
+          <div class="field"><label>邮箱</label><input id="otp-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="field-row">
+            <div class="field"><label>验证码</label><input id="otp-code" type="text" inputmode="numeric" placeholder="6 位数字"></div>
+            <button type="button" class="btn-code" id="otp-send">获取验证码</button>
+          </div>
+          <button class="btn" id="otp-submit">登录</button>
+          <div class="muted" style="font-size:12px;margin-top:12px;text-align:center;line-height:1.6">新邮箱请先到「注册」页设置密码<br>之后用密码登录，不用再收验证码</div>
+        </div>
+        <div id="signup" class="pane" style="display:none">
+          <div class="field"><label>邮箱</label><input id="su-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="field-row">
+            <div class="field"><label>验证码</label><input id="su-code" type="text" inputmode="numeric" placeholder="6 位数字"></div>
+            <button type="button" class="btn-code" id="su-send">获取验证码</button>
+          </div>
+          <div class="field"><label>设置密码（至少 6 位）</label><input id="su-pass" type="password" placeholder="后面用它直接登录" autocomplete="new-password"></div>
+          <button class="btn" id="su-submit">注册并登录</button>
+        </div>
+        <div id="reset-pane" class="pane" style="display:none">
+          <div class="field"><label>邮箱</label><input id="rs-email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="field-row">
+            <div class="field"><label>验证码</label><input id="rs-code" type="text" inputmode="numeric" placeholder="6 位数字"></div>
+            <button type="button" class="btn-code" id="rs-send">获取验证码</button>
+          </div>
+          <div class="field"><label>新密码</label><input id="rs-pass" type="password" placeholder="至少 6 位" autocomplete="new-password"></div>
+          <button class="btn" id="rs-submit">重置密码并登录</button>
+          <div style="text-align:center;margin-top:6px"><button class="btn-text" id="back-login">返回登录</button></div>
+        </div>
+        <div class="msg" id="login-msg"></div>
+      </div>
+    </div>`;
+  const msg = $('#login-msg');
+  const panes = {pwd:$('#pwd'), otp:$('#otp'), signup:$('#signup')};
+  const switchPane = (key) => {
+    $$('.login-tab').forEach(x => x.classList.toggle('active', x.dataset.tab === key));
+    Object.keys(panes).forEach(k => panes[k].style.display = (k === key ? 'block' : 'none'));
+    $('#reset-pane').style.display = 'none';
+    msg.className = 'msg';
+  };
+  $$('.login-tab').forEach(t => t.onclick = () => switchPane(t.dataset.tab));
+
+  $('#pwd-submit').onclick = async () => {
+    const email = $('#pwd-email').value.trim();
+    const pass = $('#pwd-pass').value;
+    if (!email || !pass) { showMsg(msg, '请填邮箱和密码'); return; }
+    const { data, error } = await cloud.auth.signInWithPassword({ email, password: pass });
+    if (error) { showMsg(msg, errMsg(error)); return; }
+    currentUser = data.user; renderApp();
+  };
+  $('#to-reset').onclick = () => {
+    $$('.login-tab').forEach(x => x.classList.remove('active'));
+    Object.values(panes).forEach(p => p.style.display = 'none');
+    $('#reset-pane').style.display = 'block';
+    msg.className = 'msg';
+  };
+  $('#back-login').onclick = () => switchPane('pwd');
+
+  let pendingOtp = null;
+  $('#otp-send').onclick = async (e) => {
+    const email = $('#otp-email').value.trim();
+    if (!email) { showMsg(msg, '请填邮箱'); return; }
+    e.target.disabled = true;
+    const sent = await cloud.auth.sendOtp({ email });
+    e.target.disabled = false;
+    if (sent.error) { showMsg(msg, errMsg(sent.error)); return; }
+    pendingOtp = { email, verificationId: sent.data.verificationId, isExistingUser: sent.data.isExistingUser };
+    showMsg(msg, '验证码已发送，注意查收', 'ok');
+    countdown(e.target);
+  };
+  $('#otp-submit').onclick = async () => {
+    const code = $('#otp-code').value.trim();
+    if (!pendingOtp) { showMsg(msg, '请先获取验证码'); return; }
+    if (!code) { showMsg(msg, '请填验证码'); return; }
+    const r = await cloud.auth.verifyOtp({
+      email: pendingOtp.email, verificationId: pendingOtp.verificationId,
+      isExistingUser: pendingOtp.isExistingUser, token: code
+    });
+    if (r.error) { showMsg(msg, errMsg(r.error)); return; }
+    currentUser = r.data.user; renderApp();
+  };
+
+  let pendingSu = null;
+  $('#su-send').onclick = async (e) => {
+    const email = $('#su-email').value.trim();
+    if (!email) { showMsg(msg, '请填邮箱'); return; }
+    e.target.disabled = true;
+    const sent = await cloud.auth.sendOtp({ email });
+    e.target.disabled = false;
+    if (sent.error) { showMsg(msg, errMsg(sent.error)); return; }
+    pendingSu = { email, verificationId: sent.data.verificationId, isExistingUser: sent.data.isExistingUser };
+    if (sent.data.isExistingUser) showMsg(msg, '该邮箱已注册，请用密码或验证码登录', 'err');
+    else showMsg(msg, '验证码已发送', 'ok');
+    countdown(e.target);
+  };
+  $('#su-submit').onclick = async () => {
+    const code = $('#su-code').value.trim();
+    const pass = $('#su-pass').value;
+    if (!pendingSu) { showMsg(msg, '请先获取验证码'); return; }
+    if (!code || !pass) { showMsg(msg, '验证码和密码都要填'); return; }
+    if (pass.length < 6) { showMsg(msg, '密码至少 6 位'); return; }
+    if (pendingSu.isExistingUser) { showMsg(msg, '该邮箱已注册，请改用登录'); return; }
+    const r = await cloud.auth.verifyOtp({
+      email: pendingSu.email, verificationId: pendingSu.verificationId,
+      isExistingUser: false, token: code, password: pass
+    });
+    if (r.error) { showMsg(msg, errMsg(r.error)); return; }
+    currentUser = r.data.user; renderApp();
+  };
+
+  let pendingRs = null;
+  $('#rs-send').onclick = async (e) => {
+    const email = $('#rs-email').value.trim();
+    if (!email) { showMsg(msg, '请填邮箱'); return; }
+    e.target.disabled = true;
+    const started = await cloud.auth.resetPasswordForEmail(email);
+    e.target.disabled = false;
+    if (started.error) { showMsg(msg, errMsg(started.error)); return; }
+    pendingRs = { email, started };
+    showMsg(msg, '验证码已发送', 'ok');
+    countdown(e.target);
+  };
+  $('#rs-submit').onclick = async () => {
+    const code = $('#rs-code').value.trim();
+    const pass = $('#rs-pass').value;
+    if (!pendingRs) { showMsg(msg, '请先获取验证码'); return; }
+    if (!code || !pass) { showMsg(msg, '验证码和新密码都要填'); return; }
+    if (pass.length < 6) { showMsg(msg, '新密码至少 6 位'); return; }
+    const r = await pendingRs.started.data.updateUser({ nonce: code, password: pass });
+    if (r.error) { showMsg(msg, errMsg(r.error)); return; }
+    if (r.data && r.data.user) currentUser = r.data.user;
+    renderApp();
+  };
+}
+
+/* ================= App Shell ================= */
+function renderApp() {
+  const nick = getNick();
+  $('#root').innerHTML = `
+    <div class="hd">
+      ${nick
+        ? `<div class="brand hi"><span class="hi-t">${escapeHtml(greeting())}</span><em>${escapeHtml(nick)}</em></div>`
+        : `<div class="brand">生活<em>手账</em></div>`}
+      <div class="avatar" id="btn-me" title="我的">${avatarInner(currentUser && currentUser.email)}</div>
+    </div>
+    <main class="view" id="view"></main>
+    <nav class="tab-bar">
+      <button class="tab" data-tab="home"><span class="pill">${ICONS.home}</span>今日</button>
+      <button class="tab" data-tab="expense"><span class="pill">${ICONS.expense}</span>记账</button>
+      <button class="tab" data-tab="diary"><span class="pill">${ICONS.diary}</span>日记</button>
+      <button class="tab" data-tab="life"><span class="pill">${ICONS.life}</span>生活</button>
+      <button class="tab" data-tab="sport"><span class="pill">${ICONS.sport}</span>运动</button>
+      <button class="tab" data-tab="health"><span class="pill">${ICONS.health}</span>健康</button>
+    </nav>
+    <button class="fab" id="fab">${ICONS.plus}</button>
+    <div class="modal-bg" id="modal-bg"><div class="modal" id="modal"><div class="grab"></div></div></div>`;
+  $$('.tab').forEach(t => t.onclick = () => switchTab(t.dataset.tab));
+  $('#btn-me').onclick = () => switchTab('me');
+  $('#fab').onclick = onFab;
+  $('#modal-bg').onclick = (e) => { if (e.target.id === 'modal-bg') closeModal(); };
+  switchTab('home');
+  // 头像与「手机同步来的步数」都在后台补齐，不挡首屏
+  loadAvatar().catch(() => {});
+  flushPendingSteps().catch(() => {});
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  const fab = $('#fab');
+  if (fab) fab.style.display = (tab === 'me') ? 'none' : 'flex';
+  if (tab === 'home') renderHome();
+  else if (tab === 'expense') renderExpenseList();
+  else if (tab === 'diary') renderDiaryList();
+  else if (tab === 'life') renderLifeList();
+  else if (tab === 'sport') renderSportList();
+  else if (tab === 'health') renderHealthList();
+  else if (tab === 'me') renderProfile();
+}
+
+function onFab() {
+  if (activeTab === 'home') { switchTab('expense'); setTimeout(() => openExpenseForm(), 60); }
+  else if (activeTab === 'expense') openExpenseForm();
+  else if (activeTab === 'diary') openDiaryForm();
+  else if (activeTab === 'life') openLifeForm();
+  else if (activeTab === 'sport') openSportForm();
+  else if (activeTab === 'health') openHealthForm();
+}
+
+async function confirmSignOut() {
+  if (!confirm('确定要退出登录吗？数据仍在云端，下次登录即可继续。')) return;
+  await cloud.auth.signOut();
+}
+
+/* ================= 弹窗/输入的小工具 ================= */
+
+/* 手机键盘弹起来时，弹窗要跟着让位 —— 否则输入框正好被键盘盖住，
+   写完看不到自己打了什么。visualViewport 是唯一能拿到键盘真实高度的接口。 */
+(function bindKeyboardInset() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+  const fit = () => {
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--kb', Math.round(kb) + 'px');
+  };
+  vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+  fit();
+})();
+
+/* 正文框自动长高：内容多了自己往上撑，到半屏就停住改内部滚动 */
+function bindAutoGrow(ta) {
+  if (!ta) return;
+  const cap = () => Math.round(window.innerHeight * 0.5);
+  const fit = () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight + 4, cap()) + 'px';
+  };
+  ta.addEventListener('input', fit);
+  fit();
+}
+
+/* 「选择文件」点下去如果**系统选择器压根没弹**，页面会安静地停在原地，
+   用户只能得出「点了没反应」这个结论。这里做一次探测并直说原因：
+   2 秒内页面既没被切走、也没等到 change ⇒ 基本可以断定是 App 壳里
+   没有实现 onShowFileChooser（低于 1.4 的版本就是这样）。 */
+function watchFilePick(input) {
+  if (!input) return;
+  let changed = false, away = false;
+  input.addEventListener('change', () => { changed = true; });
+  window.addEventListener('blur', () => { away = true; }, { once: true });
+  input.addEventListener('click', () => {
+    changed = false; away = false;
+    setTimeout(() => {
+      if (changed || away || !document.hasFocus()) return;   // 有动静 = 正常
+      if (input.files && input.files.length) return;
+      if (LS.get('fileHint', 0)) return;                     // 只烦一次
+      LS.set('fileHint', 1);
+      showSyncBar('文件选择器没弹出来',
+        '装的是旧版应用 —— 到「健康 → 手机步数同步」里重新下载安装包即可；网页版不受影响',
+        9000, openStepSync);
+    }, 2000);
+  });
+}
+
+/* ================= Modal ================= */
+function openModal(html) {
+  $('#modal').innerHTML = `
+    <div class="grab"></div>
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title"></div>
+      <button class="btn-close" id="modal-close">×</button>
+    </div>
+    <div id="modal-body">${html}</div>`;
+  $('#modal-bg').classList.add('show');
+  $('#modal-close').onclick = closeModal;
+}
+function closeModal() { $('#modal-bg').classList.remove('show'); }
+function setModalTitle(t) { $('#modal-title').textContent = t; }
+
+/* ================= 签到 & 养成伙伴 ================= */
+// 换皮：同一套进化形态可以换不同外观（立绘在 pet/ 目录，跟页面一起部署，不依赖外部图床）
+// 美术参考自鸣潮爱弥斯的几套 mod 皮肤，重绘成 Q 版四形态
+const PET_SKINS = [
+  { id:'vow',      name:'晨光',     tag:'粉白天使', desc:'最初陪着你的样子，粉发与羽翼' },
+  { id:'xinghong', name:'星虹狐梦', tag:'粉狐灵装', desc:'狐耳与彩虹全息光环，水晶翅膀' },
+  { id:'xingshi',  name:'星蚀夜歌', tag:'暗夜哥特', desc:'黑蕾丝与蝶翼，赤瞳的夜之侧' },
+  { id:'wedding',  name:'誓约',     tag:'银白婚纱', desc:'银发蕾丝婚纱，珍珠与蓝白光环' }
+];
+const petSkinId = () => {
+  const v = LS.get('petSkin', 'vow');
+  return PET_SKINS.some(s => s.id === v) ? v : 'vow';
+};
+const petSkin = () => PET_SKINS.find(s => s.id === petSkinId()) || PET_SKINS[0];
+// 四个进化形态（立绘文件名 pet_<皮肤>_<序号>_<形态>.webp）
+const PET_FORMS = [
+  { lv: 1,  n: '1_egg',   name: '光卵',   tip: '还在壳里，听得见你的心跳' },
+  { lv: 3,  n: '2_baby',  name: '幼生体', tip: '刚破壳，走路还晃' },
+  { lv: 6,  n: '3_child', name: '成长期', tip: '会挥手了，翅膀还没长齐' },
+  { lv: 10, n: '4_grown', name: '辉耀体', tip: '羽翼全开，和你并肩' }
+];
+const petImg = (form, skinId) => `pet/pet_${skinId || petSkinId()}_${form.n}.webp`;
+const CHECKIN_BASE = 20;   // 每日签到基础经验
+const RECORD_EXP = 5;      // 当天每记一条记录的经验
+const RECORD_CAP = 4;      // 每天最多计 4 条
+const expNeed = (lv) => 40 + (lv - 1) * 20;
+const expTotalFor = (lv) => { let s = 0; for (let i = 1; i < lv; i++) s += expNeed(i); return s; };
+const levelOf = (exp) => { let lv = 1; while (lv < 99 && exp >= expTotalFor(lv + 1)) lv++; return lv; };
+const formOf = (lv) => { let f = PET_FORMS[0]; PET_FORMS.forEach(x => { if (lv >= x.lv) f = x; }); return f; };
+const moodLabel = (m) => m >= 85 ? '元气满满' : m >= 60 ? '心情不错' : m >= 35 ? '有点蔫' : '想你了';
+const clampNum = (v, a, b) => Math.max(a, Math.min(b, Number(v) || 0));
+const streakBonus = (n) => Math.min(25, Math.floor(n / 7) * 5);
+
+// 截止到某一天的连续天数
+function streakEndingAt(set, endStr) {
+  const p = String(endStr).split('-').map(Number);
+  const d = new Date(p[0], p[1] - 1, p[2]);
+  let n = 0;
+  while (set.has(localDateStr(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+let petBusy = false;
+async function ensurePet(force) {
+  if (!currentUser) return null;
+  if (!force && state.pet && state.petLoadedDate === todayStr()) return state.pet;
+  if (petBusy) return state.pet;
+  petBusy = true;
+  try {
+    const today = todayStr();
+    let { data: pet } = await cloud.database.from('pet').select('*').limit(1).maybeSingle();
+    if (!pet) {
+      const ins = await cloud.database.from('pet').insert({ name: '爱弥斯' }).select();
+      pet = (ins.data && ins.data[0]) || { id: null, name: '爱弥斯', exp: 0, mood: 80, last_checkin: null };
+    }
+    const [chkRes, histRes] = await Promise.all([
+      cloud.database.from('checkin').select('*').eq('record_date', today).limit(1).maybeSingle(),
+      cloud.database.from('checkin').select('record_date').limit(500)
+    ]);
+    const chk = chkRes && !chkRes.error ? chkRes.data : null;
+    const days = new Set(((histRes && histRes.data) || []).map(r => String(r.record_date).slice(0, 10)));
+
+    if (!chk) {
+      // 今天还没签 —— 自动签
+      const y = new Date(); y.setDate(y.getDate() - 1);
+      const streak = streakEndingAt(days, localDateStr(y)) + 1;
+      const gain = CHECKIN_BASE + streakBonus(streak);
+      let mood = clampNum(pet.mood == null ? 80 : pet.mood, 15, 100);
+      if (pet.last_checkin) {
+        const gap = dayGap(String(pet.last_checkin).slice(0, 10), today);
+        if (gap > 1) mood -= Math.min(60, (gap - 1) * 15);
+      }
+      mood = Math.round(clampNum(mood + 8, 15, 100));
+      const beforeLv = levelOf(Number(pet.exp || 0));
+      const exp = Number(pet.exp || 0) + gain;
+      const afterLv = levelOf(exp);
+      if (pet.id) {
+        await cloud.database.from('pet')
+          .update({ exp, mood, last_checkin: today, updated_at: new Date().toISOString() })
+          .eq('id', pet.id).select();
+      }
+      const insC = await cloud.database.from('checkin').insert({ record_date: today, exp: gain }).select();
+      pet = Object.assign({}, pet, { exp, mood, last_checkin: today });
+      days.add(today);
+      state.todayCheckin = (insC.data && insC.data[0]) || { record_date: today, exp: gain, record_count: 0 };
+      state.streakNow = streak;
+      state.justChecked = { gain, streak, levelUp: afterLv > beforeLv, level: afterLv, form: formOf(afterLv) };
+    } else {
+      state.todayCheckin = chk;
+      state.streakNow = streakEndingAt(days, today);
+    }
+    state.pet = pet;
+    state.checkinDays = days;
+    state.petLoadedDate = today;
+    return pet;
+  } catch (e) {
+    console.warn('ensurePet failed', e);
+    return state.pet;
+  } finally {
+    petBusy = false;
+  }
+}
+
+// 保存一条记录后给伙伴加经验（每天最多计 4 条）
+async function awardRecordExp() {
+  const c = state.todayCheckin, pet = state.pet;
+  if (!c || !pet || !pet.id || !c.id) return;
+  const used = Number(c.record_count || 0);
+  if (used >= RECORD_CAP) return;
+  const beforeLv = levelOf(Number(pet.exp || 0));
+  c.record_count = used + 1;
+  const exp = Number(pet.exp || 0) + RECORD_EXP;
+  pet.exp = exp;
+  state.pet = pet;
+  const afterLv = levelOf(exp);
+  try {
+    await Promise.all([
+      cloud.database.from('checkin').update({ record_count: c.record_count }).eq('id', c.id).select(),
+      cloud.database.from('pet').update({ exp, updated_at: new Date().toISOString() }).eq('id', pet.id).select()
+    ]);
+  } catch (e) { /* 经验加不上不影响记录本身 */ }
+  if (afterLv > beforeLv) {
+    toast(`升级了！Lv.${afterLv}`, `${pet.name || '爱弥斯'} ${formOf(afterLv).tip}`, petImg(formOf(afterLv)));
+  } else {
+    toast(`+${RECORD_EXP} 经验`, `${pet.name || '爱弥斯'} 看着你记完了`);
+  }
+}
+
+// 顶部轻提示
+/* 顶部提示条（toast / 同步结果条）左右一划就移除，不用干等它自己消失。
+   两处细节：① toast 会被反复重建、sync-bar 每次都是新元素，所以监听挂在 document 上，
+   用 contains 判定手指落在谁身上；② 先判主方向，竖着划要留给页面滚动，别抢。 */
+(function () {
+  const targets = [
+    { get: () => { const t = document.getElementById('toast'); return (t && t.classList.contains('show')) ? t : null; },
+      at: (d) => `translate(calc(-50% + ${d}px),calc(var(--safe-top) + 66px))` },
+    { get: () => document.querySelector('.sync-bar.show'),
+      at: (d) => `translate(${d}px,0)` }
+  ];
+  let cur = null, x0 = 0, y0 = 0, dx = 0, axis = '', live = false;
+
+  document.addEventListener('touchstart', (e) => {
+    cur = null;
+    for (const it of targets) {
+      const el = it.get();
+      if (el && el.contains(e.target)) { cur = { el, at: it.at }; break; }
+    }
+    if (!cur) return;
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+    dx = 0; axis = ''; live = true;
+    cur.el.style.transition = 'none';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!live || !cur) return;
+    const cx = e.touches[0].clientX - x0, cy = e.touches[0].clientY - y0;
+    if (!axis) {
+      if (Math.abs(cx) < 8 && Math.abs(cy) < 8) return;      // 手指还没走够，先不定方向
+      axis = Math.abs(cx) > Math.abs(cy) ? 'x' : 'y';
+      if (axis === 'y') {                                    // 竖划 = 想滚页面，让开
+        live = false; cur.el.style.transition = ''; cur = null; return;
+      }
+    }
+    dx = cx;
+    cur.el.style.transform = cur.at(dx);
+    cur.el.style.opacity = String(Math.max(.2, 1 - Math.abs(dx) / 260));
+  }, { passive: true });
+
+  const finish = (cancelled) => {
+    if (!live || !cur) { if (cur) cur.el.style.transition = ''; live = false; cur = null; return; }
+    const el = cur.el, at = cur.at, d = dx;
+    live = false; cur = null; dx = 0;
+    el.style.opacity = '';
+    if (!cancelled && Math.abs(d) > 56) {                    // 划过阈值 = 顺势滑出屏幕再摘掉
+      el.style.transition = 'transform .2s ease, opacity .2s ease';
+      el.style.transform = at(d > 0 ? 460 : -460);
+      el.style.opacity = '0';
+      el.classList.remove('show');
+      setTimeout(() => { if (el.parentNode) el.remove(); }, 220);
+    } else {                                                 // 没过阈值 = 回弹
+      el.style.transition = '';
+      el.style.transform = '';
+    }
+  };
+  document.addEventListener('touchend', () => finish(false), { passive: true });
+  document.addEventListener('touchcancel', () => finish(true), { passive: true });
+})();
+
+let toastTimer = null, toastGoneTimer = null;
+function toast(text, sub, img) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  const exp = Number((state.pet && state.pet.exp) || 0);
+  el.innerHTML = `<img src="${img || petImg(formOf(levelOf(exp)))}" alt=""><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
+  el.style.transition = ''; el.style.transform = ''; el.style.opacity = '';   // 清掉上次左右滑动留下的内联位移
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(toastTimer); clearTimeout(toastGoneTimer);
+  toastTimer = setTimeout(() => {
+    el.classList.remove('show');
+    // 收起动画跑完就从 DOM 里摘掉。别指望"靠定位把隐藏态挪出屏幕"——
+    // 只要算差一点，屏幕顶端就会永远留一条小尾巴，只有刷新页面才消失。
+    toastGoneTimer = setTimeout(() => {
+      if (el.parentNode && !el.classList.contains('show')) el.remove();
+    }, 380);
+  }, 2800);
+}
+
+function petCardHTML() {
+  const pet = state.pet;
+  if (!pet) return '';
+  const exp = Number(pet.exp || 0);
+  const lv = levelOf(exp);
+  const form = formOf(lv);
+  const cur = exp - expTotalFor(lv);
+  const need = expNeed(lv);
+  const pct = Math.max(2, Math.min(100, cur / need * 100));
+  const streak = state.streakNow || 0;
+  const mood = clampNum(pet.mood == null ? 80 : pet.mood, 0, 100);
+  return `
+    <div class="pet-card" id="pet-card">
+      <div class="pet-stage skin-${petSkinId()}"><img class="pet-img" src="${petImg(form)}" alt="${form.name}"></div>
+      <div class="pet-info">
+        <div class="pet-head">
+          <span class="pet-name">${escapeHtml(pet.name || '爱弥斯')}</span>
+          <span class="lv-chip">Lv.${lv} ${form.name}</span>
+        </div>
+        <div class="pet-sub"><span>连续签到 <b>${streak}</b> 天</span><span>${moodLabel(mood)}</span><span class="pet-dress" id="pet-dress">换装 ›</span></div>
+        <div class="exp-track"><div class="exp-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        <div class="pet-tip">${petSkin().name} · 距 Lv.${lv + 1} 还差 ${need - cur} 点经验</div>
+      </div>
+    </div>`;
+}
+
+// 宠物卡上的「换装」入口：只换外观，不动等级
+function bindPetCard() {
+  const pc = $('#pet-card');
+  if (!pc) return;
+  pc.onclick = openPet;
+  const d = $('#pet-dress');
+  if (d) d.onclick = (e) => { e.stopPropagation(); openSkinPicker(); };
+}
+
+// 选皮肤：3 张缩略图（用成长期那张当封面）
+function openSkinPicker() {
+  const cur = petSkinId();
+  const petals = PET_FORMS[2];
+  openModal(`
+    <div class="skins">
+      ${PET_SKINS.map(s => `
+        <div class="skin ${s.id === cur ? 'on' : ''}" data-skin="${s.id}">
+          <img src="${petImg(petals, s.id)}" alt="${s.name}">
+          <div class="sn">${s.name}</div>
+          <div class="st">${s.tag}</div>
+        </div>`).join('')}
+    </div>
+`);
+  setModalTitle('给伙伴换装');
+  $$('.skin').forEach(el => {
+    el.onclick = () => {
+      const id = el.dataset.skin;
+      if (id === petSkinId()) { closeModal(); return; }
+      LS.set('petSkin', id);
+      const s = PET_SKINS.find(x => x.id === id);
+      closeModal();
+      // 底层页面要跟着换
+      if (activeTab === 'me') renderProfile(); else if (activeTab === 'home') renderHome();
+      toast(`已换上「${s.name}」`, s.desc, petImg(petals, id));
+    };
+  });
+}
+
+function openPet() {
+  const pet = state.pet;
+  if (!pet) { toast('伙伴还没准备好', '稍后再打开看看'); return; }
+  const exp = Number(pet.exp || 0);
+  const lv = levelOf(exp);
+  const form = formOf(lv);
+  const cur = exp - expTotalFor(lv);
+  const need = expNeed(lv);
+  const mood = clampNum(pet.mood == null ? 80 : pet.mood, 0, 100);
+  const days = state.checkinDays || new Set();
+  const next = PET_FORMS.find(f => f.lv > lv);
+  const today = todayStr();
+  // 近 28 天签到日历
+  let cal = '';
+  const base = new Date(); base.setDate(base.getDate() - 27);
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+    const k = localDateStr(d);
+    cal += `<div class="d ${days.has(k) ? 'on' : ''} ${k === today ? 'today' : ''}">${d.getDate()}</div>`;
+  }
+  openModal(`
+    <div style="text-align:center;padding:4px 0 2px">
+      <div class="pet-stage skin-${petSkinId()}" style="margin:0 auto;width:156px;height:156px"><img class="pet-img" src="${petImg(form)}" alt=""></div>
+      <div class="pet-name" style="font-size:19px;margin-top:6px">${escapeHtml(pet.name || '爱弥斯')}</div>
+      <div class="pet-sub" style="justify-content:center;margin-top:6px">
+        <span>Lv.${lv} · ${form.name}</span><span>${moodLabel(mood)}</span><span>${petSkin().name}</span>
+      </div>
+      <div class="pet-tip">${form.tip}</div>
+      ${state.todayCheckin ? '' : '<button class="btn" id="pet-checkin" style="margin-top:12px">补签今天</button>'}
+    </div>
+    <div class="sec">经验</div>
+    <div class="card">
+      <div class="row-between" style="font-size:12px"><span class="dim">Lv.${lv} → Lv.${lv + 1}</span><span class="num">${cur} / ${need}</span></div>
+      <div class="exp-track"><div class="exp-fill" style="width:${Math.max(2, Math.min(100, cur / need * 100)).toFixed(1)}%"></div></div>
+      <div class="pet-tip">${next ? `再攒 <b>${expTotalFor(next.lv) - exp}</b> 点经验进化成「${next.name}」` : '已达成最终形态「辉耀体」'}</div>
+    </div>
+    <div class="sec">进化路线</div>
+    <div class="evo">
+      ${PET_FORMS.map(f => `<div class="e ${lv >= f.lv ? 'got' : ''}"><img src="${petImg(f)}" alt=""><div class="n">${f.name}<br>Lv.${f.lv}</div></div>`).join('')}
+    </div>
+    <div class="sec">签到</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">连续签到</div><div class="value num" style="color:var(--pink)">${state.streakNow || 0}<span style="font-size:12px;color:var(--text-3)"> 天</span></div></div>
+      <div class="stat"><div class="label">最长连续</div><div class="value num" style="color:var(--pink)">${longestStreak(days)}<span style="font-size:12px;color:var(--text-3)"> 天</span></div></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="row-between" style="font-size:12px"><span class="dim">近 28 天</span><span class="num">共签到 ${days.size} 天</span></div>
+      <div class="cal">${cal}</div>
+      <div class="pet-tip">每天进来自动签到 +${CHECKIN_BASE} 经验，连续满 7 天再 +5（最高 +25）；每天前 ${RECORD_CAP} 条记录各 +${RECORD_EXP} 经验。断签不清零，只是伙伴心情会掉。</div>
+    </div>
+    <div class="sec">伙伴设置</div>
+    <div class="me-list">
+      <div class="me-item" id="pet-skin"><div class="me-ico" style="color:var(--pink)">${ICONS.sparkle}</div><div class="me-txt"><div class="t">给伙伴换装</div><div class="s">当前：${petSkin().name} · ${petSkin().tag}</div></div><div class="me-arrow">›</div></div>
+      <div class="me-item" id="pet-rename"><div class="me-ico" style="color:var(--pink)">${ICONS.paw}</div><div class="me-txt"><div class="t">给伙伴改名</div><div class="s">当前：${escapeHtml(pet.name || '爱弥斯')}</div></div><div class="me-arrow">›</div></div>
+    </div>`);
+  setModalTitle('我的伙伴');
+  $('#pet-skin').onclick = openSkinPicker;
+  $('#pet-rename').onclick = openPetRename;
+  const cb = $('#pet-checkin');
+  if (cb) cb.onclick = async () => {
+    await ensurePet(true);
+    const j = state.justChecked;
+    if (j) { state.justChecked = null; toast(`签到成功 +${j.gain} 经验`, `连续签到 ${j.streak} 天 · ${j.form.name}`, petImg(j.form)); }
+    closeModal(); openPet();
+  };
+}
+
+function openPetRename() {
+  const pet = state.pet;
+  if (!pet) return;
+  const cur = pet.name || '爱弥斯';
+  openModal(`
+    <div class="field">
+      <label>伙伴名字</label>
+      <input id="pet-name" type="text" maxlength="12" placeholder="最多 12 个字" value="${escapeHtml(cur)}">
+    </div>
+    <button class="btn" id="pet-save">保存</button>`);
+  setModalTitle('给伙伴改名');
+  $('#pet-save').onclick = async () => {
+    const name = $('#pet-name').value.trim().slice(0, 12) || '爱弥斯';
+    if (pet.id) {
+      const res = await cloud.database.from('pet').update({ name, updated_at: new Date().toISOString() }).eq('id', pet.id).select();
+      if (res.error) { alert(errMsg(res.error)); return; }
+    }
+    pet.name = name;
+    state.pet = pet;
+    closeModal();
+    if (activeTab === 'me') renderProfile(); else renderHome();
+  };
+}
+
+/* ================= Home ================= */
+async function renderHome() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    const today = todayStr();
+    const [, exp, dia, sp, li, stepRes] = await Promise.all([
+      ensurePet(),
+      cloud.database.from('expense').select('*').eq('record_date', today),
+      cloud.database.from('diary').select('*').eq('record_date', today).limit(1).maybeSingle(),
+      cloud.database.from('sport').select('*').eq('record_date', today),
+      cloud.database.from('life').select('*').eq('record_date', today),
+      cloud.database.from('steps').select('*').eq('record_date', today).limit(1).maybeSingle()
+    ]);
+    const { start: monthStart, end: monthEnd } = monthRange();
+    const monthExp = await cloud.database.from('expense').select('*').gte('record_date', monthStart).lt('record_date', monthEnd);
+
+    let todayOut = 0, todayIn = 0;
+    if (exp.data) exp.data.forEach(r => { if (r.kind === 'out') todayOut += Number(r.amount); else todayIn += Number(r.amount); });
+    let monthOut = 0, monthIn = 0;
+    if (monthExp.data) monthExp.data.forEach(r => { if (r.kind === 'out') monthOut += Number(r.amount); else monthIn += Number(r.amount); });
+    const hasDiary = !!(dia.data && dia.data.id);
+    const sportCount = sp.data ? sp.data.length : 0;
+    const lifeCount = li.data ? li.data.length : 0;
+    const stepRec = (stepRes && !stepRes.error && stepRes.data) ? stepRes.data : null;
+    const best = longestStreak(state.checkinDays || new Set());
+    const d = new Date();
+
+    v.innerHTML = `
+      <div class="hero">
+        <div class="hero-label">今日支出 · ${d.getMonth()+1}月${d.getDate()}日</div>
+        <div class="hero-num num">¥${fmtMoney(todayOut)}</div>
+        <div class="hero-grid">
+          <div><span class="k">今日收入</span><span class="v" style="color:var(--in)">+¥${fmtMoney(todayIn)}</span></div>
+          <div><span class="k">本月支出</span><span class="v num">¥${fmtMoney(monthOut)}</span></div>
+          <div><span class="k">本月收入</span><span class="v" style="color:var(--in)">+¥${fmtMoney(monthIn)}</span></div>
+          <div><span class="k">今日步数</span><span class="v num" style="color:var(--cyan)">${stepRec ? Number(stepRec.steps).toLocaleString('zh-CN') : '—'}</span></div>
+        </div>
+      </div>
+      ${petCardHTML()}
+      <div class="sec">签到里程碑</div>
+      <div class="badge-grid">
+        ${MILESTONES.map(m => `<div class="badge ${best >= m ? 'got' : ''}"><div class="n num">${m}</div><div class="d">${best >= m ? '已达成' : '天'}</div></div>`).join('')}
+      </div>
+      <div class="sec">今日打卡</div>
+      <div class="check-grid">
+        <div class="check ${hasDiary?'on':'off'}"><span class="ico">${ICONS.diary}</span><div class="t">日记</div><div class="v">${hasDiary?'已写':'未记'}</div></div>
+        <div class="check ${sportCount>0?'on':'off'}"><span class="ico">${ICONS.sport}</span><div class="t">运动</div><div class="v">${sportCount>0?sportCount+' 次':'未动'}</div></div>
+        <div class="check ${lifeCount>0?'on':'off'}"><span class="ico">${ICONS.life}</span><div class="t">生活</div><div class="v">${lifeCount>0?lifeCount+' 条':'未记'}</div></div>
+      </div>
+      <div class="sec">快速记录</div>
+      <div class="quick-grid">
+        <button class="quick" data-act="exp">${ICONS.expense}<span>记一笔</span></button>
+        <button class="quick" data-act="dia">${ICONS.diary}<span>写日记</span></button>
+        <button class="quick" data-act="sp">${ICONS.sport}<span>记运动</span></button>
+        <button class="quick" data-act="he">${ICONS.health}<span>记健康</span></button>
+      </div>`;
+    $$('.quick').forEach(b => b.onclick = () => quickAdd(b.dataset.act));
+    const pc = $('#pet-card');
+    if (pc) bindPetCard();
+    if (state.justChecked) {
+      const j = state.justChecked;
+      state.justChecked = null;
+      toast(j.levelUp ? `签到成功 · 升到 Lv.${j.level}` : `签到成功 +${j.gain} 经验`,
+        `连续签到 ${j.streak} 天 · ${j.form.name}`, petImg(j.form));
+    }
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}<br><br><button class="btn-text" onclick="renderHome()">点此重试</button></div>`;
+  }
+}
+
+function quickAdd(act) {
+  if (act === 'exp') { switchTab('expense'); setTimeout(() => openExpenseForm(), 60); }
+  else if (act === 'dia') { switchTab('diary'); setTimeout(() => openDiaryForm(), 60); }
+  else if (act === 'sp') { switchTab('sport'); setTimeout(() => openSportForm(), 60); }
+  else if (act === 'he') { switchTab('health'); setTimeout(() => openHealthForm(), 60); }
+}
+
+/* ================= Expense ================= */
+// 'YYYY-MM' → [本月1号, 下月1号) 开区间，任何月份都不会拼出非法日期
+function rangeOfYM(ym) {
+  const [y, m] = String(ym).split('-').map(Number);
+  const next = new Date(y, m, 1); // m 为 1-based，Date 自动进位到下月 1 号
+  return { start: `${pad2(y)}-${pad2(m)}-01`, end: `${next.getFullYear()}-${pad2(next.getMonth()+1)}-01` };
+}
+// 通用月份切换条：kind 决定它操作哪个模块
+function ymBar(kind, ym) {
+  const nowYM = monthStr();
+  return `
+    <div class="month-bar">
+      <button class="month-nav" data-ym="${kind}" data-step="-1" aria-label="上个月">‹</button>
+      <div class="month-cur num">${ym.slice(0,4)} 年 ${Number(ym.slice(5))} 月${ym === nowYM ? ' · 本月' : ''}</div>
+      <button class="month-nav" data-ym="${kind}" data-step="1" aria-label="下个月"${ym >= nowYM ? ' disabled' : ''}>›</button>
+    </div>`;
+}
+function monthBar(ym, mOut, mIn, outCnt, inCnt) {
+  return ymBar('expense', ym) + `
+    <div class="stat-grid">
+      <div class="stat"><div class="label">支出</div><div class="value amt-out num">-¥${fmtMoney(mOut)}</div><div class="sub">${outCnt} 笔</div></div>
+      <div class="stat"><div class="label">收入</div><div class="value amt-in num">+¥${fmtMoney(mIn)}</div><div class="sub">${inCnt} 笔</div></div>
+    </div>`;
+}
+function shiftYM(ym, d) {
+  let [y, m] = String(ym).split('-').map(Number);
+  m += d;
+  if (m < 1) { m = 12; y -= 1; } else if (m > 12) { m = 1; y += 1; }
+  return `${y}-${pad2(m)}`;
+}
+const YM_KEY = { expense: 'expYM', health: 'heYM' };
+function bindYM() {
+  $$('[data-ym]').forEach(b => {
+    if (b.disabled) return;
+    b.onclick = () => {
+      const kind = b.dataset.ym, key = YM_KEY[kind];
+      const next = shiftYM(state[key] || monthStr(), Number(b.dataset.step));
+      if (next > monthStr()) return; // 不允许翻到未来
+      state[key] = next;
+      if (kind === 'health') renderHealthList(); else renderExpenseList();
+    };
+  });
+}
+
+// 明细 / 图表 分段控件
+const expSegHTML = () => `<div class="seg">
+  <button id="seg-list" class="${state.expView === 'list' ? 'on' : ''}">${ICONS.list}明细</button>
+  <button id="seg-chart" class="${state.expView === 'chart' ? 'on' : ''}">${ICONS.chart}图表</button>
+</div>`;
+function bindExpSeg() {
+  const a = $('#seg-list'), b = $('#seg-chart');
+  if (a) a.onclick = () => { state.expView = 'list'; renderExpenseList(); };
+  if (b) b.onclick = () => { state.expView = 'chart'; renderExpenseList(); };
+}
+
+async function renderExpenseList() {
+  const v = $('#view');
+  if (state.expView === 'chart') return renderExpenseChart();
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    if (!state.expYM) state.expYM = monthStr();
+    const ym = state.expYM;
+    const { start, end } = rangeOfYM(ym);
+    const { data, error } = await cloud.database.from('expense').select('*').gte('record_date', start).lt('record_date', end).order('record_date', { ascending: false }).order('created_at', { ascending: false });
+    if (error) throw error;
+    state.expense = data || [];
+    let mOut = 0, mIn = 0;
+    state.expense.forEach(r => { if (r.kind === 'out') mOut += Number(r.amount); else mIn += Number(r.amount); });
+    if (!state.expense.length) {
+      v.innerHTML = expSegHTML() + monthBar(ym, 0, 0, 0, 0) +
+        `<div class="empty"><div class="ico">💰</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一笔</div>`;
+      bindExpSeg(); bindYM();
+      return;
+    }
+    const groups = {};
+    state.expense.forEach(r => { const k = r.record_date; (groups[k] = groups[k] || []).push(r); });
+    const sortedDays = Object.keys(groups).sort((a,b) => a < b ? 1 : -1);
+    let html = expSegHTML() + monthBar(ym, mOut, mIn, state.expense.filter(r=>r.kind==='out').length, state.expense.filter(r=>r.kind==='in').length) + `<div class="sec">明细</div>`;
+    sortedDays.forEach(day => {
+      let dayOut = 0;
+      groups[day].forEach(r => { if (r.kind === 'out') dayOut += Number(r.amount); });
+      html += `<div class="card">
+        <div class="row-between" style="margin-bottom:10px">
+          <span class="dim" style="font-size:13px;font-weight:600">${fmtDate(day)}</span>
+          <span class="muted" style="font-size:12px">${groups[day].length} 笔 · 支出 ¥${fmtMoney(dayOut)}</span>
+        </div>`;
+      groups[day].forEach(r => {
+        const sign = r.kind === 'out' ? '-' : '+';
+        const cls = r.kind === 'out' ? 'amt-out' : 'amt-in';
+        html += `
+          <div class="row card-tap" data-edit="expense" data-id="${r.id}" style="padding:8px 0">
+            <span class="grow">
+              <span class="dim">${escapeHtml(r.category||'-')}</span>
+              ${r.note ? `<div class="muted" style="font-size:12px;margin-top:2px">${escapeHtml(r.note)}</div>` : ''}
+            </span>
+            <span class="${cls} num">${sign}¥${fmtMoney(r.amount)}</span>
+            <button class="btn-close" data-del="expense" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+          </div>`;
+      });
+      html += `</div>`;
+    });
+    v.innerHTML = html;
+    bindExpSeg(); bindYM();
+    $$('[data-edit="expense"]').forEach(el => el.onclick = (e) => {
+      if (e.target.dataset.del) return;
+      openExpenseForm(el.dataset.id);
+    });
+    $$('[data-del="expense"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delExpense(b.dataset.id); });
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+/* ---- 记账图表：6 月趋势 + 分类构成 + 30 天节奏 ---- */
+async function renderExpenseChart() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nx = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      months.push({
+        ym: monthStr(d), label: (d.getMonth() + 1) + '月',
+        start: `${d.getFullYear()}-${pad2(d.getMonth()+1)}-01`,
+        end: `${nx.getFullYear()}-${pad2(nx.getMonth()+1)}-01`
+      });
+    }
+    const { data, error } = await cloud.database.from('expense').select('*')
+      .gte('record_date', months[0].start).lt('record_date', months[months.length-1].end);
+    if (error) throw error;
+    const all = data || [];
+    const inRange = (r, s, e) => String(r.record_date) >= s && String(r.record_date) < e;
+
+    if (!all.length) {
+      v.innerHTML = expSegHTML() + `<div class="empty"><div class="ico">📊</div>近半年还没有记账<br>记几笔就能看到趋势了</div>`;
+      bindExpSeg();
+      return;
+    }
+
+    // 1) 近 6 个月收支
+    const rows = months.map(m => {
+      const list = all.filter(r => inRange(r, m.start, m.end));
+      let o = 0, i = 0;
+      list.forEach(r => { if (r.kind === 'out') o += Number(r.amount); else i += Number(r.amount); });
+      return { label: m.label, a: o, b: i, list, ym: m.ym };
+    });
+
+    // 2) 当前月份分类构成（只看支出）
+    const curM = months[months.length - 1];
+    const curList = all.filter(r => inRange(r, curM.start, curM.end) && r.kind === 'out');
+    const catMap = {};
+    curList.forEach(r => { const k = r.category || '未分类'; catMap[k] = (catMap[k] || 0) + Number(r.amount); });
+    const catRows = Object.keys(catMap).map(k => ({ label: k, v: catMap[k] })).sort((a,b) => b.v - a.v);
+
+    // 3) 近 30 天每日支出
+    const d30 = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 29);
+    const dayRows = [];
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(d30.getFullYear(), d30.getMonth(), d30.getDate() + i);
+      const s = localDateStr(d);
+      const sum = all.filter(r => String(r.record_date) === s && r.kind === 'out').reduce((a,r)=>a+Number(r.amount),0);
+      dayRows.push({ label: (i % 5 === 0 || i === 29) ? (d.getMonth()+1) + '/' + d.getDate() : '', a: sum });
+    }
+
+    const totOut = curList.reduce((s,r)=>s+Number(r.amount),0);
+    let html = expSegHTML();
+    html += `<div class="chart-wrap">
+      <div class="chart-title">近 6 个月 · 支出 vs 收入</div>
+      ${barChartSVG(rows, { dual: true, h: 130 })}
+      <div class="chart-legend"><span><i style="background:var(--out)"></i>支出</span><span><i style="background:var(--in)"></i>收入</span></div>
+    </div>`;
+    html += `<div class="sec">${Number(curM.ym.slice(5))} 月支出构成 · 共 ¥${fmtMoney(totOut)}</div>`;
+    html += catRows.length
+      ? `<div class="chart-wrap"><div class="chart-title">占比 Top ${Math.min(catRows.length, 8)}</div>${hbarList(catRows.slice(0, 8), { fmt: (v, p) => `¥${fmtMoney(v)} · ${p.toFixed(0)}%` })}</div>`
+      : `<div class="chart-wrap"><div class="dim" style="font-size:12px;padding:4px">本月还没有支出记录</div></div>`;
+    html += `<div class="sec">近 30 天每日支出</div>
+      <div class="chart-wrap">
+        <div class="chart-title">日均 ¥${fmtMoney(totOut ? dayRows.reduce((s,r)=>s+r.a,0) / 30 : 0)}</div>
+        ${barChartSVG(dayRows, { h: 110, color: 'var(--brand)' })}
+      </div>`;
+
+    v.innerHTML = html;
+    bindExpSeg();
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+
+function openExpenseForm(id) {
+  const r = id ? state.expense.find(x => String(x.id) === String(id)) : null;
+  openModal(`
+    <div class="field"><label>金额</label><input id="f-amount" type="number" step="0.01" min="0" placeholder="0.00" value="${r ? r.amount : ''}"></div>
+    <div class="field-row">
+      <div class="field"><label>类型</label><select id="f-kind"><option value="out" ${!r||r.kind==='out'?'selected':''}>支出</option><option value="in" ${r&&r.kind==='in'?'selected':''}>收入</option></select></div>
+      <div class="field"><label>日期</label><input id="f-date" type="date" value="${r ? r.record_date : todayStr()}"></div>
+    </div>
+    <div class="field"><label>分类</label>
+      <select id="f-category">
+        ${getCats().map(c=>`<option value="${c}" ${r&&r.category===c?'selected':''}>${c}</option>`).join('')}
+        ${r && r.category && !getCats().includes(r.category) ? `<option value="${escapeHtml(r.category)}" selected>${escapeHtml(r.category)}</option>` : ''}
+      </select>
+    </div>
+    <div class="field"><label>备注</label><input id="f-note" type="text" placeholder="可选" value="${r ? escapeHtml(r.note||'') : ''}"></div>
+    <button class="btn" id="f-save">保存</button>`);
+  setModalTitle(r ? '编辑收支' : '记一笔');
+  $('#f-save').onclick = () => saveExpense(id);
+}
+
+async function saveExpense(id) {
+  const amount = parseFloat($('#f-amount').value);
+  if (!amount || amount <= 0) { alert('请填正确金额'); return; }
+  const payload = {
+    amount, kind: $('#f-kind').value, category: $('#f-category').value,
+    note: $('#f-note').value.trim(), record_date: $('#f-date').value
+  };
+  const res = id
+    ? await cloud.database.from('expense').update(payload).eq('id', id).select()
+    : await cloud.database.from('expense').insert(payload).select();
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (!id) awardRecordExp();
+  // 记到别的月份时自动跟过去，避免「保存完看不到」
+  const ym = payload.record_date ? payload.record_date.slice(0,7) : null;
+  if (ym && ym !== state.expYM && ym <= monthStr()) state.expYM = ym;
+  renderExpenseList();
+}
+
+async function delExpense(id) {
+  if (!confirm('删除这条记录？')) return;
+  const { error } = await cloud.database.from('expense').delete().eq('id', id).select();
+  if (error) { alert(errMsg(error)); return; }
+  renderExpenseList();
+}
+
+/* ================= Diary ================= */
+const MOODS = ['😊','😢','😡','😐','😴','🥰','😰','🤔','💪','🎉'];
+
+async function renderDiaryList() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    const { data, error } = await cloud.database.from('diary').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(500);
+    if (error) throw error;
+    state.diary = data || [];
+
+    if (!state.diary.length) {
+      v.innerHTML = `<div class="empty"><div class="ico">📖</div>还没有日记<br>点右下角 + 写第一篇</div>`;
+      return;
+    }
+    /* 搜索框只建这一次，之后打字只重画下面的 #dq-list。
+       ⛔ 以前是「每次输入都重建整个 #view」—— 连输入框本身一起换掉，
+       中文输入法正在拼的那串拼音就没了落点，表现成「打出来只有字母、上不了屏」。
+       另外 type="search" 在部分安卓输入法下会吃回车/候选键，换成 text + inputmode。 */
+    v.innerHTML = `<div class="search">
+      <span class="si">${ICONS.search}</span>
+      <input id="dq" type="text" inputmode="search" enterkeyhint="search" autocomplete="off"
+             placeholder="搜标题 / 正文 / 心情 / 日期" value="${escapeHtml(state.diaryQ || '')}">
+      <span class="clr" id="dq-clr" style="${state.diaryQ ? '' : 'display:none'}">×</span>
+    </div>
+    <div id="dq-list"></div>`;
+
+    const dq = $('#dq');
+    let composing = false;                       // 输入法拼字中，先别动 DOM
+    dq.addEventListener('compositionstart', () => { composing = true; });
+    dq.addEventListener('compositionend', (e) => { composing = false; state.diaryQ = e.target.value; paintDiaryList(); });
+    dq.addEventListener('input', (e) => {
+      state.diaryQ = e.target.value;
+      $('#dq-clr').style.display = state.diaryQ ? '' : 'none';
+      if (composing || e.isComposing) return;
+      paintDiaryList();
+    });
+    $('#dq-clr').onclick = () => {
+      state.diaryQ = ''; dq.value = '';
+      $('#dq-clr').style.display = 'none';
+      paintDiaryList(); dq.focus();
+    };
+    paintDiaryList();
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+/* 只重画搜索结果区，输入框原地不动 */
+function paintDiaryList() {
+  const box = $('#dq-list');
+  if (!box) return;
+  const q = (state.diaryQ || '').trim();
+  const lq = q.toLowerCase();
+  const list = q
+    ? state.diary.filter(r => (String(r.title||'') + String(r.content||'') + String(r.mood||'') + String(r.record_date||'')).toLowerCase().includes(lq))
+    : state.diary;
+  let html = '';
+  if (q && !list.length) {
+    html = `<div class="empty"><div class="ico">🔍</div>没有含「${escapeHtml(q)}」的日记</div>`;
+  } else {
+    html = `<div class="sec">${q ? `搜到 ${list.length} 篇` : `共 ${list.length} 篇`}</div>`;
+    list.forEach(r => {
+      const preview = excerpt(r.content, q, 72);
+      html += `<div class="card card-tap" data-edit="diary" data-id="${r.id}">
+        <div class="row-between">
+          <span class="mood">${r.mood||''}</span>
+          <span class="muted" style="font-size:12px">${highlight(fmtDate(r.record_date), q)}</span>
+        </div>
+        ${r.title ? `<div style="margin-top:4px;font-weight:600">${highlight(r.title, q)}</div>` : ''}
+        <div class="dim" style="margin-top:4px;font-size:13px">${highlight(preview, q)}</div>
+      </div>`;
+    });
+  }
+  box.innerHTML = html;
+  $$('[data-edit="diary"]').forEach(el => el.onclick = () => openDiaryForm(el.dataset.id));
+}
+
+function openDiaryForm(id) {
+  const r = id ? state.diary.find(x => String(x.id) === String(id)) : null;
+  openModal(`
+    <div class="field-row">
+      <div class="field"><label>日期</label><input id="d-date" type="date" value="${r ? r.record_date : todayStr()}"></div>
+      <div class="field"><label>心情</label>
+        <select id="d-mood"><option value="">无</option>${MOODS.map(m=>`<option value="${m}" ${r&&r.mood===m?'selected':''}>${m}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="field"><label>标题（可选）</label><input id="d-title" type="text" value="${r ? escapeHtml(r.title||'') : ''}"></div>
+    <div class="field"><label>正文</label><textarea id="d-content" class="grow" placeholder="今天都发生了什么">${r ? escapeHtml(r.content||'') : ''}</textarea></div>
+    <button class="btn" id="d-save">保存</button>
+    ${id ? '<button class="btn-ghost danger" id="d-del">删除这篇日记</button>' : ''}`);
+  setModalTitle(r ? '编辑日记' : '写日记');
+  bindAutoGrow($('#d-content'));
+  $('#d-save').onclick = () => saveDiary(id);
+  if (id) $('#d-del').onclick = () => { closeModal(); delDiary(id); };
+}
+
+async function saveDiary(id) {
+  const content = $('#d-content').value.trim();
+  if (!content) { alert('正文不能空'); return; }
+  const payload = { title: $('#d-title').value.trim(), content, mood: $('#d-mood').value, record_date: $('#d-date').value };
+  const res = id
+    ? await cloud.database.from('diary').update(payload).eq('id', id).select()
+    : await cloud.database.from('diary').insert(payload).select();
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (!id) awardRecordExp();
+  renderDiaryList();
+}
+
+async function delDiary(id) {
+  if (!confirm('删除这篇日记？')) return;
+  const { error } = await cloud.database.from('diary').delete().eq('id', id).select();
+  if (error) { alert(errMsg(error)); return; }
+  renderDiaryList();
+}
+
+/* ================= Life ================= */
+
+/* 标签池 = 自己加过的（存本地） → 历史用过的（按出现次数） → 预设常用。
+   做成点选的 chips：手机上打「逗号」本身就很别扭，而且打出来的词每次还不一样。 */
+const LIFE_TAG_PRESETS = ['朋友','家人','工作','学习','日记','美食','旅行','游戏','心情','护肤','早起','练枪'];
+const LIFE_TAG_KEY = 'lifeTags';
+/* 「管理」里删掉的标签记在这里。
+   ⛔ 不能只从 lifeTags 里删：历史记录里用过的词会被 freq 分支重新捞回候选池，
+      所以必须有一份"黑名单"，在最后统一过滤（池子和筛选条都过一遍）。 */
+const LIFE_TAG_HIDE_KEY = 'lifeTagsHidden';
+
+function lifeTagHidden() {
+  const a = LS.get(LIFE_TAG_HIDE_KEY, []);
+  return Array.isArray(a) ? a.map(String) : [];
+}
+function hideLifeTag(t) {
+  const list = lifeTagHidden();
+  if (!list.includes(t)) { list.unshift(t); LS.set(LIFE_TAG_HIDE_KEY, list.slice(0, 200)); }
+  const custom = (LS.get(LIFE_TAG_KEY, []) || []).map(String).filter(x => x !== t);
+  LS.set(LIFE_TAG_KEY, custom);
+}
+function unhideLifeTag(t) {
+  const list = lifeTagHidden();
+  if (list.includes(t)) LS.set(LIFE_TAG_HIDE_KEY, list.filter(x => x !== t));
+}
+
+function lifeTagPool() {
+  const hidden = lifeTagHidden();
+  const custom = (LS.get(LIFE_TAG_KEY, []) || []).map(String);
+  const freq = {};
+  (state.life || []).forEach(r => (r.tags || []).forEach(t => {
+    const s = String(t).trim(); if (s) freq[s] = (freq[s] || 0) + 1;
+  }));
+  const used = Object.keys(freq).sort((a, b) => freq[b] - freq[a]).slice(0, 18);
+  const out = [];
+  custom.concat(used, LIFE_TAG_PRESETS).forEach(t => {
+    const s = String(t).trim();
+    if (s && s.length <= 12 && !out.includes(s) && !hidden.includes(s)) out.push(s);
+  });
+  return out.slice(0, 36);
+}
+
+/* 已隐藏的标签随时能捞回来 —— 删错了不至于没救（这才是敢让人点 × 的前提） */
+function openHiddenTags() {
+  const hid = lifeTagHidden();
+  openModal(`
+    <div class="note" style="text-align:left;margin-bottom:12px">
+      这些标签从候选里移除了，<b>历史记录本身没动</b>。点一下就能放回去。
+    </div>
+    <div class="tagpick">
+      ${hid.map(t => `<button type="button" class="tchip" data-back="${escapeHtml(t)}">${escapeHtml(t)}<span style="color:var(--in);margin-left:5px">＋</span></button>`).join('')}
+    </div>
+    <div class="taghint show" style="margin-bottom:12px">没有要找的？直接在「＋ 添加标签」里重新加一遍也一样。</div>
+    <button class="btn-ghost" id="ht-clear">全部恢复（${hid.length} 个）</button>
+    <button class="btn" id="ht-done">好</button>`);
+  setModalTitle('已隐藏的标签');
+  $$('[data-back]').forEach(b => b.onclick = () => {
+    unhideLifeTag(b.dataset.back);
+    b.remove();
+    toast('已恢复', b.dataset.back);
+  });
+  $('#ht-clear').onclick = () => { LS.set(LIFE_TAG_HIDE_KEY, []); closeModal(); toast('已全部恢复'); };
+  $('#ht-done').onclick = closeModal;
+}
+
+async function renderLifeList() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    const { data, error } = await cloud.database.from('life').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
+    if (error) throw error;
+    state.life = data || [];
+    if (!state.life.length) {
+      v.innerHTML = `<div class="empty"><div class="ico">✨</div>还没有随手记<br>点右下角 + 记一条</div>`;
+      return;
+    }
+    // 顶部标签筛选条（按用到的次数排）—— 在「管理」里删掉的标签这里也不再出现
+    const freq = {};
+    state.life.forEach(r => (r.tags || []).forEach(t => { const s = String(t).trim(); if (s) freq[s] = (freq[s] || 0) + 1; }));
+    const hiddenTags = lifeTagHidden();
+    const names = Object.keys(freq).filter(t => !hiddenTags.includes(t)).sort((a, b) => freq[b] - freq[a]).slice(0, 24);
+    const cur = state.lifeTagQ || '';
+    const list = cur ? state.life.filter(r => (r.tags || []).some(t => String(t) === cur)) : state.life;
+
+    let html = '';
+    if (names.length) {
+      html += `<div class="tagbar">
+        <button class="filter ${cur ? '' : 'on'}" data-tagf="">全部</button>
+        ${names.map(t => `<button class="filter ${cur === t ? 'on' : ''}" data-tagf="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+      </div>`;
+    }
+    html += `<div class="sec">${cur ? `「${escapeHtml(cur)}」${list.length} 条` : `共 ${list.length} 条`}</div>`;
+    list.forEach(r => {
+      const tags = (r.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('');
+      html += `<div class="card card-tap" data-edit="life" data-id="${r.id}">
+        <div class="row-between">
+          <span class="muted" style="font-size:12px">${fmtDate(r.record_date)}</span>
+          <button class="btn-close" data-del="life" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+        </div>
+        <div style="margin-top:6px;white-space:pre-wrap">${escapeHtml(r.content)}</div>
+        ${tags ? `<div style="margin-top:7px">${tags}</div>` : ''}
+      </div>`;
+    });
+    v.innerHTML = html;
+    $$('[data-tagf]').forEach(b => b.onclick = () => { state.lifeTagQ = b.dataset.tagf; renderLifeList(); });
+    $$('[data-edit="life"]').forEach(el => el.onclick = (e) => {
+      if (e.target.dataset.del) return;
+      openLifeForm(el.dataset.id);
+    });
+    $$('[data-del="life"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delLife(b.dataset.id); });
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+function openLifeForm(id) {
+  const r = id ? state.life.find(x => String(x.id) === String(id)) : null;
+  const sel = new Set((r && r.tags) || []);
+  openModal(`
+    <div class="field"><label>日期</label><input id="l-date" type="date" value="${r ? r.record_date : todayStr()}"></div>
+    <div class="field"><label>内容</label><textarea id="l-content" placeholder="今天发生了什么想记下来的">${r ? escapeHtml(r.content||'') : ''}</textarea></div>
+    <div class="field">
+      <label>标签（点一下选中，可多选）</label>
+      <div class="tagpick" id="l-chips">${lifeTagPool().map(t => `<button type="button" class="tchip${sel.has(t) ? ' on' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}<i class="tx">×</i></button>`).join('')}<button type="button" class="tchip add" id="l-tag-add">＋ 添加标签</button><button type="button" class="tchip mgr" id="l-tag-mgr">管理</button></div>
+      <div class="taghint" id="l-tag-hint">
+        点标签上的 <b style="color:var(--out)">×</b> 从候选里去掉（只影响以后写东西时能不能点到，<b>历史记录不动</b>）。<br>
+        <button type="button" class="btn-text" id="l-tag-back" style="padding:0;font-size:11.5px;color:var(--cyan)">删错了？看已隐藏的标签 ›</button>
+      </div>
+      <div class="tagnew" id="l-tag-new">
+        <input id="l-newtag" type="text" maxlength="12" placeholder="新标签（最多 12 字）">
+        <button type="button" id="l-newtag-ok">加上</button>
+      </div>
+    </div>
+    <button class="btn" id="l-save">保存</button>`);
+  setModalTitle(r ? '编辑记录' : '随手记');
+
+  const chips = $('#l-chips');
+  const hint = $('#l-tag-hint');
+  const mgrBtn = $('#l-tag-mgr');
+  let managing = false;
+  const findChip = (val) => Array.prototype.find.call(chips.querySelectorAll('.tchip'), x => x.dataset.tag === val);
+  const setManaging = (on) => {
+    managing = on;
+    chips.classList.toggle('mgr', on);
+    hint.classList.toggle('show', on);
+    mgrBtn.classList.toggle('on', on);
+    mgrBtn.textContent = on ? '完成' : '管理';
+  };
+  mgrBtn.onclick = () => setManaging(!managing);
+  $('#l-tag-back').onclick = openHiddenTags;
+
+  chips.onclick = (e) => {
+    const cut = e.target.closest && e.target.closest('.tx');
+    if (cut) {                                  // 管理态里的 ×：从候选池移除
+      const t = cut.parentElement.dataset.tag;
+      hideLifeTag(t);
+      cut.parentElement.remove();
+      sel.delete(t);
+      return;
+    }
+    const b = e.target.closest && e.target.closest('.tchip');
+    if (!b || b.classList.contains('add') || b.classList.contains('mgr')) return;
+    if (managing) return;                       // 管理态只管删，避免手滑把选中的标签点没了
+    if (b.classList.contains('on')) { b.classList.remove('on'); sel.delete(b.dataset.tag); }
+    else { b.classList.add('on'); sel.add(b.dataset.tag); }
+  };
+  const newBox = $('#l-tag-new');
+  $('#l-tag-add').onclick = () => { newBox.classList.add('show'); $('#l-newtag').focus(); };
+  const addTag = () => {
+    const val = ($('#l-newtag').value || '').trim().slice(0, 12);
+    if (!val) return;
+    const custom = (LS.get(LIFE_TAG_KEY, []) || []).map(String);
+    if (!custom.includes(val)) { custom.unshift(val); LS.set(LIFE_TAG_KEY, custom.slice(0, 30)); }
+    unhideLifeTag(val);                          // 被 × 掉过的，重新加一遍就等于恢复
+    let b = findChip(val);
+    if (!b) {
+      b = document.createElement('button');
+      b.type = 'button'; b.className = 'tchip'; b.dataset.tag = val;
+      b.innerHTML = escapeHtml(val) + '<i class="tx">×</i>';
+      chips.insertBefore(b, $('#l-tag-add'));
+    }
+    b.classList.add('on');
+    sel.add(val);
+    $('#l-newtag').value = '';
+    newBox.classList.remove('show');
+  };
+  $('#l-newtag-ok').onclick = addTag;
+  $('#l-newtag').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } };
+
+  $('#l-save').onclick = () => saveLife(id, sel);
+}
+
+async function saveLife(id, sel) {
+  const content = $('#l-content').value.trim();
+  if (!content) { alert('内容不能空'); return; }
+  const tags = sel
+    ? Array.from(sel).map(x => String(x).trim()).filter(Boolean)
+    : ($('#l-tags') ? $('#l-tags').value.trim().split(/[,，]/).map(x => x.trim()).filter(Boolean) : []);
+  const payload = { content, tags, record_date: $('#l-date').value };
+  const res = id
+    ? await cloud.database.from('life').update(payload).eq('id', id).select()
+    : await cloud.database.from('life').insert(payload).select();
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (!id) awardRecordExp();
+  renderLifeList();
+}
+
+async function delLife(id) {
+  if (!confirm('删除这条记录？')) return;
+  const { error } = await cloud.database.from('life').delete().eq('id', id).select();
+  if (error) { alert(errMsg(error)); return; }
+  renderLifeList();
+}
+
+/* ================= Sport ================= */
+const SPORT_TYPES = ['跑步','散步','力量','瑜伽','骑行','球类','游泳','健身操','其他'];
+
+/* ---- 步数折算（距离 / 消耗）------------------------------------------------
+   手机只肯把「步数」交给 App（TYPE_STEP_COUNTER）。距离、消耗、爬楼、心率
+   都是手机自带健康 App 的私有数据，普通 App 读不到（要厂商签名级权限，
+   或走系统的 Health Connect 授权——那个得看你手机支不支持）。
+   所以这里只能按步数折算，默认值取自常见经验：步幅 0.8 米、每步每公斤约
+   0.00053 千卡（60 公斤的人约 0.032 千卡/步，与手机健康 App 的量级一致）。
+   ⛔ 界面上必须写清「估算」，别让用户以为这是手机量出来的。                 */
+function stepStrideM() { const v = Number(LS.get('stepStride', 0.8)); return (v > 0.3 && v < 1.6) ? v : 0.8; }
+function stepWeightKg() { const v = Number(LS.get('bodyWeight', 60)); return (v > 20 && v < 200) ? v : 60; }
+function stepMetrics(steps) {
+  const s = Math.max(0, Number(steps) || 0);
+  return { km: s * stepStrideM() / 1000, kcal: Math.round(s * stepWeightKg() * 0.00053) };
+}
+function stepExtraHTML(stepNow) {
+  const m = stepMetrics(stepNow);
+  return `<div class="step-extra">
+    <span class="m"><i>距离 · 估算</i><b>${m.km.toFixed(2)}<em>km</em></b></span>
+    <span class="m"><i>消耗 · 估算</i><b>${m.kcal}<em>千卡</em></b></span>
+    <span class="adj"><button class="btn-text" id="step-metrics">调整折算 ›</button></span>
+  </div>`;
+}
+
+/* 手机数据区（今日步数 + 近 14 天）。原来长在「健康」页，现在归「运动」——
+   步数和运动记录本来就是一件事，分在两个页面看才叫重复。 */
+function stepSectionHTML() {
+  const today = todayStr();
+  const list = state.steps || [];
+  const stepToday = list.find(r => String(r.record_date) === today) || null;
+  const goal = Number(stepToday && stepToday.goal) || Number(LS.get('stepGoal', 8000)) || 8000;
+  const stepNow = stepToday ? Number(stepToday.steps) : 0;
+  const pct = goal ? Math.min(100, stepNow / goal * 100) : 0;
+  const rows = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const s = localDateStr(d);
+    const rec = list.find(r => String(r.record_date) === s);
+    rows.push({ label: (i % 2 === 0) ? (d.getMonth()+1) + '/' + d.getDate() : '', a: rec ? Number(rec.steps) : 0 });
+  }
+  const hitDays = rows.filter(r => r.a >= goal).length;
+  const avgStep = Math.round(rows.reduce((s,r)=>s+r.a,0) / 14);
+  return `
+      <div class="sec">手机数据 · 自动同步</div>
+      <div class="step-hero" id="step-hero">
+        <div class="step-top">
+          <div>
+            <div class="hero-label">今日步数</div>
+            <div class="step-num num">${stepNow.toLocaleString('zh-CN')}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="hero-label">每日目标</div>
+            <div class="num" style="font-size:15px;font-weight:700;color:var(--text-2)">${goal.toLocaleString('zh-CN')}</div>
+          </div>
+        </div>
+        <div class="step-track"><span class="step-fill" style="width:${pct.toFixed(1)}%"></span></div>
+        <div class="step-hint">${stepNow >= goal ? `已达标 · 超出 ${(stepNow-goal).toLocaleString('zh-CN')} 步` : `还差 ${(goal-stepNow).toLocaleString('zh-CN')} 步达标`} · 点这里录入</div>
+        ${stepExtraHTML(stepNow)}
+        ${isInApp() ? `<div class="step-calib"><button class="btn-text" id="step-calib">自动同步的数字不对？校准今日步数 ›</button></div>` : ''}
+      </div>
+      <div class="sec">近 14 天步数</div>
+      <div class="chart-wrap">
+        <div class="chart-title">日均 ${avgStep.toLocaleString('zh-CN')} 步 · 达标 ${hitDays} 天</div>
+        ${barChartSVG(rows, { h: 108, color: 'var(--cyan)' })}
+      </div>`;
+}
+
+async function renderSportList() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    const d14 = new Date(); d14.setDate(d14.getDate() - 13);
+    const [sp, st] = await Promise.all([
+      cloud.database.from('sport').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(100),
+      cloud.database.from('steps').select('*').gte('record_date', localDateStr(d14))
+    ]);
+    if (sp.error) throw sp.error;
+    if (st.error) throw st.error;
+    state.sport = sp.data || [];
+    state.steps = (st.data || []).slice().sort((a,b) => String(a.record_date) < String(b.record_date) ? 1 : -1);
+
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+    const weekStartStr = localDateStr(weekStart);
+    const week = state.sport.filter(r => r.record_date >= weekStartStr);
+    // 近 14 天每日时长
+    const d14b = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);
+    const dayRows = [];
+    let tot14 = 0;
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(d14b.getFullYear(), d14b.getMonth(), d14b.getDate() + i);
+      const s = localDateStr(d);
+      const m = state.sport.filter(r => String(r.record_date) === s).reduce((a,r)=>a+Number(r.duration_min||0),0);
+      tot14 += m;
+      dayRows.push({ label: (i % 2 === 0) ? (d.getMonth()+1) + '/' + d.getDate() : '', a: m });
+    }
+    const sportDays = dayRows.filter(r => r.a > 0).length;
+    const totMin = week.reduce((s,r)=>s+Number(r.duration_min||0),0);
+    const totKm = week.reduce((s,r)=>s+Number(r.distance_km||0),0);
+    const totCal = week.reduce((s,r)=>s+Number(r.calories||0),0);
+
+    let html = stepSectionHTML();
+
+    if (!state.sport.length) {
+      html += `<div class="sec">运动记录</div>
+        <div class="empty"><div class="ico">🏃</div>还没有手记的运动<br>点右下角 + 记一次<br>
+        <span style="color:var(--text-3);font-size:11.5px;line-height:1.9">上面的步数 / 距离 / 消耗是手机自动同步的，不用手记</span></div>`;
+      v.innerHTML = html;
+      bindStep();
+      return;
+    }
+    html += `
+      <div class="sec">本周汇总 · 手动记录</div>
+      <div class="stat-grid">
+        <div class="stat"><div class="label">总时长</div><div class="value num">${totMin}<span style="font-size:12px;color:var(--text-3)"> 分</span></div></div>
+        <div class="stat"><div class="label">总距离</div><div class="value num">${totKm.toFixed(2)}<span style="font-size:12px;color:var(--text-3)"> km</span></div></div>
+        <div class="stat"><div class="label">总消耗</div><div class="value num">${totCal}<span style="font-size:12px;color:var(--text-3)"> 千卡</span></div></div>
+        <div class="stat"><div class="label">总次数</div><div class="value num">${week.length}<span style="font-size:12px;color:var(--text-3)"> 次</span></div></div>
+      </div>
+      <div class="sec">近 14 天时长</div>
+      <div class="chart-wrap">
+        <div class="chart-title">有 ${sportDays} 天动了 · 日均 ${Math.round(tot14 / 14)} 分</div>
+        ${barChartSVG(dayRows, { h: 108 })}
+      </div>
+      <div class="sec">明细</div>`;
+    state.sport.forEach(r => {
+      const bits = [];
+      if (r.duration_min) bits.push(r.duration_min + ' 分');
+      if (r.distance_km) bits.push(r.distance_km + ' km');
+      if (r.calories) bits.push(r.calories + ' 千卡');
+      html += `<div class="card">
+        <div class="row-between">
+          <span><span style="font-weight:600">${escapeHtml(r.kind)}</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
+          <div style="display:flex;gap:6px">
+            <button class="btn-close" data-edit="sport" data-id="${r.id}" style="font-size:12px;width:28px;height:28px">✎</button>
+            <button class="btn-close" data-del="sport" data-id="${r.id}" style="font-size:13px;width:28px;height:28px">×</button>
+          </div>
+        </div>
+        ${bits.length ? `<div class="dim" style="margin-top:6px;font-size:13px">${bits.join(' · ')}</div>` : ''}
+        ${r.note?`<div class="muted" style="margin-top:4px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
+      </div>`;
+    });
+    v.innerHTML = html;
+    bindStep();
+    $$('[data-edit="sport"]').forEach(b => b.onclick = () => openSportForm(b.dataset.id));
+    $$('[data-del="sport"]').forEach(b => b.onclick = () => delSport(b.dataset.id));
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+function openSportForm(id) {
+  const r = id ? state.sport.find(x => String(x.id) === String(id)) : null;
+  openModal(`
+    <div class="field-row">
+      <div class="field"><label>类型</label>
+        <select id="s-kind">${SPORT_TYPES.map(k=>`<option value="${k}" ${r&&r.kind===k?'selected':''}>${k}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>日期</label><input id="s-date" type="date" value="${r ? r.record_date : todayStr()}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>时长（分）</label><input id="s-dur" type="number" min="0" placeholder="0" value="${r ? r.duration_min||'' : ''}"></div>
+      <div class="field"><label>距离（km）</label><input id="s-dist" type="number" step="0.01" min="0" placeholder="0.00" value="${r ? r.distance_km||'' : ''}"></div>
+    </div>
+    <div class="field"><label>消耗（千卡）</label><input id="s-cal" type="number" min="0" placeholder="0" value="${r ? r.calories||'' : ''}"></div>
+    <div class="field"><label>备注</label><input id="s-note" type="text" placeholder="可选" value="${r ? escapeHtml(r.note||'') : ''}"></div>
+    <button class="btn" id="s-save">保存</button>`);
+  setModalTitle(r ? '编辑运动' : '记运动');
+  $('#s-save').onclick = () => saveSport(id);
+}
+
+async function saveSport(id) {
+  const payload = {
+    kind: $('#s-kind').value,
+    duration_min: parseInt($('#s-dur').value) || null,
+    distance_km: parseFloat($('#s-dist').value) || null,
+    calories: parseInt($('#s-cal').value) || null,
+    note: $('#s-note').value.trim(),
+    record_date: $('#s-date').value
+  };
+  const res = id
+    ? await cloud.database.from('sport').update(payload).eq('id', id).select()
+    : await cloud.database.from('sport').insert(payload).select();
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (!id) awardRecordExp();
+  renderSportList();
+}
+
+async function delSport(id) {
+  if (!confirm('删除这条记录？')) return;
+  const { error } = await cloud.database.from('sport').delete().eq('id', id).select();
+  if (error) { alert(errMsg(error)); return; }
+  renderSportList();
+}
+
+/* ================= Health ================= */
+async function renderHealthList() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  try {
+    if (!state.heYM) state.heYM = monthStr();
+    const ym = state.heYM;
+    const curR = rangeOfYM(ym);
+    const lm = shiftYM(ym, -1);
+    const prvR = rangeOfYM(lm);
+    const [cur, prv] = await Promise.all([
+      cloud.database.from('health').select('*').gte('record_date', curR.start).lt('record_date', curR.end).order('record_date', { ascending: false }).order('created_at', { ascending: false }),
+      cloud.database.from('health').select('*').gte('record_date', prvR.start).lt('record_date', prvR.end)
+    ]);
+    if (cur.error) throw cur.error;
+    state.health = cur.data || [];
+
+    // ⛔ 「今日步数」原来长在这一页，已经搬去「运动」页了（步数和运动记录是一件事）。
+    //    这里只留「健康」本来的记录（自慰次数 / 备注）。
+    const monthTimes = state.health.reduce((s,r)=>s+Number(r.times||0),0);
+    const monthDays = new Set(state.health.map(r=>r.record_date)).size;
+    const lastMonthTimes = (prv.data||[]).reduce((s,r)=>s+Number(r.times||0),0);
+    const diff = monthTimes - lastMonthTimes;
+    const head = ymBar('health', ym) + `
+      <div class="stat-grid">
+        <div class="stat"><div class="label">${Number(ym.slice(5))} 月次数</div><div class="value num" style="color:var(--pink)">${monthTimes}</div><div class="sub">${monthDays} 天有记录</div></div>
+        <div class="stat"><div class="label">上月 ${Number(lm.slice(5))} 月</div><div class="value num" style="color:var(--pink)">${lastMonthTimes}</div><div class="sub">${diff > 0 ? '比上月多 ' + diff + ' 次' : diff < 0 ? '比上月少 ' + (-diff) + ' 次' : '与上月持平'}</div></div>
+      </div>`;
+
+    if (!state.health.length) {
+      v.innerHTML = head + `<div class="empty"><div class="ico">♥</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一次</div>`;
+      bindYM();
+      return;
+    }
+    let html = head + `<div class="sec">明细</div>`;
+    state.health.forEach(r => {
+      html += `<div class="card card-tap" data-edit="health" data-id="${r.id}">
+        <div class="row-between">
+          <span><span style="color:var(--pink);font-weight:700">${r.times} 次</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
+          <button class="btn-close" data-del="health" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+        </div>
+        ${r.note?`<div class="muted" style="margin-top:6px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
+      </div>`;
+    });
+    v.innerHTML = html;
+    bindYM();
+    $$('[data-edit="health"]').forEach(el => el.onclick = (e) => {
+      if (e.target.dataset.del) return;
+      openHealthForm(el.dataset.id);
+    });
+    $$('[data-del="health"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delHealth(b.dataset.id); });
+  } catch(e) {
+    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+  }
+}
+
+function openHealthForm(id) {
+  const r = id ? state.health.find(x => String(x.id) === String(id)) : null;
+  openModal(`
+    <div class="field-row">
+      <div class="field"><label>次数</label><input id="h-times" type="number" min="1" value="${r ? r.times : 1}"></div>
+      <div class="field"><label>日期</label><input id="h-date" type="date" value="${r ? r.record_date : todayStr()}"></div>
+    </div>
+    <div class="field"><label>备注（可选）</label><input id="h-note" type="text" placeholder="如：状态 / 诱因 / 心情" value="${r ? escapeHtml(r.note||'') : ''}"></div>
+    <button class="btn" id="h-save">保存</button>`);
+  setModalTitle(r ? '编辑记录' : '记一次');
+  $('#h-save').onclick = () => saveHealth(id);
+}
+
+async function saveHealth(id) {
+  const times = parseInt($('#h-times').value);
+  if (!times || times < 1) { alert('次数至少 1'); return; }
+  const payload = { times, note: $('#h-note').value.trim(), record_date: $('#h-date').value };
+  const res = id
+    ? await cloud.database.from('health').update(payload).eq('id', id).select()
+    : await cloud.database.from('health').insert(payload).select();
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (!id) awardRecordExp();
+  renderHealthList();
+}
+
+async function delHealth(id) {
+  if (!confirm('删除这条记录？')) return;
+  const { error } = await cloud.database.from('health').delete().eq('id', id).select();
+  if (error) { alert(errMsg(error)); return; }
+  renderHealthList();
+}
+
+/* ---- 步数 ---- */
+/* 步数区现在长在「运动」页（原来在「健康」页），所以落库后重画的目标页也跟着换 */
+function afterStepsSaved() {
+  if (activeTab === 'sport') renderSportList();
+  else if (activeTab === 'home') renderHome();
+}
+function bindStep() {
+  const b = $('#step-hero');
+  if (b) b.onclick = openStepsForm;
+  const c = $('#step-calib');
+  if (c) c.onclick = (e) => { e.stopPropagation(); openStepCalibrate(); };
+  const m = $('#step-metrics');
+  if (m) m.onclick = (e) => { e.stopPropagation(); openStepMetrics(); };
+}
+
+/* 距离 / 消耗的折算系数。手机读不到这两项，只能按步数折，所以让用户自己报
+   步幅和体重 —— 手机健康 App 上「距离 ÷ 步数」就是他的真实步幅。 */
+function openStepMetrics() {
+  openModal(`
+    <div class="note" style="text-align:left;margin-bottom:12px">
+      手机只肯把<b>步数</b>交给 App。距离、消耗、爬楼、心率是手机自带健康 App 的私有数据，
+      普通 App 读不到（要厂商签名级权限）。<br>
+      所以这里按你自己的情况折算：<b>距离 = 步数 × 步幅</b>；
+      <b>消耗 ≈ 步数 × 体重 × 0.00053</b>。
+    </div>
+    <div class="field-row">
+      <div class="field"><label>步幅（米/步）</label><input id="sm-stride" type="number" step="0.01" min="0.3" max="1.6" value="${stepStrideM()}"></div>
+      <div class="field"><label>体重（公斤）</label><input id="sm-weight" type="number" step="0.5" min="20" max="200" value="${stepWeightKg()}"></div>
+    </div>
+    <p class="sy-p" style="color:var(--text-3)">不知道填多少？手机健康 App 里「距离 ÷ 步数」就是你的真实步幅（例如 1.21 公里 ÷ 1474 步 ≈ 0.82 米）。</p>
+    <button class="btn" id="sm-save">保存</button>`);
+  setModalTitle('距离 / 消耗 · 折算方式');
+  $('#sm-save').onclick = () => {
+    const st = parseFloat($('#sm-stride').value);
+    const wt = parseFloat($('#sm-weight').value);
+    if (!isFinite(st) || st < 0.3 || st > 1.6) { alert('步幅请填 0.3 ~ 1.6 米'); return; }
+    if (!isFinite(wt) || wt < 20 || wt > 200) { alert('体重请填 20 ~ 200 公斤'); return; }
+    LS.set('stepStride', st); LS.set('bodyWeight', wt);
+    closeModal();
+    toast('已保存', `距离按 ${st} 米/步、体重按 ${wt} 公斤折算`);
+    if (activeTab === 'sport') renderSportList();
+  };
+}
+
+async function openStepsForm() {
+  const today = todayStr();
+  let rec = (state.steps || []).find(r => String(r.record_date) === today) || null;
+  try {
+    const q = await cloud.database.from('steps').select('*').eq('record_date', today).limit(1).maybeSingle();
+    if (q && !q.error && q.data) rec = q.data;
+  } catch (e) { /* 查不到就用已有的 */ }
+  const goal = Number(rec && rec.goal) || Number(LS.get('stepGoal', 8000)) || 8000;
+  openModal(`
+    <div class="field-row">
+      <div class="field"><label>今日步数</label><input id="st-num" type="number" min="0" inputmode="numeric" placeholder="0" value="${rec ? rec.steps : ''}"></div>
+      <div class="field"><label>日期</label><input id="st-date" type="date" value="${today}"></div>
+    </div>
+    <div class="field"><label>每日目标（步）</label><input id="st-goal" type="number" min="1000" step="500" value="${goal}"></div>
+    <div class="note" style="text-align:left;padding:4px 2px 10px">
+      网页读不到手机的健康数据（只有微信小程序才拿得到微信运动）。从手机健康 App 看一眼数字填进来，几秒钟的事；同一天改第二次会覆盖，不会重复累加。<br>
+      不想手动？<button class="btn-text" id="st-sync" style="padding:0;font-size:12px">配置手机自动同步 ›</button>
+      ${isInApp() ? ` · <button class="btn-text" id="st-calib" style="padding:0;font-size:12px">校准今日步数 ›</button>` : ''}
+    </div>
+    <button class="btn" id="st-save">保存</button>`);
+  setModalTitle('记步数');
+  $('#st-save').onclick = saveSteps;
+  $('#st-sync').onclick = openStepSync;
+  const calib = $('#st-calib');
+  if (calib) calib.onclick = openStepCalibrate;
+}
+
+async function saveSteps() {
+  const raw = $('#st-num').value.trim();
+  const steps = parseInt(raw);
+  if (raw === '' || !isFinite(steps) || steps < 0) { alert('请填写步数（非负整数）'); return; }
+  const date = $('#st-date').value || todayStr();
+  const goal = parseInt($('#st-goal').value) || 8000;
+  const { res, isNew } = await saveStepsValue(date, steps, goal);
+  if (res.error) { alert(errMsg(res.error)); return; }
+  closeModal();
+  if (isNew) awardRecordExp();
+  if (activeTab === 'sport') renderSportList(); else switchTab('sport');
+}
+
+// 同一天二次录入走覆盖，不累加
+async function saveStepsValue(date, steps, goal) {
+  LS.set('stepGoal', goal);
+  const exist = await cloud.database.from('steps').select('id').eq('record_date', date).limit(1).maybeSingle();
+  const id = exist && exist.data && exist.data.id;
+  const res = id
+    ? await cloud.database.from('steps').update({ steps, goal }).eq('id', id).select()
+    : await cloud.database.from('steps').insert({ steps, goal, record_date: date }).select();
+  return { res, isNew: !id };
+}
+
+/* ---- 手机步数一键同步 ----------------------------------------------
+   浏览器（含加到主屏幕的网页）读不到系统健康数据，这是平台限制。
+   折中办法：手机上配一次快捷指令，每天把步数拼进链接打开本页，
+   页面看到 ?steps= 参数就自动落库。                                     */
+function readStepsParam() {
+  let q = null;
+  try { q = new URLSearchParams(location.search); } catch (e) { return null; }
+  const raw = q.get('steps');
+  if (raw === null || raw === '') return null;
+  // 自动化工具传来的可能是小数（8000.0），也可能带千分位逗号 —— 只取数字主体
+  const m = String(raw).replace(/[,\s]/g, '').match(/^-?\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = Math.round(parseFloat(m[0]));
+  if (!isFinite(n) || n > 300000) return null;
+  let d = (q.get('d') || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) d = todayStr();
+  // a=1：手机端自动化打开（用户可能在睡觉、不会盯着屏幕）⇒ 不弹窗打断，直接给结果并自动退回
+  const auto = q.get('a') === '1';
+  if (n < 0) return { steps: n, date: d, auto, bad: true };
+  return { steps: n, date: d, auto };
+}
+function clearStepsParam() {
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+}
+/* 自动模式（?steps=…&a=1）下没人盯着屏幕，所以：结果用不主动消失的横条说清楚，
+   然后尝试自己退回去（退不回就留着，用户瞄一眼就知道结果） */
+function showSyncBar(text, sub, ms, onTap) {
+  const el = document.createElement('div');
+  el.className = 'sync-bar';
+  el.innerHTML = `<div class="ico">${ICONS.check}</div><div><div>${escapeHtml(text)}</div>${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
+  if (typeof onTap === 'function') {
+    el.style.cursor = 'pointer';
+    el.onclick = () => { el.remove(); onTap(); };
+  }
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); }, ms || 12000);
+}
+function autoLeave() {
+  setTimeout(() => { try { if (history.length > 1) history.back(); } catch (e) {} }, 6000);
+}
+async function flushPendingSteps() {
+  const p = state.pendingSteps || LS.get('pendingSteps', null);
+  if (!p || typeof p.steps !== 'number') return;
+  state.pendingSteps = null; LS.set('pendingSteps', null);
+  const fmt = (x) => Number(x).toLocaleString('zh-CN');
+  if (p.bad) {
+    // 手机重启过 ⇒ 计步器归零 ⇒ 宏算出来的差值是负数。不猜，跳过这次。
+    showSyncBar('这次步数没用上', '同步来的是负数，多半是手机重启过（计步器会归零）');
+    if (p.auto) autoLeave();
+    return;
+  }
+  const goal = Number(LS.get('stepGoal', 8000)) || 8000;
+  let cur = null;
+  try {
+    const q = await cloud.database.from('steps').select('*').eq('record_date', p.date).limit(1).maybeSingle();
+    if (q && !q.error) cur = q.data;
+  } catch (e) { /* 查不到当没有 */ }
+  const old = cur ? Number(cur.steps) : -1;
+  // 同一天的步数只会涨：比已记的多（或本来没记）就直接存，否则先问
+  if (old < 0 || p.steps > old) {
+    const { res, isNew } = await saveStepsValue(p.date, p.steps, goal);
+    if (res.error) {
+      showSyncBar('步数同步失败', errMsg(res.error));
+      if (p.auto) autoLeave();
+      toast('步数同步失败', errMsg(res.error));
+      return;
+    }
+    if (isNew) awardRecordExp();
+    const line = `${fmt(p.steps)} 步 · ${p.date}`;
+    if (p.auto) { showSyncBar('已同步手机步数', line + ' · 这个页面可以关掉了'); autoLeave(); }
+    else toast('已同步手机步数', line);
+    afterStepsSaved();
+    return;
+  }
+  if (p.auto) {
+    // 自动打开时别弹窗等人点：保留原来那条更准的记录，只把结果说清楚
+    showSyncBar('今天已经记过步数', `已记 ${fmt(old)} 步 ≥ 同步的 ${fmt(p.steps)} 步，保留原来的`);
+    autoLeave();
+    return;
+  }
+  openModal(`
+    <div style="text-align:center;padding:8px 0 2px">
+      <div class="num" style="font-size:32px;font-weight:800">${fmt(p.steps)}</div>
+      <div class="muted" style="font-size:12.5px;margin-top:6px">手机同步来的步数 · ${p.date}</div>
+      <div class="note" style="margin-top:12px">这天已经记了 <b>${fmt(old)}</b> 步，比同步来的多。要改成同步值吗？</div>
+    </div>
+    <button class="btn" id="ss-keep">保留原来的 ${fmt(old)}</button>
+    <button class="btn-ghost" id="ss-use">改成 ${fmt(p.steps)}</button>`);
+  setModalTitle('步数对不上');
+  $('#ss-keep').onclick = closeModal;
+  $('#ss-use').onclick = async () => {
+    const { res } = await saveStepsValue(p.date, p.steps, goal);
+    closeModal();
+    if (res.error) { toast('步数同步失败', errMsg(res.error)); return; }
+    toast('已同步手机步数', `${fmt(p.steps)} 步 · ${p.date}`);
+    afterStepsSaved();
+  };
+}
+
+/* ---- 原生 App 上报步数 ----------------------------------------------
+   装了「生活手账」安卓 App 的话，App 自己就能读手机的计步传感器，
+   通过 WebView 的 JS 桥调用下面这个函数把步数交进来 —— 这条路
+   不需要任何外部自动化工具。
+
+   和 ?steps= 那条路的区别：这里用户正开着 App 看着屏幕，所以
+   不弹窗问、也不自动退出，只在真的更新了的时候给一条短提示。   */
+window.lbNativeSteps = async function (steps, date, fresh) {
+  try {
+    const n = Math.round(Number(steps));
+    if (!isFinite(n) || n < 0 || n > 300000) return;
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? String(date) : todayStr();
+    const goal = Number(LS.get('stepGoal', 8000)) || 8000;
+
+    if (!currentUser) {
+      // 还没登录：先存下来，登录后 renderApp 会自动补一次
+      const prev = LS.get('pendingSteps', null);
+      if (!prev || Number(prev.steps) < n) {
+        LS.set('pendingSteps', { steps: n, date: d, auto: true, native: true });
+      }
+      return;
+    }
+
+    let cur = null;
+    try {
+      const q = await cloud.database.from('steps').select('*').eq('record_date', d).limit(1).maybeSingle();
+      if (q && !q.error) cur = q.data;
+    } catch (e) { /* 查不到当没有 */ }
+    const old = cur ? Number(cur.steps) : -1;
+
+    // 传感器有惯性：后台被限制、手机重启都会让读到的值偏小，这时保持原记录不动
+    if (old >= 0 && n <= old) { if (fresh) freshStepTip(d); return; }
+
+    const { res, isNew } = await saveStepsValue(d, n, goal);
+    if (res.error) return;              // 静默失败，不打扰正在用的用户
+
+    if (isNew) awardRecordExp();
+    if (fresh) freshStepTip(d);
+    else showSyncBar('已同步手机步数', `${n.toLocaleString('zh-CN')} 步 · ${d}`, 3200);
+    afterStepsSaved();
+  } catch (e) { /* 桥接层出错不该影响页面本身 */ }
+};
+
+/* ---- 装机当天的校准 --------------------------------------------------
+   安卓的计步器只会说「开机以来一共走了多少步」，它不知道"今天"是从哪一步
+   开始的。所以只要 App（或手机）是今天才起来的，就缺一个"今天零点"的基准，
+   只能从当时的时刻起算 —— 那天必须靠用户告一次真实步数才能对上。
+   之后由 App 每天 23:58 的定时刷新接续，不用再校准。                   */
+function isInApp() { return /LifeBookApp/.test(navigator.userAgent); }
+
+/* 壳的版本号。
+   ⛔ 页面改了线上就生效，但**原生能力（文件选择）改了必须重装 App** —— 用户说"还是不行"时，
+   光看现象分不清是"没重装"还是"代码又坏了"。所以把版本号显示出来，一眼定位。
+   1.4 之前的壳 UA 里写死 LifeBookApp/1.0，取不到真版本 ⇒ 显示"旧版"就是答案。 */
+function appVersion() {
+  if (!isInApp()) return '';
+  try { if (window.LBApp && window.LBApp.ver) return String(window.LBApp.ver()); } catch (e) {}
+  const m = /LifeBookApp\/([\d.]+)/.exec(navigator.userAgent);
+  return m ? m[1] : '';
+}
+/** 版本号比 min 旧（简单点分比较，够用） */
+function verOlderThan(v, min) {
+  if (!v) return true;
+  const a = String(v).split('.').map(Number), b = String(min).split('.').map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] || 0, y = b[i] || 0;
+    if (x !== y) return x < y;
+  }
+  return false;
+}
+
+function freshStepTip(d) {
+  const key = 'freshTip:' + d;
+  if (LS.get(key, null)) return;        // 同一天只提醒一次，别烦人
+  LS.set(key, 1);
+  showSyncBar('今天步数从此刻起算', '计步器只记"开机以来"，不知道今天零点在哪 · 点这里校准', 9000, openStepCalibrate);
+}
+
+let calibWaiting = false;
+function openStepCalibrate() {
+  const ok = isInApp() && !!(window.LBApp && window.LBApp.calibrate);
+  const today = todayStr();
+  const rec = (state.steps || []).find(r => String(r.record_date) === today) || null;
+  openModal(`
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      手机的计步器只告诉 App「<b>开机以来一共走了多少步</b>」——它不知道"今天"是从哪一步开始的。<br>
+      所以刚装 App 那天（或手机重启后），步数只能<b>从当时的时刻</b>开始算。把今天真实的步数告一次，
+      基准就对上了，<b>以后每天都自动准，不用再管</b>。
+    </div>
+    <div class="field"><label>今天到现在，实际走了多少步</label>
+      <input id="sc-num" type="number" min="0" inputmode="numeric" placeholder="例如 6280" value="${rec ? Number(rec.steps) : ''}">
+    </div>
+    <p class="sy-p" style="color:var(--text-3)">去哪看：手机自带的「健康」App，或者微信运动 —— 首页那个数字就是今天的累计。</p>
+    ${ok ? '' : `<div class="note" style="text-align:left">校准要靠 App 里的计步器，网页版读不到手机步数。</div>`}
+    <button class="btn" id="sc-go" ${ok ? '' : 'disabled'}>${ok ? '校准' : '装 App 后即可校准'}</button>
+    <button class="btn-ghost" id="sc-later">以后再说</button>`);
+  setModalTitle('校准今日步数');
+  $('#sc-later').onclick = closeModal;
+  if (ok) $('#sc-go').onclick = doCalibrate;
+}
+
+function doCalibrate() {
+  const el = $('#sc-num');
+  const n = parseInt(String(el ? el.value : '').trim(), 10);
+  if (!isFinite(n) || n < 0 || n > 200000) { toast('请填 0 ~ 200000 之间的整数'); return; }
+  if (calibWaiting) return;
+  calibWaiting = true;
+  const btn = $('#sc-go');
+  if (btn) { btn.disabled = true; btn.textContent = '校准中…'; }
+  try { window.LBApp.calibrate(n); }
+  catch (e) { calibWaiting = false; toast('校准失败，请重试'); return; }
+  // 原生读完传感器会回调 lbCalibResult；这里超时兜底，免得按钮一直转
+  setTimeout(() => {
+    if (!calibWaiting) return;
+    calibWaiting = false;
+    const b = $('#sc-go');
+    if (!b) return;                      // 弹窗已关，别打扰
+    b.disabled = false; b.textContent = '校准';
+    toast('没读到计步器', '确认手机设置里给了「身体活动」权限');
+  }, 6000);
+}
+
+window.lbCalibResult = async function (today, date) {
+  if (!calibWaiting) return;             // 不是我们发起的，忽略
+  calibWaiting = false;
+  try {
+    const n = Math.round(Number(today));
+    if (!isFinite(n) || n < 0) { toast('校准失败', '这台手机读不到计步器'); return; }
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(date || '')) ? String(date) : todayStr();
+    const goal = Number(LS.get('stepGoal', 8000)) || 8000;
+    closeModal();
+    const { res, isNew } = await saveStepsValue(d, n, goal);
+    if (res.error) { toast('校准成功，但保存失败', errMsg(res.error)); return; }
+    if (isNew) awardRecordExp();
+    toast('校准完成', `${n.toLocaleString('zh-CN')} 步 · 以后每天自动算准`);
+    afterStepsSaved();
+  } catch (e) { toast('校准失败，请重试'); }
+};
+
+function openStepSync() {
+  const base = location.origin + location.pathname;
+  const apk = location.origin + '/download/life-book.apk';
+  const demo = `${base}?steps=8321&a=1`;
+  const inApp = isInApp();
+  const av = appVersion();
+  const avWarn = inApp && verOlderThan(av, '1.4');
+  openModal(`
+    <div class="sy-ver">当前：${inApp
+      ? `应用版本 <b>v${escapeHtml(av || '未知（旧版）')}</b>${avWarn ? ' · <span style="color:var(--amber)">旧版，建议往下重新下载安装包</span>' : ''}`
+      : '网页版（浏览器打开）'}</div>
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      网页（包括"加到主屏幕"的）<b>读不到手机的步数</b>——这是浏览器的安全限制，iPhone 也一样。<br>
+      解决办法往下看，<b>第一条最省事</b>。
+    </div>
+
+    <div class="field"><label>同步链接（iPhone 快捷指令用）</label>
+      <input id="sy-url" type="text" readonly value="${escapeHtml(demo)}" class="sy-url">
+    </div>
+    <button class="btn-ghost" id="sy-copy">复制链接</button>
+
+    <div class="sy-t"><em>1</em>用安卓 App（推荐）</div>
+    ${inApp ? `
+      <p class="sy-p">你现在<b>正在用 App 版本</b>——它能自己读手机的计步器，不用再配任何东西。<br>
+        每天打开一次就自动同步当天步数。</p>
+      <p class="sy-p">计步器只告诉 App「<b>开机以来一共走了多少步</b>」，它不知道"今天"从哪一步开始。
+        所以<b>刚装那天</b>（或手机重启后）会从当时的时刻起算 —— 点下面校准一次，
+        填上手机健康 App 里的今日步数，之后每天都自动准。</p>
+      <button class="btn" id="sy-calib">校准今日步数</button>
+      <p class="sy-p" style="color:var(--text-3);margin-top:8px">如果步数一直不涨：手机设置 → 应用管理 → 生活手账 → 权限，把<b>「身体活动 / 健身运动」</b>打开。
+        （首次启动时如果点了"拒绝"，就会是现在这样。）</p>
+    ` : `
+      <p class="sy-p">装上之后 App 能<b>直接读手机计步器</b>，什么自动化工具都不用配，每天打开一次自动同步。</p>
+      <button class="btn" id="sy-apk">下载安装包 · 约 0.3 MB</button>
+      <p class="sy-p" style="color:var(--text-3);margin-top:8px">
+        点上面按钮下载 → 打开文件安装（会提示"未知来源"，允许即可）。<br>
+        首次启动会问「允许访问活动数据吗」，选 <b>允许</b>——读步数就靠它。
+      </p>
+    `}
+
+    <div class="sy-t"><em>2</em>iPhone：用「快捷指令」</div>
+    <ol class="sy-steps">
+      <li>打开「快捷指令」→ 右上角 <b>+</b> 新建</li>
+      <li>加操作「<b>获取健康样本</b>」：类型选<b>步数</b>，时间范围<b>今天</b>，"获取"选<b>总和</b></li>
+      <li>再加「<b>打开 URL</b>」，内容填：<code>${escapeHtml(base)}?steps=</code>，后面接上一步的结果变量，末尾补 <code>&amp;a=1</code></li>
+      <li>命名保存，例如「记步数」</li>
+      <li>要全自动：切到「<b>自动化</b>」标签 → 新建 → <b>特定时间</b> 每天 23:00 → 运行这个快捷指令，并关掉「<b>运行前询问</b>」</li>
+    </ol>
+
+    <div class="sy-t"><em>3</em>什么都不想弄</div>
+    <p class="sy-p">从手机自带的「健康」App 或微信运动看一眼数字，回「运动」页点今日步数卡片填进去，几秒钟的事。同一天改第二次会覆盖，不会重复累加。</p>
+
+    <p class="sy-p" style="color:var(--text-3);margin-top:14px">链接末尾的 <span class="k">&amp;a=1</span> 是"自动模式"：同步成功不弹窗打断，只在顶部显示结果并自动退回——给"没人盯着屏幕"的定时同步用的。手动打开时可以带上，也可以不带。</p>`);
+  setModalTitle('手机步数同步');
+  const apkBtn = $('#sy-apk');
+  if (apkBtn) apkBtn.onclick = () => { location.href = apk; };
+  const calibBtn = $('#sy-calib');
+  if (calibBtn) calibBtn.onclick = openStepCalibrate;
+  $('#sy-copy').onclick = async () => {
+    const el = $('#sy-url');
+    try { el.select(); el.setSelectionRange(0, 9999); } catch (e) {}
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    if (!ok && navigator.clipboard) { try { await navigator.clipboard.writeText(demo); ok = true; } catch (e) {} }
+    toast(ok ? '链接已复制' : '请长按输入框手动复制');
+  };
+}
+
+/* ================= Profile（我的） ================= */
+async function renderProfile() {
+  const v = $('#view');
+  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  const email = (currentUser && currentUser.email) || '';
+  const uid = (currentUser && (currentUser.id || currentUser.sub)) || '';
+  let counts = { expense:'-', diary:'-', life:'-', sport:'-', health:'-', steps:'-' };
+  try {
+    const [, e, d, l, s, h, st] = await Promise.all([
+      ensurePet(),
+      cloud.database.from('expense').select('id').limit(5000),
+      cloud.database.from('diary').select('id').limit(5000),
+      cloud.database.from('life').select('id').limit(5000),
+      cloud.database.from('sport').select('id').limit(5000),
+      cloud.database.from('health').select('id').limit(5000),
+      cloud.database.from('steps').select('id').limit(5000)
+    ]);
+    counts = {
+      expense: (e.data||[]).length, diary: (d.data||[]).length, life: (l.data||[]).length,
+      sport: (s.data||[]).length, health: (h.data||[]).length, steps: (st.data||[]).length
+    };
+  } catch(err) { console.warn('profile counts', err); }
+
+  const nick = getNick();
+  const extra = LS.get('cats', []);
+  const themeId = LS.get('theme', 'aurora');
+  const themeName = (THEMES.find(t => t.id === themeId) || THEMES[0]).name;
+
+  v.innerHTML = `
+    <div class="me-hero">
+      <div class="me-avatar" id="me-avatar" title="点头像换">${avatarInner(email)}</div>
+      <div class="me-email">${escapeHtml(email)}</div>
+      <div class="me-meta">已登录 · 数据已同步到云端</div>
+      <div class="muted" style="font-size:11.5px;margin-top:8px">点头像可以换</div>
+    </div>
+
+    <div class="sec">我的伙伴</div>
+    ${petCardHTML()}
+
+    <div class="sec">外观与个性化</div>
+    <div class="me-list">
+      <div class="me-item" id="mi-avatar">
+        <div class="me-ico" style="color:var(--pink)">${ICONS.user}</div>
+        <div class="me-txt"><div class="t">我的头像</div><div class="s">${avatarVal === 'upload' ? '自己上传的图片 · 存在云端' : avatarVal.indexOf('skin:') === 0 ? '伙伴立绘 · ' + escapeHtml((PET_SKINS.find(s => s.id === avatarVal.slice(5)) || {}).name || '') : '默认 · 用邮箱首字母'}</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-nick">
+        <div class="me-ico" style="color:var(--brand)">${ICONS.user}</div>
+        <div class="me-txt"><div class="t">我的昵称</div><div class="s">${nick ? escapeHtml(nick) + ' · 首页会按时段问候你' : '未设置 · 设置后首页问候你'}</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-cats">
+        <div class="me-ico" style="color:var(--cyan)">${ICONS.expense}</div>
+        <div class="me-txt"><div class="t">记账分类</div><div class="s">内置 ${BASE_CATS.length} 类${extra.length ? ' · 自定义 ' + extra.length + ' 个' : ' · 可添加自己的'}</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="sec">主题色 · ${escapeHtml(themeName)}</div>
+    <div class="card">
+      <div class="theme-grid">
+        ${THEMES.map(t => `<button class="theme-dot ${themeId === t.id ? 'on' : ''}" data-theme-id="${t.id}" aria-label="${t.name}" title="${t.name}" style="background:${t.c}"></button>`).join('')}
+      </div>
+    </div>
+
+    <div class="sec">账号与安全</div>
+    <div class="me-list">
+      <div class="me-item" id="mi-pwd">
+        <div class="me-ico" style="color:var(--brand)">${ICONS.lock}</div>
+        <div class="me-txt"><div class="t">修改密码</div><div class="s">只需旧密码 + 新密码，不用收验证码</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-reset">
+        <div class="me-ico" style="color:var(--amber)">${ICONS.mail}</div>
+        <div class="me-txt"><div class="t">忘记密码，用邮箱验证码重置</div><div class="s">旧密码想不起来时走这条路</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-out">
+        <div class="me-ico" style="color:var(--out)">${ICONS.out}</div>
+        <div class="me-txt"><div class="t" style="color:var(--out)">退出登录</div><div class="s">数据保留在云端，下次登录继续</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="sec">我的数据</div>
+    <div class="me-list">
+      <div class="me-item"><div class="me-ico" style="color:var(--brand)">${ICONS.expense}</div><div class="me-txt"><div class="t">记账</div></div><div class="me-count">${counts.expense} 笔</div></div>
+      <div class="me-item"><div class="me-ico" style="color:var(--brand)">${ICONS.diary}</div><div class="me-txt"><div class="t">日记</div></div><div class="me-count">${counts.diary} 篇</div></div>
+      <div class="me-item"><div class="me-ico" style="color:var(--brand)">${ICONS.life}</div><div class="me-txt"><div class="t">生活</div></div><div class="me-count">${counts.life} 条</div></div>
+      <div class="me-item"><div class="me-ico" style="color:var(--brand)">${ICONS.sport}</div><div class="me-txt"><div class="t">运动</div></div><div class="me-count">${counts.sport} 次</div></div>
+      <div class="me-item"><div class="me-ico" style="color:var(--pink)">${ICONS.health}</div><div class="me-txt"><div class="t">健康</div></div><div class="me-count">${counts.health} 条</div></div>
+      <div class="me-item" id="mi-steps"><div class="me-ico" style="color:var(--cyan)">${ICONS.shoe}</div><div class="me-txt"><div class="t">步数</div><div class="s">App 自动同步 · 看数据在「运动」页</div></div><div class="me-count">${counts.steps} 天</div></div>
+    </div>
+
+    <div class="sec">数据与备份</div>
+    <div class="me-list">
+      <div class="me-item" id="mi-sync">
+        <div class="me-ico" style="color:var(--cyan)">${ICONS.shoe}</div>
+        <div class="me-txt"><div class="t">手机步数自动同步</div><div class="s">配一次快捷指令，手机把步数自动记进来</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-export">
+        <div class="me-ico" style="color:var(--in)">${ICONS.chart}</div>
+        <div class="me-txt"><div class="t">导出全部数据</div><div class="s">打包成 JSON 文件下载留底，可自己另存</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-import">
+        <div class="me-ico" style="color:var(--brand)">${ICONS.plus}</div>
+        <div class="me-txt"><div class="t">导入历史数据</div><div class="s">从正气等 App 把旧日记、运动搬过来</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="sec">关于</div>
+    <div class="me-list">
+      <div class="me-item">
+        <div class="me-ico" style="color:var(--cyan)">${ICONS.shield}</div>
+        <div class="me-txt"><div class="t">隐私</div><div class="s">数据库按账号强制隔离，只有登录本人能看到自己的记录</div></div>
+      </div>
+      <div class="me-item">
+        <div class="me-ico" style="color:var(--text-3)">${ICONS.info}</div>
+        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.2${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
+      </div>
+    </div>
+    `;
+  const miSteps = $('#mi-steps');
+  if (miSteps) miSteps.onclick = openStepsForm;
+  const pcMe = $('#pet-card');
+  if (pcMe) bindPetCard();
+  $('#me-avatar').onclick = openAvatarPicker;
+  $('#mi-avatar').onclick = openAvatarPicker;
+  $('#mi-sync').onclick = openStepSync;
+  $('#mi-nick').onclick = openNick;
+  $('#mi-cats').onclick = openCats;
+  $('#mi-export').onclick = exportData;
+  $('#mi-import').onclick = openImport;
+  $$('.theme-dot').forEach(b => b.onclick = () => {
+    LS.set('theme', b.dataset.themeId);
+    applyTheme(b.dataset.themeId);
+    switchTab('me');
+  });
+  $('#mi-pwd').onclick = openChangePwd;
+  $('#mi-reset').onclick = openResetPwd;
+  $('#mi-out').onclick = confirmSignOut;
+}
+
+/* ================= 个性化设置 ================= */
+function openNick() {
+  const cur = getNick();
+  openModal(`
+    <div class="field">
+      <label>昵称</label>
+      <input id="n-name" type="text" maxlength="12" placeholder="最多 12 个字" value="${escapeHtml(cur)}">
+    </div>
+    <button class="btn" id="n-save">保存</button>
+    ${cur ? '<button class="btn-ghost danger" id="n-clear">清除昵称</button>' : ''}`);
+  setModalTitle('我的昵称');
+  $('#n-save').onclick = () => {
+    LS.set('nick', $('#n-name').value.trim().slice(0, 12));
+    closeModal(); renderApp(); switchTab('me');
+  };
+  const clr = $('#n-clear');
+  if (clr) clr.onclick = () => { LS.set('nick', ''); closeModal(); renderApp(); switchTab('me'); };
+}
+
+function openCats() {
+  openModal(`
+    <div class="field"><label>我的自定义分类</label><div class="cat-edit" id="c-list"></div></div>
+    <div class="field-row">
+      <div class="field"><label>新增分类</label><input id="c-new" type="text" maxlength="6" placeholder="如：宠物、游戏"></div>
+      <button type="button" class="btn-code" id="c-add">添加</button>
+    </div>
+`);
+  setModalTitle('记账分类');
+  const paint = () => {
+    const list = LS.get('cats', []);
+    $('#c-list').innerHTML = list.length
+      ? list.map((c, i) => `<span class="cat-x" data-i="${i}">${escapeHtml(c)} <em>×</em></span>`).join('')
+      : '<span class="muted" style="font-size:12px">还没有自定义分类</span>';
+    $$('#c-list .cat-x').forEach(el => el.onclick = () => {
+      const arr = LS.get('cats', []); arr.splice(Number(el.dataset.i), 1);
+      LS.set('cats', arr); paint();
+    });
+  };
+  paint();
+  $('#c-add').onclick = () => {
+    const v = $('#c-new').value.trim();
+    if (!v) return;
+    const arr = LS.get('cats', []);
+    if (arr.includes(v) || BASE_CATS.includes(v)) { $('#c-new').value = ''; return; }
+    arr.push(v); LS.set('cats', arr); $('#c-new').value = '';
+    paint();
+  };
+}
+
+async function exportData() {
+  const btn = $('#mi-export');
+  if (btn) btn.style.opacity = '.5';
+  try {
+    const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps', 'checkin', 'pet'];
+    const out = { app: '生活手账', exported_at: new Date().toISOString(), account: (currentUser && currentUser.email) || '', counts: {}, data: {} };
+    for (const t of tables) {
+      const { data, error } = await cloud.database.from(t).select('*').order('record_date', { ascending: false }).limit(100000);
+      if (error) throw error;
+      out.data[t] = data || [];
+      out.counts[t] = (data || []).length;
+    }
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `生活手账-备份-${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    alert(`已导出 ${Object.values(out.counts).reduce((s, n) => s + n, 0)} 条记录`);
+  } catch (e) {
+    alert('导出失败：' + errMsg(e));
+  } finally {
+    if (btn) btn.style.opacity = '1';
+  }
+}
+
+/* ================= 导入历史数据（换 App 时搬旧账） =================
+   换应用最麻烦的从来不是"以后怎么记"，而是"以前那些记录怎么办"。
+   两条路：
+     ① 粘贴文本 —— 从正气 / 备忘录 / Excel 里复制出来，按日期切成一条条
+     ② JSON 备份 —— 生活手账自己「导出全部数据」生成的那个文件，全量恢复
+   文本解析故意写得宽松：每行（或每段）以日期开头就能认出来。        */
+let impRows = [], impTarget = 'diary';
+const IMP_TARGETS = [
+  { id: 'diary', name: '日记' },
+  { id: 'sport', name: '运动' },
+  { id: 'life',  name: '生活' }
+];
+
+function openImport() {
+  impRows = []; impTarget = 'diary';
+  openModal(`
+    <div class="note" style="text-align:left;margin-bottom:10px">
+      从别的 App 搬过来（<b>正气</b>、备忘录、Excel…）：把记录<b>复制成文字粘贴</b>进来就行。<br>
+      规则很宽松 —— 每行以日期开头即可：<br>
+      <code>2024-03-15 今天跑了 5 公里</code><br>
+      日期单独占一行、下面几行都算这篇的内容，也可以。<br><br>
+      <b>正气用户走下面这个最省事</b>：正气 → 我的 → 设置 → 数据备份与恢复 → 备份数据到SD卡，
+      把导出的 <code>backup</code> 文件直接选进来，会自动认出来并搬好。
+    </div>
+    <div id="im-paste">
+      <div class="field"><label>导入到</label>
+        <select id="im-target">${IMP_TARGETS.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>粘贴记录</label>
+        <textarea id="im-text" style="min-height:150px" placeholder="2024-03-15 今天跑了 5 公里，很爽&#10;2024-03-16 下雨，在家做力量训练 30 分钟"></textarea>
+      </div>
+      <button class="btn" id="im-parse">解析预览</button>
+    </div>
+    <label class="btn-ghost file-pick" id="im-file" style="text-align:center">选择备份文件（正气 backup / 本应用 JSON）…
+      <!-- accept 放开成 */*：正气的备份文件没有扩展名，限死类型反而让用户在选择器里找不到它 -->
+      <input type="file" id="im-file-in" accept="*/*">
+    </label>
+    <div id="im-preview"></div>`);
+  setModalTitle('导入历史数据');
+  $('#im-target').onchange = (e) => { impTarget = e.target.value; impRows = []; $('#im-preview').innerHTML = ''; };
+  $('#im-parse').onclick = parseImportPreview;
+  // 同上：靠铺满按钮的透明 input 吃点击，不用 JS 转发
+  const imIn = $('#im-file-in');
+  imIn.onchange = onImportFile;
+  watchFilePick(imIn);
+}
+
+/* 认日期：2024-03-15 / 2024/3/15 / 2024.3.15 / 2024年3月15日 / 3月15日 / 3-15（当年）
+   允许外面套 【】[]（） 这类括号，后面跟的逗号冒号也一并吃掉 */
+function impMatchDate(line) {
+  const s = String(line || '');
+  let m = s.match(/^\s*[【\[（(]?\s*(\d{4})\s*[-/.年]\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?\s*[】\]）)]?/);
+  if (m) return { y: +m[1], mo: +m[2], d: +m[3], len: m[0].length };
+  m = s.match(/^\s*[【\[（(]?\s*(\d{1,2})\s*[-/.月]\s*(\d{1,2})\s*日?\s*[】\]）)]?/);
+  if (m && +m[1] <= 12 && +m[2] <= 31) return { y: new Date().getFullYear(), mo: +m[1], d: +m[2], len: m[0].length };
+  return null;
+}
+
+function parseImportText(raw) {
+  const out = [];
+  let cur = null;
+  for (const rawLine of String(raw || '').replace(/\r\n?/g, '\n').split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    const dm = impMatchDate(line);
+    if (dm) {
+      const rest = line.slice(dm.len).replace(/^[\s,，:：、.。\-—_]+/, '').trim();
+      cur = { date: `${dm.y}-${pad2(dm.mo)}-${pad2(dm.d)}`, text: rest };
+      out.push(cur);
+    } else if (cur) {
+      cur.text = cur.text ? cur.text + '\n' + line : line;   // 续行：算上一条的内容
+    } else {
+      out.push({ date: '', text: line });                    // 开头就没有日期，预览里标出来
+    }
+  }
+  return out.filter(r => r.text);
+}
+
+function parseImportPreview() {
+  const box = $('#im-preview');
+  const rows = parseImportText($('#im-text').value);
+  if (!rows.length) {
+    box.innerHTML = `<div class="msg show err" style="display:block;margin-top:12px">没解析出内容 —— 每行要以日期开头，例如 <code>2024-03-15 跑步 5 公里</code></div>`;
+    return;
+  }
+  const valid = rows.filter(r => r.date);
+  const bad = rows.length - valid.length;
+  impRows = valid;
+  box.innerHTML = `
+    <div class="msg show ${valid.length ? 'ok' : 'err'}" style="display:block;margin-top:12px">
+      解析出 <b>${valid.length}</b> 条${bad ? `，另有 ${bad} 行没写日期已跳过` : ''}
+    </div>
+    <div style="max-height:200px;overflow:auto;margin-top:10px;border:1px solid var(--line);border-radius:12px">
+      ${rows.slice(0, 50).map(r => `
+        <div style="padding:9px 12px;border-bottom:1px solid var(--line)">
+          <div style="font-size:11.5px;color:${r.date ? 'var(--brand)' : 'var(--out)'}">${r.date ? escapeHtml(r.date) : '日期没认出来'}</div>
+          <div style="font-size:13px;margin-top:3px;line-height:1.5;white-space:pre-wrap">${escapeHtml(r.text)}</div>
+        </div>`).join('')}
+    </div>
+    ${rows.length > 50 ? `<div class="muted" style="font-size:11.5px;margin-top:6px">…还有 ${rows.length - 50} 条没展开</div>` : ''}
+    ${valid.length ? `<button class="btn" id="im-do" style="margin-top:12px">导入这 ${valid.length} 条</button>` : ''}`;
+  const b = $('#im-do');
+  if (b) b.onclick = doImport;
+}
+
+function guessSportKind(text) {
+  const t = String(text || '');
+  if (/跑|慢跑|马拉松|越野/.test(t)) return '跑步';
+  if (/游泳|泳池|泳/.test(t)) return '游泳';
+  if (/骑行|单车|自行车|骑车/.test(t)) return '骑行';
+  if (/瑜伽/.test(t)) return '瑜伽';
+  if (/球/.test(t)) return '球类';
+  if (/操|帕梅拉|有氧/.test(t)) return '健身操';
+  if (/力量|器械|撸铁|深蹲|卧推|硬拉|俯卧撑/.test(t)) return '力量';
+  if (/散步|徒步|走/.test(t)) return '散步';
+  return '其他';
+}
+
+function impToPayload(r, target) {
+  if (target === 'diary') return { record_date: r.date, title: '', content: r.text, mood: '' };
+  if (target === 'life')  return { record_date: r.date, content: r.text, tags: [] };
+  const t = r.text;
+  const p = { record_date: r.date, kind: guessSportKind(t), note: t, duration_min: null, distance_km: null, calories: null };
+  const mn = t.match(/(\d+(?:\.\d+)?)\s*(?:分钟|分鐘|min\b|分)/i);
+  const hr = t.match(/(\d+(?:\.\d+)?)\s*(?:小时|小時|hour|h\b)/i);
+  if (mn) p.duration_min = Math.round(parseFloat(mn[1]));
+  else if (hr) p.duration_min = Math.round(parseFloat(hr[1]) * 60);
+  const km = t.match(/(\d+(?:\.\d+)?)\s*(?:公里|千米|km\b)/i);
+  if (km) p.distance_km = parseFloat(km[1]);
+  return p;
+}
+
+/* 去重键：日期 + 正文（日记/生活看 content，运动看 note）——同一份文本导两次不会翻倍 */
+function impKey(r) {
+  if (!r) return '';
+  const t = (r.content != null && r.content !== '') ? r.content : (r.note != null ? r.note : '');
+  return String(r.record_date || '') + '|' + String(t || '').replace(/\s+/g, '').slice(0, 200);
+}
+
+async function doImport() {
+  if (!impRows.length) return;
+  const target = impTarget;
+  const name = (IMP_TARGETS.find(t => t.id === target) || {}).name || target;
+  const btn = $('#im-do');
+  if (btn) { btn.disabled = true; btn.textContent = '导入中…'; }
+  let ok = 0, skip = 0, fail = 0;
+  try {
+    const { data: exist } = await cloud.database.from(target).select('*').limit(100000);
+    const seen = new Set((exist || []).map(impKey));
+    const push = [];
+    for (const r of impRows) {
+      const p = impToPayload(r, target);
+      const k = impKey(p);
+      if (seen.has(k)) { skip++; continue; }
+      seen.add(k);
+      push.push(p);
+    }
+    for (let i = 0; i < push.length; i += 80) {
+      const chunk = push.slice(i, i + 80);
+      const { error } = await cloud.database.from(target).insert(chunk).select();
+      if (error) { fail += chunk.length; console.warn('import', error); }
+      else ok += chunk.length;
+    }
+  } catch (e) {
+    alert('导入失败：' + errMsg(e));
+    if (btn) { btn.disabled = false; btn.textContent = '重试'; }
+    return;
+  }
+  closeModal();
+  toast(`导入 ${ok} 条`, [skip ? `跳过重复 ${skip} 条` : '', fail ? `失败 ${fail} 条` : '', `已归到「${name}」`].filter(Boolean).join(' · '));
+  if (activeTab === target) {
+    if (target === 'diary') renderDiaryList();
+    else if (target === 'sport') renderSportList();
+    else renderLifeList();
+  } else if (activeTab === 'me') renderProfile();
+}
+
+/* ---- ② JSON 备份恢复：导出过的整包数据原样搬回来（按 日期+内容 去重） ---- */
+function onImportFile(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    let obj = null;
+    try { obj = JSON.parse(fr.result); }
+    catch (err) { alert('这个文件不是 JSON，读不出来（' + errMsg(err) + '）'); return; }
+    // ⛔ 先认正气（它顶层是 records 数组）；生活手账自己的备份是 {app, exported_at, data:{表名:[…]}}，
+    //    data 是**对象**不是数组 —— 早先写成 Array.isArray(obj.data) 会把自家备份判成认不出来
+    if (obj && Array.isArray(obj.records)) {
+      const paste = $('#im-paste');
+      if (paste) paste.style.display = 'none';      // 认出来了，粘贴框就不需要了
+      zqPreview(obj);
+      return;
+    }
+    if (obj && obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data)) { restoreBackup(obj); return; }
+    alert('没认出这个文件。\n支持两种：生活手账自己导出的 JSON 备份，或正气 App 的备份文件（backup）。');
+  };
+  fr.readAsText(f);
+  e.target.value = '';
+}
+
+async function restoreBackup(obj) {
+  if (!obj || !obj.data) { alert('这个 JSON 里没有 data 字段，不像是生活手账导出的备份'); return; }
+  const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps'];
+  const lines = [];
+  for (const t of tables) {
+    const rows = obj.data[t];
+    if (!Array.isArray(rows) || !rows.length) continue;
+    let ok = 0, skip = 0;
+    try {
+      const { data: exist } = await cloud.database.from(t).select('*').limit(100000);
+      const seen = new Set((exist || []).map(impKey));
+      const push = [];
+      for (const r of rows) {
+        const k = impKey(r);
+        if (seen.has(k)) { skip++; continue; }
+        seen.add(k);
+        const o = Object.assign({}, r);
+        delete o.id; delete o.owner_id; delete o.created_at; delete o.updated_at;   // 让云端重新发号
+        push.push(o);
+      }
+      for (let i = 0; i < push.length; i += 80) {
+        const { error } = await cloud.database.from(t).insert(push.slice(i, i + 80)).select();
+        if (error) { console.warn('restore', t, error); } else ok += Math.min(80, push.length - i);
+      }
+    } catch (e) { console.warn('restore', t, e); }
+    lines.push(`${t} +${ok}${skip ? `（重复 ${skip}）` : ''}`);
+  }
+  closeModal();
+  toast('备份已恢复', lines.join(' · ') || '这个备份里没有可恢复的记录');
+  if (activeTab === 'me') renderProfile();
+  else renderHome();
+}
+
+/* ---- ③ 正气 App 的备份（backup.txt / backup.json）----------------------
+   正气：我的 → 设置 → 数据备份与恢复 → 备份数据到SD卡，导出的就是这份：
+     {"version":2,"backup_time":"2026-09-26 18:37","first_start":20250524,
+      "records":[{"calendar":20260926,"zw":2,"good":"护眼#&#护肤","zen":"日记#&#学习","sports":"行走"}]}
+   · calendar 是 20260926 这种紧凑日期；文本项用 '#&#' 分隔多条
+   · ⚠ 正气的备份**只含「记录日历」的勾选项，不含日记正文**（日记是 App 本地功能，不进备份）
+   · 数字型记录项（zw/kh/yw 之类）名字未知 ⇒ 先在预览里报出来，确认了填进 ZQ_NUM 就能一起导 */
+/* ⚠ 数组顺序 = 合并后同一张卡片里各行的上下顺序（修行在上，跟用户列表里看到的一致） */
+const ZQ_TEXT = [
+  { key: 'zen',  label: '修行',     tag: '修行' },
+  { key: 'good', label: '良好习惯', tag: '习惯' }
+];
+/* 正气里那几个「数字型」记录项原本看不出叫什么，用户确认 zw = 自慰；其余（kh/yw/fs/yj/yy）仍留空不导。
+   ⚠ 数字型 = 「一天几次」⇒ 进「健康」表（times + note），不要再塞进「生活」当文本记录。 */
+const ZQ_NUM = { zw: '自慰' };
+const ZQ_SPORT_KIND = {
+  '行走': '散步', '散步': '散步', '走路': '散步', '徒步': '散步', '爬坡': '散步', '爬山': '散步',
+  '跑步': '跑步', '慢跑': '跑步', '骑行': '骑行', '单车': '骑行', '游泳': '游泳',
+  '球类': '球类', '瑜伽': '瑜伽', '室内': '其他', '户外': '其他'
+};
+let zqPlanData = null;
+
+function zqDateOf(n) {
+  const s = n == null ? '' : String(n);
+  return /^\d{8}$/.test(s) ? `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}` : '';
+}
+function zqItems(v) {
+  return String(v == null ? '' : v).split('#&#').map(x => x.trim()).filter(Boolean);
+}
+function zqSportKind(items) {
+  for (const it of items) if (ZQ_SPORT_KIND[it]) return ZQ_SPORT_KIND[it];
+  return guessSportKind(items.join(' '));
+}
+
+function zqBuildPlan(obj) {
+  const recs = Array.isArray(obj.records) ? obj.records : [];
+  const life = [], sport = [], health = [], unknown = [];
+  const seenNum = {};
+  let days = 0, blank = 0;
+  for (const r of recs) {
+    if (!r) continue;
+    const d = zqDateOf(r.calendar);
+    if (!d) continue;
+    let hit = false;
+    /* ⭐ 同一天的文本记录（良好习惯 / 修行）合并成一条 —— 生活页一天只占一张卡。
+       行顺序 = ZQ_TEXT 顺序；标签取并集；**不再打「正气」标记**（用户要求去掉） */
+    const lines = [], tagSet = [];
+    const add = (content, ts) => {
+      hit = true;
+      lines.push(content);
+      (ts || []).forEach(t => { const s = String(t).trim(); if (s && !tagSet.includes(s)) tagSet.push(s); });
+    };
+    for (const t of ZQ_TEXT) {
+      const items = zqItems(r[t.key]);
+      if (items.length) add(t.label + '：' + items.join('、'), [t.tag]);
+    }
+    const sp = zqItems(r.sports);
+    if (sp.length) {
+      hit = true;
+      sport.push({ record_date: d, kind: zqSportKind(sp), duration_min: null,
+                   /* 备注不再带「正气 · 」前缀（用户要求），备注本身就是去重键的一部分，
+                      所以库里旧数据也要同步改成这个形状，否则重导会翻倍 */
+                   distance_km: null, calories: null, note: sp.join('、') });
+    }
+    for (const k in r) {
+      if (k === 'calendar' || k === 'sports') continue;
+      if (ZQ_TEXT.some(t => t.key === k)) continue;
+      const v = r[k];
+      if (typeof v === 'number') {
+        if (!v) continue;
+        /* 数字型记录项 = 「一天做了几次」⇒ 落「健康」表（那里本来就是 次数 + 月度统计的形态） */
+        if (ZQ_NUM[k]) { hit = true; health.push({ record_date: d, times: v, note: ZQ_NUM[k] }); }
+        else { if (!seenNum[k]) { seenNum[k] = { days: 0, max: 0 }; unknown.push(k); } seenNum[k].days++; seenNum[k].max = Math.max(seenNum[k].max, v); }
+        continue;
+      }
+      const items = zqItems(v);
+      if (items.length) add(k + '：' + items.join('、'));   // 以后正气新增的记录项也照收
+    }
+    if (lines.length) life.push({ record_date: d, content: lines.join('\n'), tags: tagSet });
+    if (hit) days++; else blank++;
+  }
+  return { life, sport, health, days, blank, total: recs.length, unknown, seenNum, backup_time: obj.backup_time };
+}
+
+function zqPreview(obj) {
+  const box = $('#im-preview');
+  const p = zqBuildPlan(obj);
+  zqPlanData = p;
+  const n = p.life.length + p.sport.length + p.health.length;
+  box.innerHTML = `
+    <div class="msg show ok" style="display:block;margin-top:12px">
+      识别到<b>「正气」的备份</b>${p.backup_time ? `（${escapeHtml(String(p.backup_time))}）` : ''}<br>
+      共 ${p.total} 天记录，其中 ${p.days} 天有内容
+    </div>
+    <div style="max-height:190px;overflow:auto;margin-top:10px;border:1px solid var(--line);border-radius:12px">
+      ${p.life.slice(0, 12).map(r => `
+        <div style="padding:9px 12px;border-bottom:1px solid var(--line)">
+          <div style="font-size:11.5px;color:var(--brand)">${escapeHtml(r.record_date)} · 生活</div>
+          <div style="font-size:13px;margin-top:3px;line-height:1.5">${escapeHtml(r.content)}</div>
+        </div>`).join('')}
+      ${p.sport.slice(0, 6).map(r => `
+        <div style="padding:9px 12px;border-bottom:1px solid var(--line)">
+          <div style="font-size:11.5px;color:var(--brand)">${escapeHtml(r.record_date)} · 运动</div>
+          <div style="font-size:13px;margin-top:3px;line-height:1.5">${escapeHtml(r.kind)} · ${escapeHtml(r.note)}</div>
+        </div>`).join('')}
+      ${p.health.slice(0, 4).map(r => `
+        <div style="padding:9px 12px;border-bottom:1px solid var(--line)">
+          <div style="font-size:11.5px;color:var(--brand)">${escapeHtml(r.record_date)} · 健康</div>
+          <div style="font-size:13px;margin-top:3px;line-height:1.5">${escapeHtml(r.note)} ${r.times} 次</div>
+        </div>`).join('')}
+    </div>
+    ${n > 18 ? `<div class="muted" style="font-size:11.5px;margin-top:6px">…还有 ${n - 18} 条没展开</div>` : ''}
+    <div class="field" style="margin-top:12px"><label>「修行 / 良好习惯」这些文本记录放到哪</label>
+      <select id="zq-target">
+        <option value="life">生活（推荐 · 每天一条，可打标签）</option>
+        <option value="diary">日记（按天写进日记列表）</option>
+      </select>
+    </div>
+    <div class="note" style="text-align:left;margin-top:6px">
+      会导入：<b>${p.life.length}</b> 条文本记录 + <b>${p.sport.length}</b> 条运动（运动固定进「运动」）${p.health.length ? ` + <b>${p.health.length}</b> 条次数记录（如自慰，进「健康」）` : ''}。<br>
+      重复的会自动跳过，同一份文件导两次不会翻倍。
+    </div>
+    ${p.unknown.length ? `<div class="msg show err" style="display:block;margin-top:10px">
+      另外还有 <b>${p.unknown.length}</b> 个数字型记录项：${p.unknown.map(k => `<b>${escapeHtml(k)}</b>（${p.seenNum[k].days} 天，最多 ${p.seenNum[k].max} 次）`).join('、')}<br>
+      这几项从备份文件里看不出叫什么名字，猜错会污染你的历史数据，所以<b>先没导</b>。告诉我是哪几项，加一行映射就能一起导进来。
+    </div>` : ''}
+    <div class="note" style="text-align:left;margin-top:10px;color:var(--text-3)">
+      ⚠ 正气的备份里<b>没有日记正文</b>（日记是 App 本地功能，不进备份），这部分得单独搬。
+    </div>
+    ${n ? `<button class="btn" id="zq-do" style="margin-top:12px">导入这 ${n} 条</button>` : ''}`;
+  const b = $('#zq-do');
+  if (b) b.onclick = zqDo;
+}
+
+async function zqBulk(table, rows) {
+  const { data: exist } = await cloud.database.from(table).select('*').limit(100000);
+  const seen = new Set((exist || []).map(impKey));
+  const push = [];
+  let skip = 0;
+  for (const r of rows) {
+    const k = impKey(r);
+    if (seen.has(k)) { skip++; continue; }
+    seen.add(k);
+    push.push(r);
+  }
+  let ok = 0, fail = 0;
+  for (let i = 0; i < push.length; i += 80) {
+    const chunk = push.slice(i, i + 80);
+    const { error } = await cloud.database.from(table).insert(chunk).select();
+    if (error) { fail += chunk.length; console.warn('zqBulk', table, error); }
+    else ok += chunk.length;
+  }
+  return { ok, skip, fail };
+}
+
+async function zqDo() {
+  const p = zqPlanData;
+  if (!p) return;
+  const btn = $('#zq-do');
+  if (btn) { btn.disabled = true; btn.textContent = '导入中…'; }
+  const sel = $('#zq-target');
+  const tgt = sel && sel.value === 'diary' ? 'diary' : 'life';      // 正气文本记录只会进 生活 / 日记
+  const textRows = tgt === 'diary'
+    ? p.life.map(r => ({ record_date: r.record_date, title: '', content: r.content, mood: '' }))
+    : p.life;
+  const lines = [];
+  try {
+    if (textRows.length) {
+      const r1 = await zqBulk(tgt, textRows);
+      lines.push(`${tgt === 'diary' ? '日记' : '生活'} +${r1.ok}${r1.skip ? `（重复 ${r1.skip}）` : ''}`);
+    }
+    if (p.sport.length) {
+      const r2 = await zqBulk('sport', p.sport);
+      lines.push(`运动 +${r2.ok}${r2.skip ? `（重复 ${r2.skip}）` : ''}`);
+    }
+    if (p.health && p.health.length) {
+      const r3 = await zqBulk('health', p.health);
+      lines.push(`健康 +${r3.ok}${r3.skip ? `（重复 ${r3.skip}）` : ''}`);
+    }
+  } catch (e) {
+    alert('导入失败：' + errMsg(e));
+    if (btn) { btn.disabled = false; btn.textContent = '重试'; }
+    return;
+  }
+  closeModal();
+  toast('正气数据已导入', lines.join(' · ') || '没有可导入的记录');
+  if (activeTab === 'me') renderProfile();
+  else renderHome();
+}
+
+function openChangePwd() {
+  openModal(`
+    <div class="field"><label>当前密码</label><input id="p-old" type="password" placeholder="现在的登录密码" autocomplete="current-password"></div>
+    <div class="field"><label>新密码</label><input id="p-new" type="password" placeholder="至少 6 位" autocomplete="new-password"></div>
+    <div class="field"><label>确认新密码</label><input id="p-new2" type="password" placeholder="再输一次" autocomplete="new-password"></div>
+    <button class="btn" id="p-save">保存新密码</button>
+    <button class="btn-ghost" id="p-goto-reset">旧密码忘了，改用邮箱验证码</button>
+    <div class="msg" id="p-msg"></div>`);
+  setModalTitle('修改密码');
+  $('#p-goto-reset').onclick = () => { closeModal(); setTimeout(openResetPwd, 260); };
+  $('#p-save').onclick = doChangePwd;
+}
+
+async function doChangePwd() {
+  const msg = $('#p-msg');
+  const oldPassword = $('#p-old').value;
+  const newPassword = $('#p-new').value;
+  const newPassword2 = $('#p-new2').value;
+  if (!oldPassword || !newPassword) { showMsg(msg, '请把密码填完整'); return; }
+  if (newPassword.length < 6) { showMsg(msg, '新密码至少 6 位'); return; }
+  if (newPassword !== newPassword2) { showMsg(msg, '两次输入的新密码不一致'); return; }
+  const btn = $('#p-save');
+  btn.disabled = true; btn.textContent = '提交中...';
+  const r = await cloud.auth.resetPasswordForOld({ oldPassword, newPassword });
+  btn.disabled = false; btn.textContent = '保存新密码';
+  if (r && r.error) {
+    showMsg(msg, errMsg(r.error) + '（若旧密码不对，可改用邮箱验证码重置）');
+    return;
+  }
+  showMsg(msg, '密码已更新，下次用新密码登录', 'ok');
+  $('#p-old').value = ''; $('#p-new').value = ''; $('#p-new2').value = '';
+  setTimeout(closeModal, 1200);
+}
+
+function openResetPwd() {
+  const email = (currentUser && currentUser.email) || '';
+  openModal(`
+    <div class="field"><label>邮箱</label><input id="r-email" type="email" value="${escapeHtml(email)}" placeholder="you@example.com"></div>
+    <div class="field-row">
+      <div class="field"><label>验证码</label><input id="r-code" type="text" inputmode="numeric" placeholder="6 位数字"></div>
+      <button type="button" class="btn-code" id="r-send">获取验证码</button>
+    </div>
+    <div class="field"><label>新密码</label><input id="r-pass" type="password" placeholder="至少 6 位" autocomplete="new-password"></div>
+    <button class="btn" id="r-save">重置并登录</button>
+    <div class="msg" id="r-msg"></div>`);
+  setModalTitle('用邮箱验证码重置密码');
+  const msg = $('#r-msg');
+  let pending = null;
+  $('#r-send').onclick = async (e) => {
+    const em = $('#r-email').value.trim();
+    if (!em) { showMsg(msg, '请填邮箱'); return; }
+    e.target.disabled = true;
+    const started = await cloud.auth.resetPasswordForEmail(em);
+    e.target.disabled = false;
+    if (started.error) { showMsg(msg, errMsg(started.error)); return; }
+    pending = { started };
+    showMsg(msg, '验证码已发送，注意查收', 'ok');
+    countdown(e.target);
+  };
+  $('#r-save').onclick = async () => {
+    const code = $('#r-code').value.trim();
+    const pass = $('#r-pass').value;
+    if (!pending) { showMsg(msg, '请先获取验证码'); return; }
+    if (!code || !pass) { showMsg(msg, '验证码和新密码都要填'); return; }
+    if (pass.length < 6) { showMsg(msg, '新密码至少 6 位'); return; }
+    const r = await pending.started.data.updateUser({ nonce: code, password: pass });
+    if (r && r.error) { showMsg(msg, errMsg(r.error)); return; }
+    showMsg(msg, '密码已重置', 'ok');
+    setTimeout(closeModal, 1200);
+  };
+}
+
+/* ================= Boot ================= */
+boot();
+</script>
+</body>
+</html>

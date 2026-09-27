@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>生活手账 · 图标候选</title>
+<style>
+  html,body{margin:0;background:#0B0D13;font-family:system-ui,"Microsoft YaHei",sans-serif}
+  body{display:flex;gap:30px;padding:30px}
+  .cell{width:1024px;flex:0 0 1024px}
+  .art{width:1024px;height:1024px;border-radius:150px;overflow:hidden;display:block}
+  .lb{color:#E7E9F5;font-size:40px;font-weight:700;text-align:center;margin-top:26px;letter-spacing:.5px}
+  .lb i{display:block;font-size:30px;font-weight:400;color:#8B90A8;font-style:normal;margin-top:12px}
+  svg{display:block}
+</style>
+</head>
+<body>
+
+<!-- A 手账本 + 打卡勾 -->
+<div class="cell" id="cellA">
+  <div class="art">
+    <svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B8CFF"/><stop offset="1" stop-color="#B06BFF"/>
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="1024" fill="url(#gA)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="46" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="268" y="216" width="488" height="592" rx="84"/>
+        <path d="M406 296v432"/>
+        <path d="M496 412h168M496 512h112"/>
+        <path d="M496 640l62 60 128-138"/>
+      </g>
+    </svg>
+  </div>
+  <div class="lb">A · 手账本 + 打卡勾<i>“记录 + 完成”，最贴 App 做的事</i></div>
+</div>
+
+<!-- B 日历 + 打点/勾 -->
+<div class="cell" id="cellB">
+  <div class="art">
+    <svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gB" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B8CFF"/><stop offset="1" stop-color="#B06BFF"/>
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="1024" fill="url(#gB)"/>
+      <g fill="none" stroke="#ffffff" stroke-width="46" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="238" y="272" width="548" height="504" rx="88"/>
+        <path d="M396 198v112M628 198v112"/>
+        <path d="M238 412h548"/>
+        <circle cx="404" cy="528" r="38" fill="#ffffff" stroke="none"/>
+        <circle cx="620" cy="528" r="38" fill="#ffffff" stroke="none"/>
+        <circle cx="404" cy="660" r="38" fill="#ffffff" stroke="none"/>
+        <path d="M566 656l46 46 100-108"/>
+      </g>
+    </svg>
+  </div>
+  <div class="lb">B · 日历 + 打卡<i>“每天一点”，强调连续记录</i></div>
+</div>
+
+<!-- C 圆环 + 心 -->
+<div class="cell" id="cellC">
+  <div class="art">
+    <svg viewBox="0 0 1024 1024" width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="gC" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7B8CFF"/><stop offset="1" stop-color="#B06BFF"/>
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="1024" fill="url(#gC)"/>
+      <circle cx="512" cy="512" r="286" fill="none" stroke="#ffffff" stroke-width="48"/>
+      <path d="M512 676C428 610 352 550 352 468c0-60 48-104 104-104 27 0 49 12 56 30 7-18 29-30 56-30 56 0 104 44 104 104 0 82-76 142-160 208z" fill="#ffffff"/>
+    </svg>
+  </div>
+  <div class="lb">C · 圆环 + 心<i>“生活与心情”，柔和、偏生活感</i></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 应用图标底色：与页面主题一致的品牌渐变（左上→右下） -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient
+        android:type="linear"
+        android:angle="315"
+        android:startColor="#7B8CFF"
+        android:endColor="#B06BFF" />
+</shape>

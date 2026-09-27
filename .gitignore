@@ -1,0 +1,19 @@
+# 签名材料
+*.jks
+*.keystore
+*.p12
+
+# 构建产物
+build/
+*.class
+*.apk.idsig
+
+# 本地开发 / 无头浏览器缓存
+.playwright-cli/
+.cache/
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
