@@ -38,12 +38,17 @@
 - 步数按天去重入库、当天只增不减；距离 = 步数 × 步幅（默认 0.8 m），
   消耗 ≈ 步数 × 体重 × 0.00053（默认 60 kg），UI 明确标注「估算」
 - 日期一律按本地时区处理（用 UTC 会让东八区凌晨的记录落到前一天）
+- **安卓壳的入口地址每天换一次缓存键**（`?app=1&d=20260928`）：CDN 各边缘节点会把同一个
+  固定 URL 的旧副本缓存很久、且不回源，写死的入口会让 App 一直停在旧版页面。
+  每天换键后，当天首次打开必然回源拿最新，同一天内再打开仍走缓存
+- **版本号只有一处**（`index.html` 里的 `APP_VER`）：它同时决定「重新下载」的链接
+  （`/download/life-book.apk?v=…`，换键才绕得开 CDN 里的旧包）和旧壳的升级提示
 
 ## 技术栈
 
 | 层 | 选型 | 说明 |
 |---|---|---|
-| 前端 | 原生 JS + CSS | 单文件 `index.html`，约 223 KB，无框架、无打包步骤 |
+| 前端 | 原生 JS + CSS | 单文件 `index.html`，约 229 KB，无框架、无打包步骤 |
 | 后端 | WorkBuddy 云服务 | Postgres + 行级权限（RLS）+ 文件存储 + 邮箱认证 |
 | 图表 | 手写内联 SVG | 单文件应用挂 CDN 图表库不可靠 |
 | Android | WebView 空壳 | 用 aapt2 / d8 / zipalign / apksigner 手动打包，不走 Gradle |
@@ -55,7 +60,9 @@
 ├── index.html              # 整个 H5 应用（单文件）
 ├── sdk.index.global.js     # 云服务客户端 SDK（随页面分发）
 ├── pet/                    # 宠物立绘 webp：5 套皮肤 × 4 个形态
-├── download/life-book.apk  # 已签名的 Android 安装包
+├── download/               # 已签名的 Android 安装包
+│   ├── life-book.apk        #   页面按钮用的固定名
+│   └── life-book-1.5.apk    #   带版本号，换新文件名 = 换缓存键，一定下得到新版
 └── android/                # Android 壳工程，见 android/README.md
 ```
 
