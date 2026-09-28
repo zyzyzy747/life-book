@@ -25,6 +25,10 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 /**
  * 生活手账的外壳。
  *
@@ -40,14 +44,23 @@ public class MainActivity extends Activity {
     /** 站点域名。判断站内跳转用，站外链接丢给系统浏览器。 */
     private static final String HOST = "life-book-18142.app.workbuddy.host";
     /**
-     * 壳打开的入口地址。
+     * 壳打开的入口地址：`?app=1` + **当天的日期**。
      *
-     * ⛔ **末尾一定要带 `?app=1`**：CDN 是把完整 URL（含 query）当缓存键的，
-     * 根路径 `/` 那条键会在边缘节点缓存很久，部署完页面后 App 里看到的还是旧版
-     * （实测 `/` 一直回旧字节，而 `/?t=1` 立刻是新版）。带一个固定参数就永远绕开这条脏键，
-     * 且**以后改页面不用再动 App**。
+     * ⛔ 为什么参数必须跟着日期变：CDN 是腾讯 EdgeOne，它把**完整 URL（含 query）**
+     * 当缓存键，而且**每台边缘节点各持一份独立副本**、TTL 长到十几个小时都不回源。
+     * 实测同一个 `/?app=1` 连发 8 次：7 次命中前一天那份旧页面（`Eo-Cache-Status: HIT`、
+     * `Last-Modified` 还是部署前一天），只有 1 次落在已更新的节点上；而带随机 query 的
+     * 请求 100% 回源拿到新版。固定参数救不了 —— 那条键已经被旧副本占了，CDN 又没有
+     * 清理接口。所以让缓存键**每天换一次**：
+     *
+     *   · 当天第一次打开 → 新键 → 必然 MISS 回源 → 一定是最新页面
+     *   · 同一天内再打开 → 同一个键 → 走缓存 → 秒开
+     *   · 以后改页面 → 最迟第二天自动生效，**不用再重装 App**（这是本文件存在的意义）
      */
-    private static final String HOME = "https://" + HOST + "/?app=1";
+    private String homeUrl() {
+        String day = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
+        return "https://" + HOST + "/?app=1&d=" + day;
+    }
 
     /** 和页面一致的深色底，避免加载时白闪。 */
     private static final int BG = 0xFF0B0D13;
@@ -91,7 +104,7 @@ public class MainActivity extends Activity {
         }
         applyInsets();
 
-        web.loadUrl(HOME);
+        web.loadUrl(homeUrl());
 
         StepReader.ensureScheduled(this);
         askPermission();
@@ -213,7 +226,7 @@ public class MainActivity extends Activity {
                 offline.setVisibility(View.GONE);
                 web.setVisibility(View.VISIBLE);
                 pageReady = false;
-                web.loadUrl(HOME);
+                web.loadUrl(homeUrl());
             }
         });
         LinearLayout.LayoutParams retryLp = new LinearLayout.LayoutParams(
