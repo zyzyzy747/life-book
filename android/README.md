@@ -30,12 +30,16 @@ python build.py
 |---|---|---|
 | 步数 | `StepReader.java` | 读 `TYPE_STEP_COUNTER`，通过 JS 桥暴露给页面 —— H5 自己在浏览器里拿不到步数 |
 | 文件选择 | `MainActivity` | 手写 `WebChromeClient.onShowFileChooser`：`ACTION_GET_CONTENT` + `CATEGORY_OPENABLE`，`setAllowContentAccess(true)`，`onActivityResult` 回填。**不能按 accept 过滤**，否则没有扩展名的备份文件选不中 |
-| 版本号 | `MainActivity.verName()` | 同时注入 UA 和 JS 桥方法，页面能显示「应用版本 v1.4」，用来判断用户装的是哪一版 |
+| 版本号 | `MainActivity.verName()` | 同时注入 UA 和 JS 桥方法，页面能显示「应用版本 v1.5」，用来判断用户装的是哪一版 |
 | 每日提醒 | `AlarmReceiver` / `BootReceiver` | 定时提醒 + 开机重排闹钟 |
 
 ## 两个刻意为之的点
 
-- **入口 URL 带固定参数**（`?app=1`）：CDN 会长期缓存根路径 `/` 的旧字节，带任意 query
-  才会回源。App 壳如果写死无参数的首页地址，用户就永远只能看到旧版页面。
+- **入口 URL 每天换一次缓存键**（`?app=1&d=20260928`，见 `MainActivity.homeUrl()`）：
+  CDN 按**完整 URL（含 query）**做缓存键，而且**每台边缘节点各持一份副本、TTL 长到十几个
+  小时都不回源** —— 只加一个固定参数（`?app=1`）只是把脏键从 `/` 挪到 `/?app=1`，
+  照样被旧副本占住，用户 App 里就一直是旧页面。让参数跟着当天日期走：当天首次打开必然
+  回源拿到最新，同一天内再打开仍走缓存，以后改页面**最迟第二天自动生效、不用重装**。
 - **空壳加载线上页面** ⇒ 改网页不用重发 APK；只有动到原生能力（比如文件选择）才需要重装。
-  这一点也让「版本号」变得重要：页面能读到壳的版本，才能提示用户「你装的是旧版」。
+  这一点也让「版本号」变得重要：页面能读到壳的版本，才能提示用户「你装的是旧版」，
+  并给出重新下载安装包的入口。
