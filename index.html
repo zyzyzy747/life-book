@@ -571,6 +571,10 @@ hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
 .wk-diary .tt .sum{display:block}
 .wk-diary .tt .sum.pending{color:var(--text-3)}
 .wk-diary .more{flex:0 0 auto;font-size:11px;color:var(--brand);opacity:.9;padding-top:1px;white-space:nowrap}
+/* 摘要没跑出来时的说明行：不然用户只能看到一个不动的「正在读原文」 */
+.wk-sumfail{display:flex;align-items:center;gap:6px;margin:2px 2px 10px;
+  font-size:11.5px;line-height:1.6;color:var(--text-3)}
+.wk-sumfail .btn-text{padding:4px 2px;font-size:11.5px;color:var(--brand)}
 .rd-sum{margin:2px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(var(--brand-rgb),.10);font-size:13px;line-height:1.7}
 .rd-body{font-size:13.5px;line-height:1.95;color:var(--text-2);white-space:pre-wrap;word-break:break-word}
 .rd-meta{margin-top:14px;font-size:11px;color:var(--text-3)}
@@ -3310,8 +3314,17 @@ function weeklyVerdict(s, p) {
 const DIARY_SUM_LS = 'diarySum';
 let diarySumCache = null;      // 运行时副本
 let diarySumBusy = false;      // 并发闸：同一时间只跑一轮
+let diarySumBusyAt = 0;        // 本轮开始时间（闸门兜底，防止一轮悬着的请求把后续全锁死）
 let diarySumFailAt = 0;        // 上次失败时间（冷却 5 分钟）
 let diaryModelId = '';         // 选中的模型 id
+
+/* 单次摘要的硬超时（毫秒）。7 篇日记压一句话，flash 级模型几秒就够；
+   给到 25 秒还很慢的，基本就是卡住了（App 切后台时 WebView 冻结会让请求一直悬着）。
+   ⭐ `window.__DIARY_SUM_TIMEOUT` 可以在无头验证里调小，免得每条断言都真等 25 秒。 */
+const DIARY_SUM_TIMEOUT_DEFAULT = 25000;
+const diarySumTimeout = () => Number(window.__DIARY_SUM_TIMEOUT) || DIARY_SUM_TIMEOUT_DEFAULT;
+/* 闸门最长占用时间：超过这个还没跑完，就认为是上一轮卡死了，放行新一轮 */
+const DIARY_SUM_LOCK_MS = 90000;
 
 function diaryFingerprint(s) {
   let h = 5381; const t = String(s || '');
@@ -3335,22 +3348,59 @@ function diarySumCanRun() {
   return !!(cloud && cloud.llm && cloud.llm.chat && cloud.llm.chat.completions)
     && (Date.now() - diarySumFailAt > 5 * 60 * 1000);
 }
+// 把模型给的对象整成「纯数字键 → 摘要」，顺手剥掉「【12】」「12号」这类包装
+function normSumObj(o) {
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return {};
+  const out = {};
+  Object.keys(o).forEach(k => {
+    const id = String(k).replace(/[^\d]/g, '');
+    const v = String(o[k] == null ? '' : o[k]).replace(/\s+/g, '').trim();
+    if (id && v) out[id] = v;
+  });
+  return out;
+}
+const tryJSON = (s) => { try { return JSON.parse(s); } catch (e) { return null; } };
 function parseSumJSON(t) {
   const s = String(t || '');
   const a = s.indexOf('{'), b = s.lastIndexOf('}');
-  if (a < 0 || b <= a) return {};
-  try {
-    const o = JSON.parse(s.slice(a, b + 1));
-    return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
-  } catch (e) { return {}; }
+  if (a >= 0 && b > a) {
+    const got = normSumObj(tryJSON(s.slice(a, b + 1)));
+    if (Object.keys(got).length) return got;
+  }
+  // 兜底：onlyReasoning 的模型可能把思考过程也吐进 content，整体切片必然解析失败。
+  // 退化成「逐个配平花括号」扫描，取键最多的那个块。
+  let best = {};
+  let i = s.indexOf('{');
+  while (i >= 0) {
+    let depth = 0, en = -1;
+    for (let j = i; j < s.length; j++) {
+      if (s[j] === '{') depth++;
+      else if (s[j] === '}') { depth--; if (!depth) { en = j; break; } }
+    }
+    if (en < 0) break;
+    const got = normSumObj(tryJSON(s.slice(i, en + 1)));
+    if (Object.keys(got).length > Object.keys(best).length) best = got;
+    i = s.indexOf('{', en + 1);
+  }
+  return best;
 }
-async function diaryModel() {
+/* 挑一个适合「把几篇日记压成一句话」的短任务模型。
+   ⛔ 列表第一个是 auto（isDefault、onlyReasoning、effort=high）：它是「按任务自动路由」的
+   推理模型，跑这种小任务要几十秒 high-effort 思考，**中途只出 reasoning 不出 content**，
+   界面就一直卡在「正在读原文，稍等…」。所以排除 auto，优先挑 flash / turbo / mini 这类轻量模型。 */
+const DIARY_MODEL_HINT = /flash|turbo|mini|lite|fast|light/i;
+function pickDiaryModel(ms) {
+  const ok = (ms || []).filter(x => x && x.id && x.disabled !== true && x.enabled !== false
+    && String(x.id).toLowerCase() !== 'auto');
+  return ok.find(x => DIARY_MODEL_HINT.test(String(x.id))) || ok[0] || null;
+}
+async function diaryModel(signal) {
   if (diaryModelId) return diaryModelId;
   const cached = LS.get('llmModel', '');
-  if (cached) { diaryModelId = cached; return cached; }
+  if (cached && String(cached).toLowerCase() !== 'auto') { diaryModelId = cached; return cached; }
   if (!cloud || !cloud.llm || !cloud.llm.models) return '';
-  const ms = (await cloud.llm.models.list()) || [];
-  const m = ms.find(x => x && x.disabled !== true && x.enabled !== false);
+  const ms = (await cloud.llm.models.list(signal)) || [];
+  const m = pickDiaryModel(ms);
   if (!m) return '';
   diaryModelId = m.id;
   LS.set('llmModel', m.id);
@@ -3369,11 +3419,16 @@ function paintDiarySum(rows) {
 async function ensureDiarySummaries(rows) {
   const need = (rows || []).filter(r =>
     !String(r.title || '').trim() && !getDiarySum(r) && String(r.content || '').trim());
-  if (!need.length || diarySumBusy || !diarySumCanRun()) return;
-  diarySumBusy = true;
+  if (!need.length || !diarySumCanRun()) return;
+  // 闸门：正常跑的时候挡住重复请求；但上一轮如果卡住了（切后台会让流式请求一直悬着），
+  // 超过 DIARY_SUM_LOCK_MS 就放行 —— 否则界面永远停在「正在读原文」，既不出摘要也不降级。
+  if (diarySumBusy && Date.now() - diarySumBusyAt < DIARY_SUM_LOCK_MS) return;
+  diarySumBusy = true; diarySumBusyAt = Date.now();
+  const ac = new AbortController();
+  const to = setTimeout(() => ac.abort(), diarySumTimeout());
   try {
-    const model = await diaryModel();
-    if (!model) { diarySumFailAt = Date.now(); paintDiarySum(rows); return; }
+    const model = await diaryModel(ac.signal);
+    if (!model) { diarySumFailAt = Date.now(); return; }
     const list = need
       .map(r => `【${r.id}】${String(r.content || '').replace(/\s+/g, ' ').trim().slice(0, 600)}`)
       .join('\n');
@@ -3386,6 +3441,7 @@ async function ensureDiarySummaries(rows) {
       model,
       stream: true,
       temperature: 0.5,
+      signal: ac.signal,   // 超时就掐断，别让它一直挂着
       messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }]
     })) {
       const d = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
@@ -3402,11 +3458,28 @@ async function ensureDiarySummaries(rows) {
     // 未登录 / 额度用尽 / 模型不可用：静默降级为「点开看原文」，不打扰用户
     console.warn('[周报] 日记摘要未生成：', (e && e.error && e.error.code) || (e && e.message) || e);
     diarySumFailAt = Date.now();
-    LS.set('llmModel', '');   // 缓存的模型可能已下线，下次重新拉目录
+    // 超时掐断的不算「模型下线」，别把刚选好的模型也丢掉（⛔ 内存里那份也要清，
+    // 只清 LS 的话下次 diaryModel() 会直接从 diaryModelId 返回下线模型，永远重试不成功）
+    if (!(e && e.name === 'AbortError')) { diaryModelId = ''; LS.set('llmModel', ''); }
   } finally {
+    clearTimeout(to);
     diarySumBusy = false;
     paintDiarySum(rows);
   }
+}
+/* 手动重试：清掉冷却和选好的模型，把行上的文案先改回「正在读」，再跑一轮 */
+function retryDiarySummaries(rows) {
+  diarySumFailAt = 0; diarySumBusy = false; diarySumBusyAt = 0;
+  diaryModelId = ''; LS.set('llmModel', '');
+  (rows || []).forEach(r => {
+    if (String(r.title || '').trim() || getDiarySum(r)) return;
+    const el = document.querySelector(`[data-sum="${r.id}"]`);
+    if (!el) return;
+    el.textContent = '正在读原文，稍等…';
+    el.classList.add('pending');
+  });
+  const tip = $('#wk-sumfail'); if (tip) tip.remove();
+  ensureDiarySummaries(rows);
 }
 function openDiaryRead(id, rows) {
   const r = (rows || []).find(x => String(x.id) === String(id));
@@ -3477,6 +3550,11 @@ async function renderWeekly() {
   const allCats = [...new Set([...s.cats.map(c => c[0]), ...p.cats.map(c => c[0])])]
     .sort((a, b) => (thisMap[b] || 0) - (thisMap[a] || 0) || (prevMap[b] || 0) - (prevMap[a] || 0));
 
+  // 摘要状态：该总结的一条都没出来、又处在失败冷却里 ⇒ 说明刚失败过。
+  // 这时候必须给个明确说法 + 重试入口，否则行上只会挂着一个不动的「正在读原文」。
+  const sumNeed = s.diary.filter(r => !String(r.title || '').trim() && String(r.content || '').trim());
+  const sumStuck = sumNeed.length > 0 && !sumNeed.some(r => getDiarySum(r)) && !diarySumCanRun();
+
   v.innerHTML = `
     <div class="wk-back" id="wk-back">‹ 返回</div>
     <div class="wk-nav">
@@ -3537,13 +3615,17 @@ async function renderWeekly() {
       ${s.diary.length ? `<ul class="wk-diary">${s.diary.map(r => {
         const title = String(r.title || '').trim();
         const sum = getDiarySum(r);
-        const pending = !title && !sum && diarySumCanRun();
+        // 有正文才谈得上「读原文」——没正文就别挂一个永远不动的「正在读」
+        const canRead = !!String(r.content || '').trim();
+        const pending = !title && !sum && canRead && diarySumCanRun();
         const label = title || sum || (pending ? '正在读原文，稍等…' : '点开看原文');
         return `<li data-did="${r.id}"><span class="dd">${ymd(r).slice(5)}</span>`
           + `<span class="tt"><span class="sum${pending ? ' pending' : ''}" data-sum="${r.id}">${escapeHtml(label)}</span></span>`
           + `<span class="more">原文 ›</span></li>`;
       }).join('')}</ul>` : '<div class="dim" style="font-size:12px;padding:8px 0">本周无记录</div>'}
     </div>
+    ${sumStuck ? '<div class="wk-sumfail" id="wk-sumfail"><span>摘要没生成（模型暂时不可用）</span>'
+      + '<button class="btn-text" id="wk-sumretry">重试</button></div>' : ''}
 
     <div class="sec">${s.sportN ? `运动 · ${s.sportN} 次` : '运动'}</div>
     <div class="stat-grid">
@@ -3588,6 +3670,8 @@ async function renderWeekly() {
   v.querySelectorAll('.wk-diary li').forEach(li => {
     li.onclick = () => openDiaryRead(li.getAttribute('data-did'), s.diary);
   });
+  const sumRetry = $('#wk-sumretry');
+  if (sumRetry) sumRetry.onclick = () => retryDiarySummaries(s.diary);
   if (s.diary.length) ensureDiarySummaries(s.diary);   // 后台生成摘要，不阻塞首屏
   const back = $('#wk-back'); if (back) back.onclick = () => switchTab('me');
   const pv = $('#wk-prev'); if (pv) pv.onclick = () => { weeklyAnchor = shiftDays(viewMon, -7); renderWeekly(); };
@@ -3724,7 +3808,7 @@ async function renderProfile() {
       </div>
       <div class="me-item">
         <div class="me-ico" style="color:var(--text-3)">${ICONS.info}</div>
-        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.3${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
+        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.4${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
       </div>
     </div>
     `;
