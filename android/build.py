@@ -35,8 +35,8 @@ KS = os.path.join(PROJ, "life-book.jks")
 KS_PASS = os.environ.get("LIFEBOOK_KS_PASS", "")
 KS_ALIAS = os.environ.get("LIFEBOOK_KS_ALIAS", "lifebook")
 
-VERSION_CODE = "5"
-VERSION_NAME = "1.4"
+VERSION_CODE = "6"
+VERSION_NAME = "1.5"
 MIN_SDK = "26"
 TARGET_SDK = "35"
 
