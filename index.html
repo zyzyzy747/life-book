@@ -74,12 +74,24 @@ a{color:var(--brand);text-decoration:none}
 
 /* ===== Header ===== */
 .hd{
-  position:sticky;top:0;z-index:20;
+  position:sticky;top:var(--neth,0px);z-index:20;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:calc(var(--safe-top) + 13px) 18px 12px;
   background:rgba(11,13,19,.72);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
   border-bottom:1px solid var(--line);
 }
+/* 断网提示条：放在 #root 外面（登录页也要有），sticky 粘顶。
+   它出现时 .hd 要用 --neth 让位 —— 两个元素都是 sticky top:0，不抬一手会互相压住。
+   高度由 JS 实测写入（横条高度随安全区变），别在 CSS 里猜。 */
+.net-bar{
+  position:sticky;top:0;z-index:30;display:none;
+  align-items:center;justify-content:center;gap:7px;
+  padding:calc(var(--safe-top) + 8px) 14px 8px;
+  background:linear-gradient(135deg,var(--amber),#F0913C);color:#241703;
+  font-size:12.5px;font-weight:700;letter-spacing:.01em;
+}
+.net-bar.on{display:flex}
+
 .brand{font-size:19px;font-weight:700;letter-spacing:-.02em}
 .brand em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .brand.hi{line-height:1.25}
@@ -388,6 +400,13 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
   display:flex;align-items:center;gap:9px;max-width:92vw
 }
 .toast.show{transform:translate(-50%,calc(var(--safe-top) + 66px));opacity:1;visibility:visible;pointer-events:auto}
+/* 出错提示：红描边 + 叹号，别和「签到成功 +20 经验」那种带宠物头像的鼓励提示混在一起 */
+.toast.err{border-color:rgba(255,107,107,.55)}
+.toast .ti{
+  width:23px;height:23px;border-radius:50%;flex:0 0 auto;
+  background:var(--out);color:#210808;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;line-height:1
+}
 .toast img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
 .toast .tt{line-height:1.35}
 .toast .tt i{display:block;font-style:normal;font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:1px}
@@ -511,9 +530,59 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .note{font-size:11.5px;color:var(--text-3);text-align:center;padding:6px 20px 0;line-height:1.7}
 hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
 .badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600;background:rgba(var(--brand-rgb),.16);color:var(--brand)}
+
+/* ===== 每周回顾 ===== */
+.wk-back{display:flex;align-items:center;gap:6px;width:fit-content;margin-bottom:14px;padding:7px 13px;
+  background:var(--card);border:1px solid var(--line);border-radius:11px;color:var(--text-2);font-size:12.5px}
+.wk-nav{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.wk-nav .rg{flex:1;text-align:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.wk-nav .rg em{font-style:normal;font-size:11px;font-weight:600;color:var(--text-3);margin-left:6px}
+.wk-nav button{width:33px;height:33px;flex:0 0 auto;border-radius:11px;background:var(--card);border:1px solid var(--line);
+  color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center}
+.wk-nav button:disabled{opacity:.3}
+.wk-hero{background:linear-gradient(140deg,rgba(var(--brand-rgb),.24),rgba(var(--brand2-rgb),.10) 60%,rgba(255,255,255,.04));
+  border:1px solid rgba(var(--brand-rgb),.26);border-radius:22px;padding:18px 18px 16px}
+.wk-hero .lbl{font-size:12px;color:rgba(234,236,242,.72);letter-spacing:.03em}
+.wk-hero .big{font-size:31px;font-weight:800;letter-spacing:-.03em;color:#fff;margin:3px 0 13px}
+.wk-hero .g{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 8px;
+  border-top:1px solid rgba(255,255,255,.12);padding-top:13px}
+.wk-hero .g .k{display:block;font-size:11px;color:rgba(234,236,242,.6);margin-bottom:2px}
+.wk-hero .g .v{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.wk-delta{font-weight:700}
+.wk-up{color:var(--out)}.wk-dn{color:var(--in)}.wk-flat{color:var(--text-3)}
+.nr{display:inline-block;font-size:11.5px;font-weight:600;color:var(--amber);
+  background:rgba(255,180,84,.11);border:1px solid rgba(255,180,84,.3);border-radius:8px;padding:2px 8px}
+.st-tb{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.st-tb th,.st-tb td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.st-tb th:first-child,.st-tb td:first-child{text-align:left}
+.st-tb thead th{font-size:11px;color:var(--text-3);font-weight:600}
+.st-tb tbody tr:last-child td{border-bottom:none;font-weight:700}
+.wk-days{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.wk-day{font-size:11.5px;padding:4px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--text-2)}
+.wk-day.on{border-color:rgba(var(--brand-rgb),.5);background:rgba(var(--brand-rgb),.13);color:#fff;font-weight:600}
+.wk-day.off{color:var(--text-3);border-style:dashed}
+.wk-diary{list-style:none}
+.wk-diary li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.wk-diary li:last-child{border-bottom:none}
+.wk-diary .dd{flex:0 0 44px;font-size:11.5px;font-weight:700;color:var(--brand);padding-top:1px;font-variant-numeric:tabular-nums}
+.wk-diary li{cursor:pointer;align-items:flex-start}
+.wk-diary li:active{background:rgba(var(--brand-rgb),.07)}
+.wk-diary .tt{flex:1 1 auto;min-width:0;font-size:12.5px;line-height:1.55;color:var(--text-2)}
+.wk-diary .tt .sum{display:block}
+.wk-diary .tt .sum.pending{color:var(--text-3)}
+.wk-diary .more{flex:0 0 auto;font-size:11px;color:var(--brand);opacity:.9;padding-top:1px;white-space:nowrap}
+.rd-sum{margin:2px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(var(--brand-rgb),.10);font-size:13px;line-height:1.7}
+.rd-body{font-size:13.5px;line-height:1.95;color:var(--text-2);white-space:pre-wrap;word-break:break-word}
+.rd-meta{margin-top:14px;font-size:11px;color:var(--text-3)}
+.wk-verdict{background:linear-gradient(140deg,rgba(var(--brand-rgb),.14),rgba(var(--brand2-rgb),.10));
+  border:1px solid rgba(var(--brand-rgb),.3);border-radius:18px;padding:16px 17px;margin-top:18px}
+.wk-verdict .t{font-size:13px;font-weight:700;margin-bottom:7px}
+.wk-verdict p{margin:0;font-size:12.5px;line-height:1.85;color:var(--text-2)}
+.wk-verdict .wc{font-size:10.5px;color:var(--text-3);margin-top:9px}
 </style>
 </head>
 <body>
+<div class="net-bar" id="net-bar"><span>⚠</span><span>当前没有网络 · 显示的是上次的数据，联网后自动刷新</span></div>
 <div id="root"></div>
 <script src="sdk.index.global.js"></script>
 <script>
@@ -583,20 +652,23 @@ const errMsg = (e) => (e && e.message) ? e.message : (e ? String(e) : '出错了
 
 /* ================= 图表 / 连续打卡 / 搜索（通用） ================= */
 // 柱状图。rows: [{label, a, b?}]；dual=true 时 a/b 并排双色
+// padTop：给顶部留白，最高那根柱子的数值标签才不会被切掉
 function barChartSVG(rows, opt = {}) {
   const dual = !!opt.dual;
-  const W = 340, H = opt.h || 118, plotH = H - 26, padX = 8;
+  const W = 340, H = opt.h || 118, padX = 8;
+  const padTop = Math.max(0, opt.padTop || 0);
+  const base = H - 26, avail = Math.max(4, base - padTop);
   const max = Math.max(1, ...rows.map(r => Math.max(Number(r.a) || 0, dual ? (Number(r.b) || 0) : 0)));
   const n = Math.max(1, rows.length);
   const slot = (W - padX * 2) / n;
   const bw = Math.min(dual ? 13 : 20, slot * (dual ? 0.36 : 0.5));
   const yOf = (v) => {
-    const raw = (Math.max(0, Number(v) || 0) / max) * plotH;
+    const raw = (Math.max(0, Number(v) || 0) / max) * avail;
     const h = raw > 0 ? Math.max(2, raw) : 0;
-    return { h, y: plotH - h };
+    return { h, y: base - h };
   };
   let out = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">`;
-  out += `<line x1="${padX}" y1="${plotH}" x2="${W - padX}" y2="${plotH}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;
+  out += `<line x1="${padX}" y1="${base}" x2="${W - padX}" y2="${base}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;
   rows.forEach((r, i) => {
     const cx = padX + slot * i + slot / 2;
     const A = yOf(r.a);
@@ -792,7 +864,7 @@ async function uploadAvatar(file) {
     afterAvatarChanged();
     toast('头像已更新', '已存到云端，换设备登录也在');
   } catch (e) {
-    alert(e && e.message ? e.message : '上传失败，检查网络后重试');
+    toastErr(e && e.message ? e.message : '上传失败，检查网络后重试');
     paintAvatar();
   } finally { avatarBusy = false; }
 }
@@ -823,7 +895,7 @@ function openAvatarPicker() {
   watchFilePick(avIn);
   $$('.av-opt[data-skin]').forEach(b => b.onclick = async () => {
     try { await setAvatar('skin:' + b.dataset.skin); afterAvatarChanged(); toast('头像已更新', '用的是伙伴立绘'); }
-    catch (e) { alert(errMsg(e)); }
+    catch (e) { toastErr(errMsg(e)); }
   });
   const rs = $('#av-reset');
   if (rs) rs.onclick = async () => {
@@ -832,7 +904,7 @@ function openAvatarPicker() {
       await setAvatar('');
       if (p) { try { await cloud.storage.remove([p]); } catch (e) {} }
       afterAvatarChanged(); toast('已恢复默认头像');
-    } catch (e) { alert(errMsg(e)); }
+    } catch (e) { toastErr(errMsg(e)); }
   };
 }
 
@@ -1107,13 +1179,14 @@ function switchTab(tab) {
   activeTab = tab;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   const fab = $('#fab');
-  if (fab) fab.style.display = (tab === 'me') ? 'none' : 'flex';
+  if (fab) fab.style.display = (tab === 'me' || tab === 'weekly') ? 'none' : 'flex';
   if (tab === 'home') renderHome();
   else if (tab === 'expense') renderExpenseList();
   else if (tab === 'diary') renderDiaryList();
   else if (tab === 'life') renderLifeList();
   else if (tab === 'sport') renderSportList();
   else if (tab === 'health') renderHealthList();
+  else if (tab === 'weekly') renderWeekly();
   else if (tab === 'me') renderProfile();
 }
 
@@ -1254,7 +1327,7 @@ async function ensurePet(force) {
     }
     const [chkRes, histRes] = await Promise.all([
       cloud.database.from('checkin').select('*').eq('record_date', today).limit(1).maybeSingle(),
-      cloud.database.from('checkin').select('record_date').limit(500)
+      cloud.database.from('checkin').select('record_date').limit(LIMIT_LIST)
     ]);
     const chk = chkRes && !chkRes.error ? chkRes.data : null;
     const days = new Set(((histRes && histRes.data) || []).map(r => String(r.record_date).slice(0, 10)));
@@ -1386,7 +1459,7 @@ async function awardRecordExp() {
 })();
 
 let toastTimer = null, toastGoneTimer = null;
-function toast(text, sub, img) {
+function toast(text, sub, img, kind) {
   let el = document.getElementById('toast');
   if (!el) {
     el = document.createElement('div');
@@ -1395,7 +1468,11 @@ function toast(text, sub, img) {
     document.body.appendChild(el);
   }
   const exp = Number((state.pet && state.pet.exp) || 0);
-  el.innerHTML = `<img src="${img || petImg(formOf(levelOf(exp)))}" alt=""><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
+  const err = kind === 'err';
+  el.classList.toggle('err', err);          // 用 classList 而不是重写 className，免得把正在显示的 .show 抹掉
+  el.innerHTML = err
+    ? `<span class="ti">!</span><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`
+    : `<img src="${img || petImg(formOf(levelOf(exp)))}" alt=""><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
   el.style.transition = ''; el.style.transform = ''; el.style.opacity = '';   // 清掉上次左右滑动留下的内联位移
   requestAnimationFrame(() => el.classList.add('show'));
   clearTimeout(toastTimer); clearTimeout(toastGoneTimer);
@@ -1408,6 +1485,54 @@ function toast(text, sub, img) {
     }, 380);
   }, 2800);
 }
+
+/* 出错提示：替换原生 alert。安卓 WebView 里的 alert 又丑又会卡住整个界面，
+   而且样式和 App 完全不搭。 */
+const toastErr = (text, sub) => toast(text, sub, null, 'err');
+
+/* ---------- 列表页通用：秒开 / 静默刷新 / 失败重试 ---------- */
+
+/* 列表一次拉多少条。个人使用量级（几百条）下绰绰有余。
+   ⛔ 原来 life / sport 写死 limit(100)，diary 写死 500 —— 记录一多就**静默截断**，
+   用户只会觉得"更早的记录不见了"，不会有任何报错。 */
+const LIMIT_LIST = 2000;
+/* 导出备份 / 导入判重需要全表，给一个足够大的上限 */
+const LIMIT_ALL = 100000;
+
+// 加载占位（六个页面共用一份，别再各写各的）
+const loadingHTML = () => `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+
+/* 失败块：一律带「点此重试」。
+   以前只有首页有重试按钮，其他页失败后只能靠来回切 tab 碰运气。 */
+function failHTML(what, e, retryCall) {
+  return `<div class="empty"><div class="ico">!</div>${escapeHtml(what)}失败：${escapeHtml(errMsg(e))}`
+    + `<br><br><button class="btn-text" onclick="${retryCall}">点此重试</button></div>`;
+}
+
+/* 行数据指纹：判断「这次拉回来的」和「上次画出来的」是不是同一批。
+   数据就几百条，JSON 序列化比逐字段比对省事，速度也够。
+   ⭐ 写操作（增删改）不用手动清缓存 —— 服务端数据一变指纹就变，自动会重画。 */
+const rowsSig = (rows) => JSON.stringify(rows || []);
+
+/* 屏幕上已经有旧数据时，刷新失败别把整页变成错误块，轻提示一句就好 */
+function softFail(e) { toast('刷新失败 · 显示的是上次的数据', errMsg(e)); }
+
+/* ---------- 网络状态：断网时顶部压一条，别让人对着转圈干等 ---------- */
+(function bindNetStatus() {
+  const bar = document.getElementById('net-bar');
+  if (!bar) return;
+  const apply = (off) => {
+    bar.classList.toggle('on', off);
+    // 先切 class 再量高度：display:none 的时候 offsetHeight 是 0
+    document.documentElement.style.setProperty('--neth', off ? bar.offsetHeight + 'px' : '0px');
+  };
+  window.addEventListener('online',  () => { apply(false); toast('网络已恢复'); });
+  window.addEventListener('offline', () => apply(true));
+  window.addEventListener('resize',  () => apply(navigator.onLine === false));  // 横竖屏切换后安全区变了
+  apply(navigator.onLine === false);
+  // 真实 offline 事件在无头浏览器里造不出来，留个钩子给本地验证脚本用
+  window.__netStatus = apply;
+})();
 
 function petCardHTML() {
   const pet = state.pet;
@@ -1555,7 +1680,7 @@ function openPetRename() {
     const name = $('#pet-name').value.trim().slice(0, 12) || '爱弥斯';
     if (pet.id) {
       const res = await cloud.database.from('pet').update({ name, updated_at: new Date().toISOString() }).eq('id', pet.id).select();
-      if (res.error) { alert(errMsg(res.error)); return; }
+      if (res.error) { toastErr(errMsg(res.error)); return; }
     }
     pet.name = name;
     state.pet = pet;
@@ -1567,19 +1692,20 @@ function openPetRename() {
 /* ================= Home ================= */
 async function renderHome() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  v.innerHTML = loadingHTML();
   try {
     const today = todayStr();
-    const [, exp, dia, sp, li, stepRes] = await Promise.all([
+    // 本月汇总原本是串行跟在后面单独 await 的 —— 白多一个网络往返，一起并行掉
+    const { start: monthStart, end: monthEnd } = monthRange();
+    const [, exp, dia, sp, li, stepRes, monthExp] = await Promise.all([
       ensurePet(),
       cloud.database.from('expense').select('*').eq('record_date', today),
       cloud.database.from('diary').select('*').eq('record_date', today).limit(1).maybeSingle(),
       cloud.database.from('sport').select('*').eq('record_date', today),
       cloud.database.from('life').select('*').eq('record_date', today),
-      cloud.database.from('steps').select('*').eq('record_date', today).limit(1).maybeSingle()
+      cloud.database.from('steps').select('*').eq('record_date', today).limit(1).maybeSingle(),
+      cloud.database.from('expense').select('*').gte('record_date', monthStart).lt('record_date', monthEnd)
     ]);
-    const { start: monthStart, end: monthEnd } = monthRange();
-    const monthExp = await cloud.database.from('expense').select('*').gte('record_date', monthStart).lt('record_date', monthEnd);
 
     let todayOut = 0, todayIn = 0;
     if (exp.data) exp.data.forEach(r => { if (r.kind === 'out') todayOut += Number(r.amount); else todayIn += Number(r.amount); });
@@ -1631,7 +1757,7 @@ async function renderHome() {
         `连续签到 ${j.streak} 天 · ${j.form.name}`, petImg(j.form));
     }
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}<br><br><button class="btn-text" onclick="renderHome()">点此重试</button></div>`;
+    v.innerHTML = failHTML('加载', e, 'renderHome()');
   }
 }
 
@@ -1700,65 +1826,81 @@ function bindExpSeg() {
 async function renderExpenseList() {
   const v = $('#view');
   if (state.expView === 'chart') return renderExpenseChart();
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  if (!state.expYM) state.expYM = monthStr();
+  const ym = state.expYM;
+
+  // 这个月的旧数据已经画过 ⇒ 先把旧的摆上去（秒开），再后台拉最新的
+  const cached = state.expenseSig && state.expenseYM === ym ? state.expense : null;
+  if (cached) paintExpenseList();
+  else v.innerHTML = loadingHTML();
+
   try {
-    if (!state.expYM) state.expYM = monthStr();
-    const ym = state.expYM;
     const { start, end } = rangeOfYM(ym);
     const { data, error } = await cloud.database.from('expense').select('*').gte('record_date', start).lt('record_date', end).order('record_date', { ascending: false }).order('created_at', { ascending: false });
     if (error) throw error;
-    state.expense = data || [];
-    let mOut = 0, mIn = 0;
-    state.expense.forEach(r => { if (r.kind === 'out') mOut += Number(r.amount); else mIn += Number(r.amount); });
-    if (!state.expense.length) {
-      v.innerHTML = expSegHTML() + monthBar(ym, 0, 0, 0, 0) +
-        `<div class="empty"><div class="ico">💰</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一笔</div>`;
-      bindExpSeg(); bindYM();
-      return;
-    }
-    const groups = {};
-    state.expense.forEach(r => { const k = r.record_date; (groups[k] = groups[k] || []).push(r); });
-    const sortedDays = Object.keys(groups).sort((a,b) => a < b ? 1 : -1);
-    let html = expSegHTML() + monthBar(ym, mOut, mIn, state.expense.filter(r=>r.kind==='out').length, state.expense.filter(r=>r.kind==='in').length) + `<div class="sec">明细</div>`;
-    sortedDays.forEach(day => {
-      let dayOut = 0;
-      groups[day].forEach(r => { if (r.kind === 'out') dayOut += Number(r.amount); });
-      html += `<div class="card">
-        <div class="row-between" style="margin-bottom:10px">
-          <span class="dim" style="font-size:13px;font-weight:600">${fmtDate(day)}</span>
-          <span class="muted" style="font-size:12px">${groups[day].length} 笔 · 支出 ¥${fmtMoney(dayOut)}</span>
-        </div>`;
-      groups[day].forEach(r => {
-        const sign = r.kind === 'out' ? '-' : '+';
-        const cls = r.kind === 'out' ? 'amt-out' : 'amt-in';
-        html += `
-          <div class="row card-tap" data-edit="expense" data-id="${r.id}" style="padding:8px 0">
-            <span class="grow">
-              <span class="dim">${escapeHtml(r.category||'-')}</span>
-              ${r.note ? `<div class="muted" style="font-size:12px;margin-top:2px">${escapeHtml(r.note)}</div>` : ''}
-            </span>
-            <span class="${cls} num">${sign}¥${fmtMoney(r.amount)}</span>
-            <button class="btn-close" data-del="expense" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
-          </div>`;
-      });
-      html += `</div>`;
-    });
-    v.innerHTML = html;
-    bindExpSeg(); bindYM();
-    $$('[data-edit="expense"]').forEach(el => el.onclick = (e) => {
-      if (e.target.dataset.del) return;
-      openExpenseForm(el.dataset.id);
-    });
-    $$('[data-del="expense"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delExpense(b.dataset.id); });
+    const list = data || [];
+    const sig = rowsSig(list);
+    const same = sig === state.expenseSig && state.expenseYM === ym;
+    state.expense = list; state.expenseSig = sig; state.expenseYM = ym;
+    if (!same) paintExpenseList();     // 数据没变就别重画，免得打断正在看列表的人
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    if (cached) softFail(e);
+    else v.innerHTML = failHTML('加载', e, 'renderExpenseList()');
   }
+}
+
+/* 只负责画（数据取 state.expense）—— 秒开和刷新完成后都走它 */
+function paintExpenseList() {
+  const v = $('#view');
+  const ym = state.expYM;
+  let mOut = 0, mIn = 0;
+  state.expense.forEach(r => { if (r.kind === 'out') mOut += Number(r.amount); else mIn += Number(r.amount); });
+  if (!state.expense.length) {
+    v.innerHTML = expSegHTML() + monthBar(ym, 0, 0, 0, 0) +
+      `<div class="empty"><div class="ico">💰</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一笔</div>`;
+    bindExpSeg(); bindYM();
+    return;
+  }
+  const groups = {};
+  state.expense.forEach(r => { const k = r.record_date; (groups[k] = groups[k] || []).push(r); });
+  const sortedDays = Object.keys(groups).sort((a,b) => a < b ? 1 : -1);
+  let html = expSegHTML() + monthBar(ym, mOut, mIn, state.expense.filter(r=>r.kind==='out').length, state.expense.filter(r=>r.kind==='in').length) + `<div class="sec">明细</div>`;
+  sortedDays.forEach(day => {
+    let dayOut = 0;
+    groups[day].forEach(r => { if (r.kind === 'out') dayOut += Number(r.amount); });
+    html += `<div class="card">
+      <div class="row-between" style="margin-bottom:10px">
+        <span class="dim" style="font-size:13px;font-weight:600">${fmtDate(day)}</span>
+        <span class="muted" style="font-size:12px">${groups[day].length} 笔 · 支出 ¥${fmtMoney(dayOut)}</span>
+      </div>`;
+    groups[day].forEach(r => {
+      const sign = r.kind === 'out' ? '-' : '+';
+      const cls = r.kind === 'out' ? 'amt-out' : 'amt-in';
+      html += `
+        <div class="row card-tap" data-edit="expense" data-id="${r.id}" style="padding:8px 0">
+          <span class="grow">
+            <span class="dim">${escapeHtml(r.category||'-')}</span>
+            ${r.note ? `<div class="muted" style="font-size:12px;margin-top:2px">${escapeHtml(r.note)}</div>` : ''}
+          </span>
+          <span class="${cls} num">${sign}¥${fmtMoney(r.amount)}</span>
+          <button class="btn-close" data-del="expense" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  v.innerHTML = html;
+  bindExpSeg(); bindYM();
+  $$('[data-edit="expense"]').forEach(el => el.onclick = (e) => {
+    if (e.target.dataset.del) return;
+    openExpenseForm(el.dataset.id);
+  });
+  $$('[data-del="expense"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delExpense(b.dataset.id); });
 }
 
 /* ---- 记账图表：6 月趋势 + 分类构成 + 30 天节奏 ---- */
 async function renderExpenseChart() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  v.innerHTML = loadingHTML();
   try {
     const now = new Date();
     const months = [];
@@ -1828,7 +1970,7 @@ async function renderExpenseChart() {
     v.innerHTML = html;
     bindExpSeg();
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    v.innerHTML = failHTML('加载', e, 'renderExpenseChart()');
   }
 }
 
@@ -1855,7 +1997,7 @@ function openExpenseForm(id) {
 
 async function saveExpense(id) {
   const amount = parseFloat($('#f-amount').value);
-  if (!amount || amount <= 0) { alert('请填正确金额'); return; }
+  if (!amount || amount <= 0) { toastErr('请填正确金额'); return; }
   const payload = {
     amount, kind: $('#f-kind').value, category: $('#f-category').value,
     note: $('#f-note').value.trim(), record_date: $('#f-date').value
@@ -1863,7 +2005,7 @@ async function saveExpense(id) {
   const res = id
     ? await cloud.database.from('expense').update(payload).eq('id', id).select()
     : await cloud.database.from('expense').insert(payload).select();
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (!id) awardRecordExp();
   // 记到别的月份时自动跟过去，避免「保存完看不到」
@@ -1875,7 +2017,7 @@ async function saveExpense(id) {
 async function delExpense(id) {
   if (!confirm('删除这条记录？')) return;
   const { error } = await cloud.database.from('expense').delete().eq('id', id).select();
-  if (error) { alert(errMsg(error)); return; }
+  if (error) { toastErr(errMsg(error)); return; }
   renderExpenseList();
 }
 
@@ -1884,47 +2026,69 @@ const MOODS = ['😊','😢','😡','😐','😴','🥰','😰','🤔','💪','�
 
 async function renderDiaryList() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  // 有旧数据就先把旧的摆上去（秒开），再后台拉最新的。
+  // ⛔ 已经站在日记页、搜索框也建好了 ⇒ 绝不能走 paintDiaryAll ——
+  //    它会重建整个 #view（连输入框一起换掉），正在拼的中文就没落点了。
+  //    #dq 不存在只可能是"刚从别的 tab 切过来"（各 tab 共用 #view，DOM 早被冲了）。
+  const cached = state.diarySig ? state.diary : null;
+  if (cached) { if (state.diary.length && $('#dq')) paintDiaryList(); else paintDiaryAll(); }
+  else v.innerHTML = loadingHTML();
+
   try {
-    const { data, error } = await cloud.database.from('diary').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(500);
+    const { data, error } = await cloud.database.from('diary').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(LIMIT_LIST);
     if (error) throw error;
-    state.diary = data || [];
-
-    if (!state.diary.length) {
-      v.innerHTML = `<div class="empty"><div class="ico">📖</div>还没有日记<br>点右下角 + 写第一篇</div>`;
-      return;
+    const list = data || [];
+    const sig = rowsSig(list);
+    const same = sig === state.diarySig;
+    state.diary = list; state.diarySig = sig;
+    if (!same) {
+      // ⛔ 搜索框已经建好就只重画列表。重建整个 #view 会把正在拼的中文打断
+      //    （「打出来只有字母、上不了屏」那个老 bug 就是这么来的）
+      if (state.diary.length && $('#dq')) paintDiaryList();
+      else paintDiaryAll();
     }
-    /* 搜索框只建这一次，之后打字只重画下面的 #dq-list。
-       ⛔ 以前是「每次输入都重建整个 #view」—— 连输入框本身一起换掉，
-       中文输入法正在拼的那串拼音就没了落点，表现成「打出来只有字母、上不了屏」。
-       另外 type="search" 在部分安卓输入法下会吃回车/候选键，换成 text + inputmode。 */
-    v.innerHTML = `<div class="search">
-      <span class="si">${ICONS.search}</span>
-      <input id="dq" type="text" inputmode="search" enterkeyhint="search" autocomplete="off"
-             placeholder="搜标题 / 正文 / 心情 / 日期" value="${escapeHtml(state.diaryQ || '')}">
-      <span class="clr" id="dq-clr" style="${state.diaryQ ? '' : 'display:none'}">×</span>
-    </div>
-    <div id="dq-list"></div>`;
-
-    const dq = $('#dq');
-    let composing = false;                       // 输入法拼字中，先别动 DOM
-    dq.addEventListener('compositionstart', () => { composing = true; });
-    dq.addEventListener('compositionend', (e) => { composing = false; state.diaryQ = e.target.value; paintDiaryList(); });
-    dq.addEventListener('input', (e) => {
-      state.diaryQ = e.target.value;
-      $('#dq-clr').style.display = state.diaryQ ? '' : 'none';
-      if (composing || e.isComposing) return;
-      paintDiaryList();
-    });
-    $('#dq-clr').onclick = () => {
-      state.diaryQ = ''; dq.value = '';
-      $('#dq-clr').style.display = 'none';
-      paintDiaryList(); dq.focus();
-    };
-    paintDiaryList();
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    if (cached) softFail(e);
+    else v.innerHTML = failHTML('加载', e, 'renderDiaryList()');
   }
+}
+
+/* 建搜索框 + 列表。只在「第一次进来」和「列表变空」时跑，
+   之后一律只调 paintDiaryList()，别再重建输入框。 */
+function paintDiaryAll() {
+  const v = $('#view');
+  if (!state.diary.length) {
+    v.innerHTML = `<div class="empty"><div class="ico">📖</div>还没有日记<br>点右下角 + 写第一篇</div>`;
+    return;
+  }
+  /* 搜索框只建这一次，之后打字只重画下面的 #dq-list。
+     ⛔ 以前是「每次输入都重建整个 #view」—— 连输入框本身一起换掉，
+     中文输入法正在拼的那串拼音就没了落点，表现成「打出来只有字母、上不了屏」。
+     另外 type="search" 在部分安卓输入法下会吃回车/候选键，换成 text + inputmode。 */
+  v.innerHTML = `<div class="search">
+    <span class="si">${ICONS.search}</span>
+    <input id="dq" type="text" inputmode="search" enterkeyhint="search" autocomplete="off"
+           placeholder="搜标题 / 正文 / 心情 / 日期" value="${escapeHtml(state.diaryQ || '')}">
+    <span class="clr" id="dq-clr" style="${state.diaryQ ? '' : 'display:none'}">×</span>
+  </div>
+  <div id="dq-list"></div>`;
+
+  const dq = $('#dq');
+  let composing = false;                       // 输入法拼字中，先别动 DOM
+  dq.addEventListener('compositionstart', () => { composing = true; });
+  dq.addEventListener('compositionend', (e) => { composing = false; state.diaryQ = e.target.value; paintDiaryList(); });
+  dq.addEventListener('input', (e) => {
+    state.diaryQ = e.target.value;
+    $('#dq-clr').style.display = state.diaryQ ? '' : 'none';
+    if (composing || e.isComposing) return;
+    paintDiaryList();
+  });
+  $('#dq-clr').onclick = () => {
+    state.diaryQ = ''; dq.value = '';
+    $('#dq-clr').style.display = 'none';
+    paintDiaryList(); dq.focus();
+  };
+  paintDiaryList();
 }
 
 /* 只重画搜索结果区，输入框原地不动 */
@@ -1978,12 +2142,12 @@ function openDiaryForm(id) {
 
 async function saveDiary(id) {
   const content = $('#d-content').value.trim();
-  if (!content) { alert('正文不能空'); return; }
+  if (!content) { toastErr('正文不能空'); return; }
   const payload = { title: $('#d-title').value.trim(), content, mood: $('#d-mood').value, record_date: $('#d-date').value };
   const res = id
     ? await cloud.database.from('diary').update(payload).eq('id', id).select()
     : await cloud.database.from('diary').insert(payload).select();
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (!id) awardRecordExp();
   renderDiaryList();
@@ -1992,7 +2156,7 @@ async function saveDiary(id) {
 async function delDiary(id) {
   if (!confirm('删除这篇日记？')) return;
   const { error } = await cloud.database.from('diary').delete().eq('id', id).select();
-  if (error) { alert(errMsg(error)); return; }
+  if (error) { toastErr(errMsg(error)); return; }
   renderDiaryList();
 }
 
@@ -2063,52 +2227,67 @@ function openHiddenTags() {
 
 async function renderLifeList() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
-  try {
-    const { data, error } = await cloud.database.from('life').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(100);
-    if (error) throw error;
-    state.life = data || [];
-    if (!state.life.length) {
-      v.innerHTML = `<div class="empty"><div class="ico">✨</div>还没有随手记<br>点右下角 + 记一条</div>`;
-      return;
-    }
-    // 顶部标签筛选条（按用到的次数排）—— 在「管理」里删掉的标签这里也不再出现
-    const freq = {};
-    state.life.forEach(r => (r.tags || []).forEach(t => { const s = String(t).trim(); if (s) freq[s] = (freq[s] || 0) + 1; }));
-    const hiddenTags = lifeTagHidden();
-    const names = Object.keys(freq).filter(t => !hiddenTags.includes(t)).sort((a, b) => freq[b] - freq[a]).slice(0, 24);
-    const cur = state.lifeTagQ || '';
-    const list = cur ? state.life.filter(r => (r.tags || []).some(t => String(t) === cur)) : state.life;
+  // 有旧数据就先把旧的摆上去（秒开），再后台拉最新的
+  const cached = state.lifeSig ? state.life : null;
+  if (cached) paintLifeList();
+  else v.innerHTML = loadingHTML();
 
-    let html = '';
-    if (names.length) {
-      html += `<div class="tagbar">
-        <button class="filter ${cur ? '' : 'on'}" data-tagf="">全部</button>
-        ${names.map(t => `<button class="filter ${cur === t ? 'on' : ''}" data-tagf="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
-      </div>`;
-    }
-    html += `<div class="sec">${cur ? `「${escapeHtml(cur)}」${list.length} 条` : `共 ${list.length} 条`}</div>`;
-    list.forEach(r => {
-      const tags = (r.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('');
-      html += `<div class="card card-tap" data-edit="life" data-id="${r.id}">
-        <div class="row-between">
-          <span class="muted" style="font-size:12px">${fmtDate(r.record_date)}</span>
-          <button class="btn-close" data-del="life" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
-        </div>
-        <div style="margin-top:6px;white-space:pre-wrap">${escapeHtml(r.content)}</div>
-        ${tags ? `<div style="margin-top:7px">${tags}</div>` : ''}
-      </div>`;
-    });
-    v.innerHTML = html;
-    $$('[data-tagf]').forEach(b => b.onclick = () => { state.lifeTagQ = b.dataset.tagf; renderLifeList(); });
-    $$('[data-edit="life"]').forEach(el => el.onclick = (e) => {
-      if (e.target.dataset.del) return;
-      openLifeForm(el.dataset.id);
-    });
-    $$('[data-del="life"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delLife(b.dataset.id); });
+  try {
+    const { data, error } = await cloud.database.from('life').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(LIMIT_LIST);
+    if (error) throw error;
+    const list = data || [];
+    const sig = rowsSig(list);
+    const same = sig === state.lifeSig;
+    state.life = list; state.lifeSig = sig;
+    if (!same) paintLifeList();
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    if (cached) softFail(e);
+    else v.innerHTML = failHTML('加载', e, 'renderLifeList()');
   }
+}
+
+/* 只负责画（数据取 state.life） */
+function paintLifeList() {
+  const v = $('#view');
+  if (!state.life.length) {
+    v.innerHTML = `<div class="empty"><div class="ico">✨</div>还没有随手记<br>点右下角 + 记一条</div>`;
+    return;
+  }
+  // 顶部标签筛选条（按用到的次数排）—— 在「管理」里删掉的标签这里也不再出现
+  const freq = {};
+  state.life.forEach(r => (r.tags || []).forEach(t => { const s = String(t).trim(); if (s) freq[s] = (freq[s] || 0) + 1; }));
+  const hiddenTags = lifeTagHidden();
+  const names = Object.keys(freq).filter(t => !hiddenTags.includes(t)).sort((a, b) => freq[b] - freq[a]).slice(0, 24);
+  const cur = state.lifeTagQ || '';
+  const list = cur ? state.life.filter(r => (r.tags || []).some(t => String(t) === cur)) : state.life;
+
+  let html = '';
+  if (names.length) {
+    html += `<div class="tagbar">
+      <button class="filter ${cur ? '' : 'on'}" data-tagf="">全部</button>
+      ${names.map(t => `<button class="filter ${cur === t ? 'on' : ''}" data-tagf="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+    </div>`;
+  }
+  html += `<div class="sec">${cur ? `「${escapeHtml(cur)}」${list.length} 条` : `共 ${list.length} 条`}</div>`;
+  list.forEach(r => {
+    const tags = (r.tags||[]).map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('');
+    html += `<div class="card card-tap" data-edit="life" data-id="${r.id}">
+      <div class="row-between">
+        <span class="muted" style="font-size:12px">${fmtDate(r.record_date)}</span>
+        <button class="btn-close" data-del="life" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+      </div>
+      <div style="margin-top:6px;white-space:pre-wrap">${escapeHtml(r.content)}</div>
+      ${tags ? `<div style="margin-top:7px">${tags}</div>` : ''}
+    </div>`;
+  });
+  v.innerHTML = html;
+  // ⭐ 点标签只是换个筛选条件，数据没变 —— 只重画，不再重新请求（原来每次都要走一遍网络）
+  $$('[data-tagf]').forEach(b => b.onclick = () => { state.lifeTagQ = b.dataset.tagf; paintLifeList(); });
+  $$('[data-edit="life"]').forEach(el => el.onclick = (e) => {
+    if (e.target.dataset.del) return;
+    openLifeForm(el.dataset.id);
+  });
+  $$('[data-del="life"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delLife(b.dataset.id); });
 }
 
 function openLifeForm(id) {
@@ -2190,7 +2369,7 @@ function openLifeForm(id) {
 
 async function saveLife(id, sel) {
   const content = $('#l-content').value.trim();
-  if (!content) { alert('内容不能空'); return; }
+  if (!content) { toastErr('内容不能空'); return; }
   const tags = sel
     ? Array.from(sel).map(x => String(x).trim()).filter(Boolean)
     : ($('#l-tags') ? $('#l-tags').value.trim().split(/[,，]/).map(x => x.trim()).filter(Boolean) : []);
@@ -2198,7 +2377,7 @@ async function saveLife(id, sel) {
   const res = id
     ? await cloud.database.from('life').update(payload).eq('id', id).select()
     : await cloud.database.from('life').insert(payload).select();
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (!id) awardRecordExp();
   renderLifeList();
@@ -2207,7 +2386,7 @@ async function saveLife(id, sel) {
 async function delLife(id) {
   if (!confirm('删除这条记录？')) return;
   const { error } = await cloud.database.from('life').delete().eq('id', id).select();
-  if (error) { alert(errMsg(error)); return; }
+  if (error) { toastErr(errMsg(error)); return; }
   renderLifeList();
 }
 
@@ -2219,13 +2398,57 @@ const SPORT_TYPES = ['跑步','散步','力量','瑜伽','骑行','球类','游�
    都是手机自带健康 App 的私有数据，普通 App 读不到（要厂商签名级权限，
    或走系统的 Health Connect 授权——那个得看你手机支不支持）。
    所以这里只能按步数折算，默认值取自常见经验：步幅 0.8 米、每步每公斤约
-   0.00053 千卡（60 公斤的人约 0.032 千卡/步，与手机健康 App 的量级一致）。
+   0.00053 千卡（72 公斤的人约 0.038 千卡/步，与手机健康 App 的量级一致）。
    ⛔ 界面上必须写清「估算」，别让用户以为这是手机量出来的。                 */
 function stepStrideM() { const v = Number(LS.get('stepStride', 0.8)); return (v > 0.3 && v < 1.6) ? v : 0.8; }
-function stepWeightKg() { const v = Number(LS.get('bodyWeight', 60)); return (v > 20 && v < 200) ? v : 60; }
+function stepWeightKg() { const v = Number(LS.get('bodyWeight', 72)); return (v > 20 && v < 200) ? v : 72; }
+function stepSpm() { const v = Number(LS.get('stepSpm', 100)); return (v >= 60 && v <= 160) ? v : 100; }
 function stepMetrics(steps) {
   const s = Math.max(0, Number(steps) || 0);
   return { km: s * stepStrideM() / 1000, kcal: Math.round(s * stepWeightKg() * 0.00053) };
+}
+// 步数 → 步行时长（分）。散步步频约 100 步/分，可在「调整折算」里改。
+function stepMinutes(steps) { return Math.round(Math.max(0, Number(steps) || 0) / stepSpm()); }
+
+/* ---- 运动量口径：手记优先，步数折算兜底 --------------------------------
+   散步这类日常活动用户懒得填时长/距离/消耗（也确实没必要填），所以周汇总
+   不能只看手记字段，否则永远是三个「未记录」。这里按「天」合并：
+     某天手记填了 → 用那天手记的值；那天没填 → 用那天的步数折算。
+   ⛔ 同一天只用一种来源，不做相加，避免手记和折算重复计算。
+   ⛔ 折算出来的值必须标「估算」，不能和手记实测混为一谈。 */
+function dayLoad(sportRows, stepRows) {
+  const d = {};
+  const slot = (k) => d[k] || (d[k] = { mKm: 0, mKcal: 0, mMin: 0, steps: 0 });
+  (sportRows || []).forEach(r => {
+    const o = slot(ymd(r));
+    o.mKm += Number(r.distance_km) || 0;
+    o.mKcal += Number(r.calories) || 0;
+    o.mMin += Number(r.duration_min) || 0;
+  });
+  (stepRows || []).forEach(r => { slot(ymd(r)).steps = Number(r.steps) || 0; });
+
+  const keys = Object.keys(d).sort();
+  keys.forEach(k => {
+    const o = d[k], e = stepMetrics(o.steps);
+    const pick = (m) => m > 0 ? 'm' : (o.steps > 0 ? 'e' : null);
+    o.km = o.mKm > 0 ? o.mKm : e.km;
+    o.kcal = o.mKcal > 0 ? o.mKcal : e.kcal;
+    o.min = o.mMin > 0 ? o.mMin : stepMinutes(o.steps);
+    o.src = { km: pick(o.mKm), kcal: pick(o.mKcal), min: pick(o.mMin) };
+  });
+  return d;
+}
+// 周合计 + 来源判定：'manual' 全是手记 / 'est' 全是步数估算 / 'mix' 两种都有 / 'none' 两样都没有
+function loadSum(dayMap) {
+  const days = Object.keys(dayMap).map(k => dayMap[k]);
+  const tot = { km: 0, kcal: 0, min: 0 };
+  days.forEach(o => { tot.km += o.km; tot.kcal += o.kcal; tot.min += o.min; });
+  const src = {};
+  ['km', 'kcal', 'min'].forEach(f => {
+    const s = new Set(days.map(o => o.src[f]).filter(Boolean));
+    src[f] = !s.size ? 'none' : (s.size > 1 ? 'mix' : [...s][0]);
+  });
+  return { ...tot, src, estDays: days.filter(o => o.src.km === 'e').length, days: days.length };
 }
 function stepExtraHTML(stepNow) {
   const m = stepMetrics(stepNow);
@@ -2281,86 +2504,111 @@ function stepSectionHTML() {
 
 async function renderSportList() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  // 有旧数据就先把旧的摆上去（秒开），再后台拉最新的
+  const cached = state.sportSig ? true : null;
+  if (cached) paintSportList();
+  else v.innerHTML = loadingHTML();
+
   try {
     const d14 = new Date(); d14.setDate(d14.getDate() - 13);
     const [sp, st] = await Promise.all([
-      cloud.database.from('sport').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(100),
+      cloud.database.from('sport').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(LIMIT_LIST),
       cloud.database.from('steps').select('*').gte('record_date', localDateStr(d14))
     ]);
     if (sp.error) throw sp.error;
     if (st.error) throw st.error;
     state.sport = sp.data || [];
     state.steps = (st.data || []).slice().sort((a,b) => String(a.record_date) < String(b.record_date) ? 1 : -1);
+    // 这一页同时吃 sport 和 steps 两份数据，指纹要一起算
+    const sig = rowsSig(state.sport) + '\u0001' + rowsSig(state.steps);
+    const same = sig === state.sportSig;
+    state.sportSig = sig;
+    if (!same) paintSportList();
+  } catch(e) {
+    if (cached) softFail(e);
+    else v.innerHTML = failHTML('加载', e, 'renderSportList()');
+  }
+}
 
-    const now = new Date();
-    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
-    const weekStartStr = localDateStr(weekStart);
-    const week = state.sport.filter(r => r.record_date >= weekStartStr);
-    // 近 14 天每日时长
-    const d14b = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);
-    const dayRows = [];
-    let tot14 = 0;
-    for (let i = 0; i < 14; i++) {
-      const d = new Date(d14b.getFullYear(), d14b.getMonth(), d14b.getDate() + i);
-      const s = localDateStr(d);
-      const m = state.sport.filter(r => String(r.record_date) === s).reduce((a,r)=>a+Number(r.duration_min||0),0);
-      tot14 += m;
-      dayRows.push({ label: (i % 2 === 0) ? (d.getMonth()+1) + '/' + d.getDate() : '', a: m });
-    }
-    const sportDays = dayRows.filter(r => r.a > 0).length;
-    const totMin = week.reduce((s,r)=>s+Number(r.duration_min||0),0);
-    const totKm = week.reduce((s,r)=>s+Number(r.distance_km||0),0);
-    const totCal = week.reduce((s,r)=>s+Number(r.calories||0),0);
+/* 只负责画（数据取 state.sport / state.steps） */
+function paintSportList() {
+  const v = $('#view');
+  const now = new Date();
+  const weekStartStr = localDateStr(mondayOf(now));   // 周一为一周起点，跟周报对齐
+  const week = state.sport.filter(r => r.record_date >= weekStartStr);
+  // 近 14 天每日时长
+  const d14b = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 13);
+  const dayRows = [];
+  let tot14 = 0;
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(d14b.getFullYear(), d14b.getMonth(), d14b.getDate() + i);
+    const s = localDateStr(d);
+    const m = state.sport.filter(r => String(r.record_date) === s).reduce((a,r)=>a+Number(r.duration_min||0),0);
+    tot14 += m;
+    dayRows.push({ label: (i % 2 === 0) ? (d.getMonth()+1) + '/' + d.getDate() : '', a: m });
+  }
+  const sportDays = dayRows.filter(r => r.a > 0).length;
+  // 运动量：手记优先、步数折算兜底（散步不用手填，具体见 dayLoad 注释）
+  const load = loadSum(dayLoad(week, (state.steps || []).filter(r => String(r.record_date) >= weekStartStr)));
+  const SRC_TXT = { m: '手记', e: '步数估算', mix: '手记 + 估算' };
+  const cell = (label, v, unit, fix, key) => {
+    const has = v > 0;
+    const txt = has ? (fix === 2 ? v.toFixed(2) : Math.round(v).toLocaleString('zh-CN')) : '—';
+    const u = has ? `<span style="font-size:12px;color:var(--text-3)"> ${unit}</span>` : '';
+    return `<div class="stat"><div class="label">${label}</div><div class="value num">${txt}${u}</div>`
+      + `<div class="sub">${has ? SRC_TXT[load.src[key]] : '无记录'}</div></div>`;
+  };
+  const loadNote = load.estDays
+    ? `时长 / 距离 / 消耗没手填的按步数折算，本周覆盖 ${load.estDays} 天（步幅 ${stepStrideM()} 米、体重 ${stepWeightKg()} 公斤、步频 ${stepSpm()} 步/分）· 点「调整折算」可改`
+    : (week.length ? '本周运动量全部来自手记明细' : '');
 
-    let html = stepSectionHTML();
+  let html = stepSectionHTML();
+  html += `
+    <div class="sec">本周汇总</div>
+    <div class="stat-grid">
+      ${cell('总时长', load.min, '分', 0, 'min')}
+      ${cell('总距离', load.km, 'km', 2, 'km')}
+      ${cell('总消耗', load.kcal, '千卡', 0, 'kcal')}
+      <div class="stat"><div class="label">总次数</div><div class="value num">${week.length}<span style="font-size:12px;color:var(--text-3)"> 次</span></div><div class="sub">手记次数</div></div>
+    </div>
+    ${loadNote ? `<div class="muted" style="font-size:11.5px;line-height:1.85;margin:9px 2px 0">${escapeHtml(loadNote)}</div>` : ''}`;
 
-    if (!state.sport.length) {
-      html += `<div class="sec">运动记录</div>
-        <div class="empty"><div class="ico">🏃</div>还没有手记的运动<br>点右下角 + 记一次<br>
-        <span style="color:var(--text-3);font-size:11.5px;line-height:1.9">上面的步数 / 距离 / 消耗是手机自动同步的，不用手记</span></div>`;
-      v.innerHTML = html;
-      bindStep();
-      return;
-    }
-    html += `
-      <div class="sec">本周汇总 · 手动记录</div>
-      <div class="stat-grid">
-        <div class="stat"><div class="label">总时长</div><div class="value num">${totMin}<span style="font-size:12px;color:var(--text-3)"> 分</span></div></div>
-        <div class="stat"><div class="label">总距离</div><div class="value num">${totKm.toFixed(2)}<span style="font-size:12px;color:var(--text-3)"> km</span></div></div>
-        <div class="stat"><div class="label">总消耗</div><div class="value num">${totCal}<span style="font-size:12px;color:var(--text-3)"> 千卡</span></div></div>
-        <div class="stat"><div class="label">总次数</div><div class="value num">${week.length}<span style="font-size:12px;color:var(--text-3)"> 次</span></div></div>
-      </div>
-      <div class="sec">近 14 天时长</div>
-      <div class="chart-wrap">
-        <div class="chart-title">有 ${sportDays} 天动了 · 日均 ${Math.round(tot14 / 14)} 分</div>
-        ${barChartSVG(dayRows, { h: 108 })}
-      </div>
-      <div class="sec">明细</div>`;
-    state.sport.forEach(r => {
-      const bits = [];
-      if (r.duration_min) bits.push(r.duration_min + ' 分');
-      if (r.distance_km) bits.push(r.distance_km + ' km');
-      if (r.calories) bits.push(r.calories + ' 千卡');
-      html += `<div class="card">
-        <div class="row-between">
-          <span><span style="font-weight:600">${escapeHtml(r.kind)}</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
-          <div style="display:flex;gap:6px">
-            <button class="btn-close" data-edit="sport" data-id="${r.id}" style="font-size:12px;width:28px;height:28px">✎</button>
-            <button class="btn-close" data-del="sport" data-id="${r.id}" style="font-size:13px;width:28px;height:28px">×</button>
-          </div>
-        </div>
-        ${bits.length ? `<div class="dim" style="margin-top:6px;font-size:13px">${bits.join(' · ')}</div>` : ''}
-        ${r.note?`<div class="muted" style="margin-top:4px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
-      </div>`;
-    });
+  if (!state.sport.length) {
+    html += `<div class="sec">运动记录</div>
+      <div class="empty"><div class="ico">🏃</div>还没有手记的运动<br>点右下角 + 记一次<br>
+      <span style="color:var(--text-3);font-size:11.5px;line-height:1.9">散步这种日常活动不用手填明细，上面的距离 / 消耗 / 时长按步数折算</span></div>`;
     v.innerHTML = html;
     bindStep();
-    $$('[data-edit="sport"]').forEach(b => b.onclick = () => openSportForm(b.dataset.id));
-    $$('[data-del="sport"]').forEach(b => b.onclick = () => delSport(b.dataset.id));
-  } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    return;
   }
+  html += `
+    <div class="sec">近 14 天时长</div>
+    <div class="chart-wrap">
+      <div class="chart-title">有 ${sportDays} 天动了 · 日均 ${Math.round(tot14 / 14)} 分</div>
+      ${barChartSVG(dayRows, { h: 108 })}
+    </div>
+    <div class="sec">明细</div>`;
+  state.sport.forEach(r => {
+    const bits = [];
+    if (r.duration_min) bits.push(r.duration_min + ' 分');
+    if (r.distance_km) bits.push(r.distance_km + ' km');
+    if (r.calories) bits.push(r.calories + ' 千卡');
+    html += `<div class="card">
+      <div class="row-between">
+        <span><span style="font-weight:600">${escapeHtml(r.kind)}</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
+        <div style="display:flex;gap:6px">
+          <button class="btn-close" data-edit="sport" data-id="${r.id}" style="font-size:12px;width:28px;height:28px">✎</button>
+          <button class="btn-close" data-del="sport" data-id="${r.id}" style="font-size:13px;width:28px;height:28px">×</button>
+        </div>
+      </div>
+      ${bits.length ? `<div class="dim" style="margin-top:6px;font-size:13px">${bits.join(' · ')}</div>` : ''}
+      ${r.note?`<div class="muted" style="margin-top:4px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
+    </div>`;
+  });
+  v.innerHTML = html;
+  bindStep();
+  $$('[data-edit="sport"]').forEach(b => b.onclick = () => openSportForm(b.dataset.id));
+  $$('[data-del="sport"]').forEach(b => b.onclick = () => delSport(b.dataset.id));
 }
 
 function openSportForm(id) {
@@ -2378,6 +2626,7 @@ function openSportForm(id) {
     </div>
     <div class="field"><label>消耗（千卡）</label><input id="s-cal" type="number" min="0" placeholder="0" value="${r ? r.calories||'' : ''}"></div>
     <div class="field"><label>备注</label><input id="s-note" type="text" placeholder="可选" value="${r ? escapeHtml(r.note||'') : ''}"></div>
+    <p class="sy-p" style="color:var(--text-3)">散步这类日常活动可以留空不填 —— 空着的项会按当天的步数折算（步幅 / 体重 / 步频在「调整折算」里设）。</p>
     <button class="btn" id="s-save">保存</button>`);
   setModalTitle(r ? '编辑运动' : '记运动');
   $('#s-save').onclick = () => saveSport(id);
@@ -2395,7 +2644,7 @@ async function saveSport(id) {
   const res = id
     ? await cloud.database.from('sport').update(payload).eq('id', id).select()
     : await cloud.database.from('sport').insert(payload).select();
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (!id) awardRecordExp();
   renderSportList();
@@ -2404,64 +2653,81 @@ async function saveSport(id) {
 async function delSport(id) {
   if (!confirm('删除这条记录？')) return;
   const { error } = await cloud.database.from('sport').delete().eq('id', id).select();
-  if (error) { alert(errMsg(error)); return; }
+  if (error) { toastErr(errMsg(error)); return; }
   renderSportList();
 }
 
 /* ================= Health ================= */
 async function renderHealthList() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  if (!state.heYM) state.heYM = monthStr();
+  const ym = state.heYM;
+
+  // 这个月的旧数据已经画过 ⇒ 先把旧的摆上去（秒开），再后台拉最新的
+  const cached = state.healthSig && state.healthYM === ym ? true : null;
+  if (cached) paintHealthList();
+  else v.innerHTML = loadingHTML();
+
   try {
-    if (!state.heYM) state.heYM = monthStr();
-    const ym = state.heYM;
     const curR = rangeOfYM(ym);
-    const lm = shiftYM(ym, -1);
-    const prvR = rangeOfYM(lm);
+    const prvR = rangeOfYM(shiftYM(ym, -1));
     const [cur, prv] = await Promise.all([
       cloud.database.from('health').select('*').gte('record_date', curR.start).lt('record_date', curR.end).order('record_date', { ascending: false }).order('created_at', { ascending: false }),
       cloud.database.from('health').select('*').gte('record_date', prvR.start).lt('record_date', prvR.end)
     ]);
     if (cur.error) throw cur.error;
     state.health = cur.data || [];
-
-    // ⛔ 「今日步数」原来长在这一页，已经搬去「运动」页了（步数和运动记录是一件事）。
-    //    这里只留「健康」本来的记录（自慰次数 / 备注）。
-    const monthTimes = state.health.reduce((s,r)=>s+Number(r.times||0),0);
-    const monthDays = new Set(state.health.map(r=>r.record_date)).size;
-    const lastMonthTimes = (prv.data||[]).reduce((s,r)=>s+Number(r.times||0),0);
-    const diff = monthTimes - lastMonthTimes;
-    const head = ymBar('health', ym) + `
-      <div class="stat-grid">
-        <div class="stat"><div class="label">${Number(ym.slice(5))} 月次数</div><div class="value num" style="color:var(--pink)">${monthTimes}</div><div class="sub">${monthDays} 天有记录</div></div>
-        <div class="stat"><div class="label">上月 ${Number(lm.slice(5))} 月</div><div class="value num" style="color:var(--pink)">${lastMonthTimes}</div><div class="sub">${diff > 0 ? '比上月多 ' + diff + ' 次' : diff < 0 ? '比上月少 ' + (-diff) + ' 次' : '与上月持平'}</div></div>
-      </div>`;
-
-    if (!state.health.length) {
-      v.innerHTML = head + `<div class="empty"><div class="ico">♥</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一次</div>`;
-      bindYM();
-      return;
-    }
-    let html = head + `<div class="sec">明细</div>`;
-    state.health.forEach(r => {
-      html += `<div class="card card-tap" data-edit="health" data-id="${r.id}">
-        <div class="row-between">
-          <span><span style="color:var(--pink);font-weight:700">${r.times} 次</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
-          <button class="btn-close" data-del="health" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
-        </div>
-        ${r.note?`<div class="muted" style="margin-top:6px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
-      </div>`;
-    });
-    v.innerHTML = html;
-    bindYM();
-    $$('[data-edit="health"]').forEach(el => el.onclick = (e) => {
-      if (e.target.dataset.del) return;
-      openHealthForm(el.dataset.id);
-    });
-    $$('[data-del="health"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delHealth(b.dataset.id); });
+    // 环比要用到上个月的合计，一起缓存下来 —— 否则秒开时这一格会先显示 0
+    state.healthPrvTimes = (prv.data || []).reduce((s,r)=>s+Number(r.times||0),0);
+    const sig = rowsSig(state.health) + '\u0001' + state.healthPrvTimes;
+    const same = sig === state.healthSig && state.healthYM === ym;
+    state.healthSig = sig; state.healthYM = ym;
+    if (!same) paintHealthList();
   } catch(e) {
-    v.innerHTML = `<div class="empty"><div class="ico">!</div>加载失败：${escapeHtml(errMsg(e))}</div>`;
+    if (cached) softFail(e);
+    else v.innerHTML = failHTML('加载', e, 'renderHealthList()');
   }
+}
+
+/* 只负责画（数据取 state.health / state.healthPrvTimes） */
+function paintHealthList() {
+  const v = $('#view');
+  const ym = state.heYM;
+  const lm = shiftYM(ym, -1);
+  // ⛔ 「今日步数」原来长在这一页，已经搬去「运动」页了（步数和运动记录是一件事）。
+  //    这里只留「健康」本来的记录（自慰次数 / 备注）。
+  const monthTimes = state.health.reduce((s,r)=>s+Number(r.times||0),0);
+  const monthDays = new Set(state.health.map(r=>r.record_date)).size;
+  const lastMonthTimes = state.healthPrvTimes || 0;
+  const diff = monthTimes - lastMonthTimes;
+  const head = ymBar('health', ym) + `
+    <div class="stat-grid">
+      <div class="stat"><div class="label">${Number(ym.slice(5))} 月次数</div><div class="value num" style="color:var(--pink)">${monthTimes}</div><div class="sub">${monthDays} 天有记录</div></div>
+      <div class="stat"><div class="label">上月 ${Number(lm.slice(5))} 月</div><div class="value num" style="color:var(--pink)">${lastMonthTimes}</div><div class="sub">${diff > 0 ? '比上月多 ' + diff + ' 次' : diff < 0 ? '比上月少 ' + (-diff) + ' 次' : '与上月持平'}</div></div>
+    </div>`;
+
+  if (!state.health.length) {
+    v.innerHTML = head + `<div class="empty"><div class="ico">♥</div>${Number(ym.slice(5))} 月还没有记录<br>点右下角 + 记一次</div>`;
+    bindYM();
+    return;
+  }
+  let html = head + `<div class="sec">明细</div>`;
+  state.health.forEach(r => {
+    html += `<div class="card card-tap" data-edit="health" data-id="${r.id}">
+      <div class="row-between">
+        <span><span style="color:var(--pink);font-weight:700">${r.times} 次</span> <span class="muted" style="font-size:12px;margin-left:8px">${fmtDate(r.record_date)}</span></span>
+        <button class="btn-close" data-del="health" data-id="${r.id}" style="font-size:13px;width:26px;height:26px">×</button>
+      </div>
+      ${r.note?`<div class="muted" style="margin-top:6px;font-size:12px">${escapeHtml(r.note)}</div>`:''}
+    </div>`;
+  });
+  v.innerHTML = html;
+  bindYM();
+  $$('[data-edit="health"]').forEach(el => el.onclick = (e) => {
+    if (e.target.dataset.del) return;
+    openHealthForm(el.dataset.id);
+  });
+  $$('[data-del="health"]').forEach(b => b.onclick = (e) => { e.stopPropagation(); delHealth(b.dataset.id); });
 }
 
 function openHealthForm(id) {
@@ -2479,12 +2745,12 @@ function openHealthForm(id) {
 
 async function saveHealth(id) {
   const times = parseInt($('#h-times').value);
-  if (!times || times < 1) { alert('次数至少 1'); return; }
+  if (!times || times < 1) { toastErr('次数至少 1'); return; }
   const payload = { times, note: $('#h-note').value.trim(), record_date: $('#h-date').value };
   const res = id
     ? await cloud.database.from('health').update(payload).eq('id', id).select()
     : await cloud.database.from('health').insert(payload).select();
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (!id) awardRecordExp();
   renderHealthList();
@@ -2493,7 +2759,7 @@ async function saveHealth(id) {
 async function delHealth(id) {
   if (!confirm('删除这条记录？')) return;
   const { error } = await cloud.database.from('health').delete().eq('id', id).select();
-  if (error) { alert(errMsg(error)); return; }
+  if (error) { toastErr(errMsg(error)); return; }
   renderHealthList();
 }
 
@@ -2520,23 +2786,26 @@ function openStepMetrics() {
       手机只肯把<b>步数</b>交给 App。距离、消耗、爬楼、心率是手机自带健康 App 的私有数据，
       普通 App 读不到（要厂商签名级权限）。<br>
       所以这里按你自己的情况折算：<b>距离 = 步数 × 步幅</b>；
-      <b>消耗 ≈ 步数 × 体重 × 0.00053</b>。
+      <b>消耗 ≈ 步数 × 体重 × 0.00053</b>；<b>时长 = 步数 ÷ 步频</b>。
     </div>
     <div class="field-row">
       <div class="field"><label>步幅（米/步）</label><input id="sm-stride" type="number" step="0.01" min="0.3" max="1.6" value="${stepStrideM()}"></div>
       <div class="field"><label>体重（公斤）</label><input id="sm-weight" type="number" step="0.5" min="20" max="200" value="${stepWeightKg()}"></div>
     </div>
-    <p class="sy-p" style="color:var(--text-3)">不知道填多少？手机健康 App 里「距离 ÷ 步数」就是你的真实步幅（例如 1.21 公里 ÷ 1474 步 ≈ 0.82 米）。</p>
+    <div class="field"><label>步频（步/分钟）</label><input id="sm-spm" type="number" step="1" min="60" max="160" value="${stepSpm()}"></div>
+    <p class="sy-p" style="color:var(--text-3)">不知道填多少？手机健康 App 里「距离 ÷ 步数」就是你的真实步幅（例如 1.21 公里 ÷ 1474 步 ≈ 0.82 米）。步频散步一般 90 ~ 110。</p>
     <button class="btn" id="sm-save">保存</button>`);
   setModalTitle('距离 / 消耗 · 折算方式');
   $('#sm-save').onclick = () => {
     const st = parseFloat($('#sm-stride').value);
     const wt = parseFloat($('#sm-weight').value);
-    if (!isFinite(st) || st < 0.3 || st > 1.6) { alert('步幅请填 0.3 ~ 1.6 米'); return; }
-    if (!isFinite(wt) || wt < 20 || wt > 200) { alert('体重请填 20 ~ 200 公斤'); return; }
-    LS.set('stepStride', st); LS.set('bodyWeight', wt);
+    const sp2 = parseFloat($('#sm-spm').value);
+    if (!isFinite(st) || st < 0.3 || st > 1.6) { toastErr('步幅请填 0.3 ~ 1.6 米'); return; }
+    if (!isFinite(wt) || wt < 20 || wt > 200) { toastErr('体重请填 20 ~ 200 公斤'); return; }
+    if (!isFinite(sp2) || sp2 < 60 || sp2 > 160) { toastErr('步频请填 60 ~ 160 步/分'); return; }
+    LS.set('stepStride', st); LS.set('bodyWeight', wt); LS.set('stepSpm', sp2);
     closeModal();
-    toast('已保存', `距离按 ${st} 米/步、体重按 ${wt} 公斤折算`);
+    toast('已保存', `距离按 ${st} 米/步、体重 ${wt} 公斤、步频 ${sp2} 步/分折算`);
     if (activeTab === 'sport') renderSportList();
   };
 }
@@ -2571,11 +2840,11 @@ async function openStepsForm() {
 async function saveSteps() {
   const raw = $('#st-num').value.trim();
   const steps = parseInt(raw);
-  if (raw === '' || !isFinite(steps) || steps < 0) { alert('请填写步数（非负整数）'); return; }
+  if (raw === '' || !isFinite(steps) || steps < 0) { toastErr('请填写步数（非负整数）'); return; }
   const date = $('#st-date').value || todayStr();
   const goal = parseInt($('#st-goal').value) || 8000;
   const { res, isNew } = await saveStepsValue(date, steps, goal);
-  if (res.error) { alert(errMsg(res.error)); return; }
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
   if (isNew) awardRecordExp();
   if (activeTab === 'sport') renderSportList(); else switchTab('sport');
@@ -2900,9 +3169,425 @@ function openStepSync() {
 }
 
 /* ================= Profile（我的） ================= */
+/* ================= 每周回顾（周报） ================= */
+// 周一为一周起点；全程本地时间，避免东八区凌晨算错日期
+let weeklyAnchor = null;                 // 当前查看的那一周的周一（Date）
+let weeklyData = null, weeklyDataAt = 0; // 近 13 周原始数据缓存
+
+const WEEK_LABEL = ['一', '二', '三', '四', '五', '六', '日'];
+const WEEK_TABLES = ['expense', 'diary', 'sport', 'health', 'steps'];
+const WEEK_STEP_GOAL = 8000;
+
+function mondayOf(d) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+function shiftDays(d, n) {
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() + n);
+  return x;
+}
+function weekRange(mon) {
+  const sun = shiftDays(mon, 6);
+  return { ws: localDateStr(mon), we: localDateStr(sun) };
+}
+const ymd = (r) => String((r && r.record_date) || '').slice(0, 10);
+const inRange = (r, a, b) => { const d = ymd(r); return !!d && d >= a && d <= b; };
+const sumBy = (arr, f) => arr.reduce((s, r) => s + (Number(f(r)) || 0), 0);
+
+async function fetchWeeklyData() {
+  if (weeklyData && Date.now() - weeklyDataAt < 60000) return weeklyData;
+  const since = localDateStr(shiftDays(mondayOf(new Date()), -7 * 13));
+  const res = await Promise.all(WEEK_TABLES.map(t =>
+    cloud.database.from(t).select('*').gte('record_date', since).limit(5000)
+      .then(r => (r && r.data) || [], () => [])
+  ));
+  const out = {};
+  WEEK_TABLES.forEach((t, i) => { out[t] = res[i]; });
+  weeklyData = out; weeklyDataAt = Date.now();
+  return out;
+}
+
+function weekStats(data, ws, we) {
+  const cut = (t) => (data[t] || []).filter(r => inRange(r, ws, we));
+  const ex = cut('expense');
+  const out = ex.filter(r => r.kind === 'out');
+  const inc = ex.filter(r => r.kind === 'in');
+  const cats = {}, catN = {};
+  out.forEach(r => {
+    const k = (r.category || '').trim() || '未分类';
+    cats[k] = (cats[k] || 0) + (Number(r.amount) || 0);
+    catN[k] = (catN[k] || 0) + 1;
+  });
+  const sp = cut('sport'), he = cut('health');
+  const kinds = {};
+  sp.forEach(r => { const k = (r.kind || '运动').trim() || '运动'; kinds[k] = (kinds[k] || 0) + 1; });
+  const st = cut('steps').slice().sort((a, b) => ymd(a) < ymd(b) ? -1 : 1);
+  const hDates = [...new Set(he.map(ymd))].sort();
+  return {
+    outTotal: sumBy(out, r => r.amount), outN: out.length,
+    inTotal: sumBy(inc, r => r.amount), inN: inc.length,
+    cats: Object.keys(cats).map(k => [k, cats[k]]).sort((a, b) => b[1] - a[1]),
+    catN, expRows: out,
+    diary: cut('diary').slice().sort((a, b) => ymd(a) < ymd(b) ? -1 : 1),
+    sportN: sp.length, sportKinds: kinds,
+    load: loadSum(dayLoad(sp, st)),
+    healthN: he.length, healthDays: hDates.length, healthTimes: sumBy(he, r => r.times), healthDates: hDates,
+    steps: st, stepTotal: sumBy(st, r => r.steps), stepDays: st.length,
+    stepGoal: Number((st[0] || {}).goal) || WEEK_STEP_GOAL,
+    stepHit: st.filter(r => (Number(r.steps) || 0) >= (Number(r.goal) || WEEK_STEP_GOAL)).length
+  };
+}
+
+function deltaShort(cur, prev) {
+  if (!prev) return cur > 0 ? '<span class="wk-up">新增</span>' : '<span class="wk-flat">—</span>';
+  const p = (cur - prev) / prev * 100;
+  const cls = p > 0.05 ? 'wk-up' : (p < -0.05 ? 'wk-dn' : 'wk-flat');
+  const sg = (cur - prev) > 0 ? '+' : ((cur - prev) < 0 ? '−' : '');
+  return `<span class="wk-delta ${cls}">${sg}${Math.abs(p).toFixed(1)}%</span>`;
+}
+function deltaHTML(cur, prev, unit) {
+  if (!prev) return cur > 0
+    ? `<span class="wk-delta wk-flat">上周无记录（本周 ${unit}${fmtMoney(cur)}）</span>`
+    : '<span class="wk-delta wk-flat">两周都无记录</span>';
+  const p = (cur - prev) / prev * 100;
+  const abs = cur - prev;
+  const cls = p > 0.05 ? 'wk-up' : (p < -0.05 ? 'wk-dn' : 'wk-flat');
+  const sg = abs > 0 ? '+' : (abs < 0 ? '−' : '');
+  const av = unit === '¥' ? unit + fmtMoney(Math.abs(abs)) : Math.abs(abs);
+  return `<span class="wk-delta ${cls}">${sg}${Math.abs(p).toFixed(1)}% · ${sg}${av}</span>`;
+}
+
+// 一段话点评：全部由当周数据推出来，不写死
+function weeklyVerdict(s, p) {
+  const parts = [];
+  if (s.outN) {
+    let t = `本周支出 ¥${fmtMoney(s.outTotal)}（${s.outN} 笔）`;
+    if (p.outTotal > 0) {
+      const d = (s.outTotal - p.outTotal) / p.outTotal * 100;
+      t += `，环比${d >= 0 ? '涨' : '降'} ${Math.abs(d).toFixed(1)}%`;
+    } else t += '，上周没有支出记录';
+    if (s.cats.length && s.outTotal > 0) {
+      t += `；「${s.cats[0][0]}」¥${fmtMoney(s.cats[0][1])} 居首，占 ${Math.round(s.cats[0][1] / s.outTotal * 100)}%`;
+    }
+    parts.push(t);
+  } else parts.push('本周没有支出记录');
+
+  if (s.inN) parts.push(`收入 ¥${fmtMoney(s.inTotal)}（${s.inN} 笔），${s.inTotal - s.outTotal < 0 ? '净结余为负' : '净结余为正'}`);
+  else parts.push('本周没有收入记录');
+
+  const rec = [];
+  rec.push(s.diary.length ? `日记 ${s.diary.length} 篇` : '日记没写');
+  if (s.sportN) {
+    const l = s.load, bits = [];
+    if (l.km > 0) bits.push(`约 ${l.km.toFixed(2)} km`);
+    if (l.kcal > 0) bits.push(`${Math.round(l.kcal)} 千卡`);
+    const est = ['e', 'mix'].indexOf(l.src.km) >= 0 || ['e', 'mix'].indexOf(l.src.kcal) >= 0 || l.src.min === 'e';
+    rec.push(`运动 ${s.sportN} 次${bits.length ? `（${bits.join('、')}${est ? '，步数估算' : ''}）` : ''}`);
+  } else if (s.load.estDays) rec.push(`没记运动，步数折算约 ${s.load.km.toFixed(2)} km`);
+  else rec.push('没有运动记录');
+  if (s.stepDays) rec.push(`步数记了 ${s.stepDays} 天、达标 ${s.stepHit} 天`);
+  else rec.push('步数没记录');
+  parts.push(rec.join('，'));
+
+  return parts.join('。') + '。';
+}
+
+/* ---- 日记摘要：让模型读一遍再压成一句话，替掉「正文前 20 字」的硬截断 ----
+   成本控制：按「日记 id + 正文指纹」缓存（内容改了自动失效）；一次请求批量总结当周；
+   失败后 5 分钟内不再重试；模型目录空 / 未登录就老实显示「点开看原文」，不编内容。 */
+const DIARY_SUM_LS = 'diarySum';
+let diarySumCache = null;      // 运行时副本
+let diarySumBusy = false;      // 并发闸：同一时间只跑一轮
+let diarySumFailAt = 0;        // 上次失败时间（冷却 5 分钟）
+let diaryModelId = '';         // 选中的模型 id
+
+function diaryFingerprint(s) {
+  let h = 5381; const t = String(s || '');
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+const diarySumKey = (r) => r.id + '|' + diaryFingerprint(r.content);
+function diarySumStore() {
+  if (!diarySumCache) diarySumCache = LS.get(DIARY_SUM_LS, {}) || {};
+  return diarySumCache;
+}
+function getDiarySum(r) { return String(diarySumStore()[diarySumKey(r)] || ''); }
+function putDiarySum(r, text) {
+  const c = diarySumStore();
+  c[diarySumKey(r)] = String(text).replace(/\s+/g, '').slice(0, 60);
+  const ks = Object.keys(c);
+  if (ks.length > 400) ks.slice(0, ks.length - 400).forEach(k => delete c[k]);
+  LS.set(DIARY_SUM_LS, c);
+}
+function diarySumCanRun() {
+  return !!(cloud && cloud.llm && cloud.llm.chat && cloud.llm.chat.completions)
+    && (Date.now() - diarySumFailAt > 5 * 60 * 1000);
+}
+function parseSumJSON(t) {
+  const s = String(t || '');
+  const a = s.indexOf('{'), b = s.lastIndexOf('}');
+  if (a < 0 || b <= a) return {};
+  try {
+    const o = JSON.parse(s.slice(a, b + 1));
+    return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+  } catch (e) { return {}; }
+}
+async function diaryModel() {
+  if (diaryModelId) return diaryModelId;
+  const cached = LS.get('llmModel', '');
+  if (cached) { diaryModelId = cached; return cached; }
+  if (!cloud || !cloud.llm || !cloud.llm.models) return '';
+  const ms = (await cloud.llm.models.list()) || [];
+  const m = ms.find(x => x && x.disabled !== true && x.enabled !== false);
+  if (!m) return '';
+  diaryModelId = m.id;
+  LS.set('llmModel', m.id);
+  return diaryModelId;
+}
+// 只回填「没有标题」的行；有标题的照旧显示标题
+function paintDiarySum(rows) {
+  (rows || []).forEach(r => {
+    if (String(r.title || '').trim()) return;
+    const el = document.querySelector(`[data-sum="${r.id}"]`);
+    if (!el) return;
+    el.textContent = getDiarySum(r) || '点开看原文';
+    el.classList.remove('pending');
+  });
+}
+async function ensureDiarySummaries(rows) {
+  const need = (rows || []).filter(r =>
+    !String(r.title || '').trim() && !getDiarySum(r) && String(r.content || '').trim());
+  if (!need.length || diarySumBusy || !diarySumCanRun()) return;
+  diarySumBusy = true;
+  try {
+    const model = await diaryModel();
+    if (!model) { diarySumFailAt = Date.now(); paintDiarySum(rows); return; }
+    const list = need
+      .map(r => `【${r.id}】${String(r.content || '').replace(/\s+/g, ' ').trim().slice(0, 600)}`)
+      .join('\n');
+    const sys = '你在帮「生活手账」写周报。把每篇日记压成一句中文摘要，20 个字以内，'
+      + '只说当天最主要的一件事或状态，像朋友随口一提；不要「这篇日记」「记录了」这类铺垫，'
+      + '不要评价、不要加书名号引号、不要换行。只输出 JSON 对象，键是日记编号（【】里的数字），值是摘要字符串。';
+    const usr = `日记如下：\n${list}\n\n只输出 JSON：`;
+    let buf = '';
+    for await (const chunk of cloud.llm.chat.completions.create({
+      model,
+      stream: true,
+      temperature: 0.5,
+      messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }]
+    })) {
+      const d = chunk.choices && chunk.choices[0] && chunk.choices[0].delta;
+      if (d && d.content) buf += d.content;
+    }
+    const obj = parseSumJSON(buf);
+    let hit = 0;
+    need.forEach(r => {
+      const v = String(obj[String(r.id)] || '').trim();
+      if (v) { putDiarySum(r, v); hit++; }
+    });
+    if (!hit) diarySumFailAt = Date.now();
+  } catch (e) {
+    // 未登录 / 额度用尽 / 模型不可用：静默降级为「点开看原文」，不打扰用户
+    console.warn('[周报] 日记摘要未生成：', (e && e.error && e.error.code) || (e && e.message) || e);
+    diarySumFailAt = Date.now();
+    LS.set('llmModel', '');   // 缓存的模型可能已下线，下次重新拉目录
+  } finally {
+    diarySumBusy = false;
+    paintDiarySum(rows);
+  }
+}
+function openDiaryRead(id, rows) {
+  const r = (rows || []).find(x => String(x.id) === String(id));
+  if (!r) return;
+  const sum = getDiarySum(r);
+  const body = escapeHtml(String(r.content || '')).replace(/\n/g, '<br>');
+  openModal(
+    (sum ? `<div class="rd-sum">${escapeHtml(sum)}</div>` : '')
+    + `<div class="rd-body">${body}</div>`
+    + `<div class="rd-meta">${ymd(r).slice(5)}${sum ? ' · 摘要由模型读过原文后生成' : ''}</div>`
+  );
+  setModalTitle(`${ymd(r).slice(5)} 的日记`);
+}
+
+async function renderWeekly() {
+  const v = $('#view');
+  if (!weeklyData) v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+
+  let data;
+  try { data = await fetchWeeklyData(); }
+  catch (e) { v.innerHTML = `<div class="empty">读取失败<br>${escapeHtml(errMsg(e))}</div>`; return; }
+
+  const thisMon = mondayOf(new Date());
+  if (!weeklyAnchor) {
+    // 默认看本周；本周（截至今天）一条记录都没有时自动退回上一周，免得开出一页空白
+    const r0 = weekRange(thisMon);
+    const blank = WEEK_TABLES.every(t => !(data[t] || []).some(r => inRange(r, r0.ws, r0.we)));
+    weeklyAnchor = blank ? shiftDays(thisMon, -7) : thisMon;
+  }
+  const viewMon = weeklyAnchor;
+  const { ws, we } = weekRange(viewMon);
+  const prevR = weekRange(shiftDays(viewMon, -7));
+  const s = weekStats(data, ws, we);
+  const p = weekStats(data, prevR.ws, prevR.we);
+  const isThisWeek = localDateStr(viewMon) === localDateStr(thisMon);
+
+  const dayRows = WEEK_LABEL.map((lb, i) => ({
+    label: lb, a: sumBy(s.expRows.filter(r => ymd(r) === localDateStr(shiftDays(viewMon, i))), r => r.amount)
+  }));
+  const stepMap = {};
+  s.steps.forEach(r => { stepMap[ymd(r)] = Number(r.steps) || 0; });
+  const stepRows = WEEK_LABEL.map((lb, i) => ({
+    label: lb, a: stepMap[localDateStr(shiftDays(viewMon, i))] || 0
+  }));
+  const stepAvg = s.stepDays ? s.stepTotal / s.stepDays : 0;
+  const chips = (days) => WEEK_LABEL.map((lb, i) => {
+    const ds = localDateStr(shiftDays(viewMon, i));
+    const on = days.indexOf(ds) >= 0;
+    return `<span class="wk-day ${on ? 'on' : 'off'}">${ds.slice(5)} ${lb}${on ? '' : ' 无'}</span>`;
+  }).join('');
+
+  const topCats = s.cats.slice(0, 5);
+  // 运动量单元格：手记 / 步数估算分别标出来源，两样都没有就照实写「未记录」
+  const SRC_TXT = { m: '手记', e: '步数估算', mix: '手记 + 估算', none: '—' };
+  const loadCell = (label, val, unit, fix, key) => {
+    const src = s.load.src[key];
+    const has = val > 0;
+    const shown = has ? (fix === 2 ? val.toFixed(2) : Math.round(val).toLocaleString('zh-CN')) + unit : '<span class="nr">未记录</span>';
+    return `<div class="stat"><div class="label">${label}</div><div class="value" style="font-size:17px">${shown}</div>`
+      + `<div class="sub">${has ? SRC_TXT[src] : '—'}</div></div>`;
+  };
+  const estNote = s.load.estDays
+    ? `时长 / 距离 / 消耗：手记填了就用手记，没填按步数折算 —— 覆盖本周 ${s.load.estDays} 天（步幅 ${stepStrideM()} 米、体重 ${stepWeightKg()} 公斤、步频 ${stepSpm()} 步/分，可在「运动 → 调整折算」里改）`
+    : (s.sportN ? '本周运动量全部来自手记，没有用到步数折算' : '');
+  const thisMap = {}, prevMap = {};
+  s.cats.forEach(c => { thisMap[c[0]] = c[1]; });
+  p.cats.forEach(c => { prevMap[c[0]] = c[1]; });
+  const allCats = [...new Set([...s.cats.map(c => c[0]), ...p.cats.map(c => c[0])])]
+    .sort((a, b) => (thisMap[b] || 0) - (thisMap[a] || 0) || (prevMap[b] || 0) - (prevMap[a] || 0));
+
+  v.innerHTML = `
+    <div class="wk-back" id="wk-back">‹ 返回</div>
+    <div class="wk-nav">
+      <button id="wk-prev" aria-label="上一周">‹</button>
+      <div class="rg">${ws.slice(5)} ~ ${we.slice(5)}${isThisWeek ? '<em>本周</em>' : ''}</div>
+      <button id="wk-next" aria-label="下一周" ${isThisWeek ? 'disabled' : ''}>›</button>
+    </div>
+
+    <div class="sec">收支</div>
+    <div class="wk-hero">
+      <div class="lbl">本周支出</div>
+      <div class="big"${s.outN ? '' : ' style="font-size:21px;color:var(--amber)"'}>${s.outN ? '¥' + fmtMoney(s.outTotal) : '本周无记录'}</div>
+      <div class="g">
+        <div><span class="k">支出笔数</span><span class="v">${s.outN ? s.outN + ' 笔' : '—'}</span></div>
+        <div><span class="k">收入</span><span class="v" style="color:var(--in)">${s.inN ? '¥' + fmtMoney(s.inTotal) + ' · ' + s.inN + ' 笔' : '无记录'}</span></div>
+        <div><span class="k">净结余</span><span class="v" style="color:${s.inTotal - s.outTotal < 0 ? 'var(--out)' : 'var(--in)'}">${(s.outN || s.inN) ? (s.inTotal - s.outTotal < 0 ? '−' : '') + '¥' + fmtMoney(Math.abs(s.inTotal - s.outTotal)) : '—'}</span></div>
+        <div><span class="k">笔均支出</span><span class="v">${s.outN ? '¥' + fmtMoney(s.outTotal / s.outN) : '—'}</span></div>
+      </div>
+    </div>
+    <div class="muted" style="font-size:11.5px;line-height:1.9;margin:9px 2px 0">
+      对比上周（${prevR.ws.slice(5)} ~ ${prevR.we.slice(5)}）<br>
+      支出 ${deltaHTML(s.outTotal, p.outTotal, '¥')}<br>
+      收入 ${deltaHTML(s.inTotal, p.inTotal, '¥')}
+    </div>
+
+    <div class="sec">每日支出</div>
+    <div class="chart-wrap">
+      <div class="chart-title">${ws.slice(5)} ~ ${we.slice(5)} · ${s.outN ? '合计 ¥' + fmtMoney(s.outTotal) : '本周无记录'}</div>
+      ${s.outN
+        ? barChartSVG(dayRows, { h: 130, padTop: 14, color: 'var(--out)', showVal: true, fmt: (x) => x >= 100 ? x.toFixed(0) : x.toFixed(1) })
+        : '<div class="dim" style="font-size:12px;padding:6px 4px">本周无记录</div>'}
+    </div>
+
+    <div class="sec">支出分类 Top 5</div>
+    <div class="chart-wrap">
+      ${topCats.length
+        ? hbarList(topCats.map(c => ({ label: c[0], v: c[1] })), { fmt: (x) => '¥' + fmtMoney(x) })
+        : '<div class="dim" style="font-size:12px;padding:4px">本周无记录</div>'}
+    </div>
+
+    <div class="sec">分类明细 · 含上周对比</div>
+    <div class="card" style="padding:4px 12px">
+      <table class="st-tb">
+        <thead><tr><th>分类</th><th>本周</th><th>笔</th><th>上周</th><th>变化</th></tr></thead>
+        <tbody>
+          ${allCats.length ? allCats.map(k => {
+            const cur = thisMap[k] || 0, pv = prevMap[k] || 0;
+            return `<tr><td>${escapeHtml(k)}</td><td>¥${fmtMoney(cur)}</td><td>${s.catN[k] || 0}</td>`
+              + `<td>${pv ? '¥' + fmtMoney(pv) : '—'}</td><td>${deltaShort(cur, pv)}</td></tr>`;
+          }).join('') + `<tr><td>合计</td><td>¥${fmtMoney(s.outTotal)}</td><td>${s.outN}</td><td>¥${fmtMoney(p.outTotal)}</td><td>${deltaShort(s.outTotal, p.outTotal)}</td></tr>`
+            : '<tr><td colspan="5" class="muted">本周无记录</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec">日记 · ${s.diary.length} 篇</div>
+    <div class="card" style="padding:4px 14px">
+      ${s.diary.length ? `<ul class="wk-diary">${s.diary.map(r => {
+        const title = String(r.title || '').trim();
+        const sum = getDiarySum(r);
+        const pending = !title && !sum && diarySumCanRun();
+        const label = title || sum || (pending ? '正在读原文，稍等…' : '点开看原文');
+        return `<li data-did="${r.id}"><span class="dd">${ymd(r).slice(5)}</span>`
+          + `<span class="tt"><span class="sum${pending ? ' pending' : ''}" data-sum="${r.id}">${escapeHtml(label)}</span></span>`
+          + `<span class="more">原文 ›</span></li>`;
+      }).join('')}</ul>` : '<div class="dim" style="font-size:12px;padding:8px 0">本周无记录</div>'}
+    </div>
+
+    <div class="sec">${s.sportN ? `运动 · ${s.sportN} 次` : '运动'}</div>
+    <div class="stat-grid">
+      ${loadCell('总时长', s.load.min, ' 分', 0, 'min')}
+      ${loadCell('总距离', s.load.km, ' km', 2, 'km')}
+      ${loadCell('总消耗', s.load.kcal, ' kcal', 0, 'kcal')}
+      <div class="stat"><div class="label">次数</div><div class="value">${s.sportN}</div><div class="sub">上周 ${p.sportN} 次</div></div>
+    </div>
+    ${s.sportN
+      ? `<div class="wk-days">${Object.keys(s.sportKinds).map(k => `<span class="wk-day on">${escapeHtml(k)} ×${s.sportKinds[k]}</span>`).join('')}</div>`
+      : (s.load.estDays ? '' : '<div class="muted" style="font-size:12px;margin:8px 2px">本周无记录</div>')}
+    ${estNote ? `<div class="muted" style="font-size:11.5px;line-height:1.85;margin:9px 2px 0">${escapeHtml(estNote)}</div>` : ''}
+
+    <div class="sec">健康 · ${s.healthN} 次 / ${s.healthDays} 天</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">记录次数</div><div class="value">${s.healthN}</div><div class="sub">上周 ${p.healthN} 次</div></div>
+      <div class="stat"><div class="label">涉及天数</div><div class="value">${s.healthDays}</div><div class="sub">上周 ${p.healthDays} 天</div></div>
+    </div>
+    ${s.healthN ? `<div class="wk-days">${chips(s.healthDates)}</div>` : '<div class="muted" style="font-size:12px;margin:8px 2px">本周无记录</div>'}
+
+    <div class="sec">步数 · 达标线 ${s.stepGoal}</div>
+    <div class="chart-wrap">
+      <div class="chart-title">${s.stepDays ? `记录日均 ${Math.round(stepAvg).toLocaleString('zh-CN')} 步 · 达标 ${s.stepHit} 天` : '本周无记录'}</div>
+      ${s.stepDays
+        ? barChartSVG(stepRows, { h: 122, padTop: 14, color: 'var(--cyan)', showVal: true })
+        : '<div class="dim" style="font-size:12px;padding:6px 4px">09-21 ~ 09-27 这 7 天都没有步数记录</div>'}
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">记录天数</div><div class="value">${s.stepDays} / 7</div><div class="sub">上周 ${p.stepDays} 天</div></div>
+      <div class="stat"><div class="label">周平均步数</div><div class="value" style="font-size:18px">${s.stepDays ? Math.round(stepAvg).toLocaleString('zh-CN') : '—'}</div><div class="sub">7 日摊平 ${Math.round(s.stepTotal / 7).toLocaleString('zh-CN')} 步</div></div>
+      <div class="stat"><div class="label">达标天数</div><div class="value" style="color:${s.stepHit ? 'var(--in)' : 'var(--out)'}">${s.stepHit}</div><div class="sub">目标 ${s.stepGoal} 步/天</div></div>
+      <div class="stat"><div class="label">合计步数</div><div class="value" style="font-size:18px">${s.stepTotal.toLocaleString('zh-CN')}</div><div class="sub">${s.stepDays} 天累计</div></div>
+    </div>
+
+    <div class="wk-verdict">
+      <div class="t">趋势点评</div>
+      <p>${escapeHtml(weeklyVerdict(s, p))}</p>
+      <div class="wc">按本地时间统计 · 没有记录的项目照实写「无记录」，不做推算或补零</div>
+    </div>
+  `;
+
+  v.querySelectorAll('.wk-diary li').forEach(li => {
+    li.onclick = () => openDiaryRead(li.getAttribute('data-did'), s.diary);
+  });
+  if (s.diary.length) ensureDiarySummaries(s.diary);   // 后台生成摘要，不阻塞首屏
+  const back = $('#wk-back'); if (back) back.onclick = () => switchTab('me');
+  const pv = $('#wk-prev'); if (pv) pv.onclick = () => { weeklyAnchor = shiftDays(viewMon, -7); renderWeekly(); };
+  const nx = $('#wk-next'); if (nx) nx.onclick = () => { if (isThisWeek) return; weeklyAnchor = shiftDays(viewMon, 7); renderWeekly(); };
+  window.scrollTo(0, 0);
+}
+
 async function renderProfile() {
   const v = $('#view');
-  v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+  v.innerHTML = loadingHTML();
   const email = (currentUser && currentUser.email) || '';
   const uid = (currentUser && (currentUser.id || currentUser.sub)) || '';
   let counts = { expense:'-', diary:'-', life:'-', sport:'-', health:'-', steps:'-' };
@@ -2933,6 +3618,15 @@ async function renderProfile() {
       <div class="me-email">${escapeHtml(email)}</div>
       <div class="me-meta">已登录 · 数据已同步到云端</div>
       <div class="muted" style="font-size:11.5px;margin-top:8px">点头像可以换</div>
+    </div>
+
+    <div class="sec">每周回顾</div>
+    <div class="me-list">
+      <div class="me-item" id="mi-weekly">
+        <div class="me-ico" style="color:var(--brand-2)">${ICONS.chart}</div>
+        <div class="me-txt"><div class="t">本周回顾</div><div class="s">收支 · 日记 · 运动 · 健康 · 步数，一页看完还能翻周</div></div>
+        <div class="me-arrow">›</div>
+      </div>
     </div>
 
     <div class="sec">我的伙伴</div>
@@ -3020,12 +3714,14 @@ async function renderProfile() {
       </div>
       <div class="me-item">
         <div class="me-ico" style="color:var(--text-3)">${ICONS.info}</div>
-        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.2${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
+        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.3${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
       </div>
     </div>
     `;
   const miSteps = $('#mi-steps');
   if (miSteps) miSteps.onclick = openStepsForm;
+  const miWeekly = $('#mi-weekly');
+  if (miWeekly) miWeekly.onclick = () => { weeklyDataAt = 0; switchTab('weekly'); };
   const pcMe = $('#pet-card');
   if (pcMe) bindPetCard();
   $('#me-avatar').onclick = openAvatarPicker;
@@ -3101,7 +3797,7 @@ async function exportData() {
     const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps', 'checkin', 'pet'];
     const out = { app: '生活手账', exported_at: new Date().toISOString(), account: (currentUser && currentUser.email) || '', counts: {}, data: {} };
     for (const t of tables) {
-      const { data, error } = await cloud.database.from(t).select('*').order('record_date', { ascending: false }).limit(100000);
+      const { data, error } = await cloud.database.from(t).select('*').order('record_date', { ascending: false }).limit(LIMIT_ALL);
       if (error) throw error;
       out.data[t] = data || [];
       out.counts[t] = (data || []).length;
@@ -3113,9 +3809,9 @@ async function exportData() {
     a.download = `生活手账-备份-${todayStr()}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 3000);
-    alert(`已导出 ${Object.values(out.counts).reduce((s, n) => s + n, 0)} 条记录`);
+    toast(`已导出 ${Object.values(out.counts).reduce((s, n) => s + n, 0)} 条记录`);
   } catch (e) {
-    alert('导出失败：' + errMsg(e));
+    toastErr('导出失败：' + errMsg(e));
   } finally {
     if (btn) btn.style.opacity = '1';
   }
@@ -3268,7 +3964,7 @@ async function doImport() {
   if (btn) { btn.disabled = true; btn.textContent = '导入中…'; }
   let ok = 0, skip = 0, fail = 0;
   try {
-    const { data: exist } = await cloud.database.from(target).select('*').limit(100000);
+    const { data: exist } = await cloud.database.from(target).select('*').limit(LIMIT_ALL);
     const seen = new Set((exist || []).map(impKey));
     const push = [];
     for (const r of impRows) {
@@ -3285,7 +3981,7 @@ async function doImport() {
       else ok += chunk.length;
     }
   } catch (e) {
-    alert('导入失败：' + errMsg(e));
+    toastErr('导入失败：' + errMsg(e));
     if (btn) { btn.disabled = false; btn.textContent = '重试'; }
     return;
   }
@@ -3306,7 +4002,7 @@ function onImportFile(e) {
   fr.onload = () => {
     let obj = null;
     try { obj = JSON.parse(fr.result); }
-    catch (err) { alert('这个文件不是 JSON，读不出来（' + errMsg(err) + '）'); return; }
+    catch (err) { toastErr('这个文件不是 JSON，读不出来（' + errMsg(err) + '）'); return; }
     // ⛔ 先认正气（它顶层是 records 数组）；生活手账自己的备份是 {app, exported_at, data:{表名:[…]}}，
     //    data 是**对象**不是数组 —— 早先写成 Array.isArray(obj.data) 会把自家备份判成认不出来
     if (obj && Array.isArray(obj.records)) {
@@ -3316,14 +4012,14 @@ function onImportFile(e) {
       return;
     }
     if (obj && obj.data && typeof obj.data === 'object' && !Array.isArray(obj.data)) { restoreBackup(obj); return; }
-    alert('没认出这个文件。\n支持两种：生活手账自己导出的 JSON 备份，或正气 App 的备份文件（backup）。');
+    toastErr('没认出这个文件', '支持生活手账导出的备份，或旧 App 的 backup 文件');
   };
   fr.readAsText(f);
   e.target.value = '';
 }
 
 async function restoreBackup(obj) {
-  if (!obj || !obj.data) { alert('这个 JSON 里没有 data 字段，不像是生活手账导出的备份'); return; }
+  if (!obj || !obj.data) { toastErr('这个 JSON 里没有 data 字段，不像是生活手账导出的备份'); return; }
   const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps'];
   const lines = [];
   for (const t of tables) {
@@ -3331,7 +4027,7 @@ async function restoreBackup(obj) {
     if (!Array.isArray(rows) || !rows.length) continue;
     let ok = 0, skip = 0;
     try {
-      const { data: exist } = await cloud.database.from(t).select('*').limit(100000);
+      const { data: exist } = await cloud.database.from(t).select('*').limit(LIMIT_ALL);
       const seen = new Set((exist || []).map(impKey));
       const push = [];
       for (const r of rows) {
@@ -3490,7 +4186,7 @@ function zqPreview(obj) {
 }
 
 async function zqBulk(table, rows) {
-  const { data: exist } = await cloud.database.from(table).select('*').limit(100000);
+  const { data: exist } = await cloud.database.from(table).select('*').limit(LIMIT_ALL);
   const seen = new Set((exist || []).map(impKey));
   const push = [];
   let skip = 0;
@@ -3535,7 +4231,7 @@ async function zqDo() {
       lines.push(`健康 +${r3.ok}${r3.skip ? `（重复 ${r3.skip}）` : ''}`);
     }
   } catch (e) {
-    alert('导入失败：' + errMsg(e));
+    toastErr('导入失败：' + errMsg(e));
     if (btn) { btn.disabled = false; btn.textContent = '重试'; }
     return;
   }
