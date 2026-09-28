@@ -3009,6 +3009,13 @@ window.lbNativeSteps = async function (steps, date, fresh) {
    开始的。所以只要 App（或手机）是今天才起来的，就缺一个"今天零点"的基准，
    只能从当时的时刻起算 —— 那天必须靠用户告一次真实步数才能对上。
    之后由 App 每天 23:58 的定时刷新接续，不用再校准。                   */
+/* 壳的最新版本号。发新版 APK 时**只改这一个地方**：
+   ① 「重新下载」的链接跟着它换 query —— CDN 把完整 URL（含 query）当缓存键，
+      不加参数的话下载到的可能还是上一版（叠加覆盖改不动老键）；
+   ② 版本门槛也用它，旧壳会看到"建议重新下载安装包"。
+   ⚠ 忘了改它，用户就会一直下到旧包 —— 这是最容易漏的一步。 */
+const APP_VER = '1.5';
+
 function isInApp() { return /LifeBookApp/.test(navigator.userAgent); }
 
 /* 壳的版本号。
@@ -3102,11 +3109,11 @@ window.lbCalibResult = async function (today, date) {
 
 function openStepSync() {
   const base = location.origin + location.pathname;
-  const apk = location.origin + '/download/life-book.apk';
+  const apk = location.origin + '/download/life-book.apk?v=' + APP_VER;
   const demo = `${base}?steps=8321&a=1`;
   const inApp = isInApp();
   const av = appVersion();
-  const avWarn = inApp && verOlderThan(av, '1.4');
+  const avWarn = inApp && verOlderThan(av, APP_VER);
   openModal(`
     <div class="sy-ver">当前：${inApp
       ? `应用版本 <b>v${escapeHtml(av || '未知（旧版）')}</b>${avWarn ? ' · <span style="color:var(--amber)">旧版，建议往下重新下载安装包</span>' : ''}`
@@ -3129,6 +3136,9 @@ function openStepSync() {
         所以<b>刚装那天</b>（或手机重启后）会从当时的时刻起算 —— 点下面校准一次，
         填上手机健康 App 里的今日步数，之后每天都自动准。</p>
       <button class="btn" id="sy-calib">校准今日步数</button>
+      ${avWarn ? `
+        <button class="btn-ghost" id="sy-apk" style="margin-top:10px">重新下载安装包 v${APP_VER}</button>
+        <p class="sy-p" style="color:var(--text-3);margin-top:8px">直接<b>覆盖安装</b>即可，不用先卸载 —— 记录都在云端，重装不丢。</p>` : ''}
       <p class="sy-p" style="color:var(--text-3);margin-top:8px">如果步数一直不涨：手机设置 → 应用管理 → 生活手账 → 权限，把<b>「身体活动 / 健身运动」</b>打开。
         （首次启动时如果点了"拒绝"，就会是现在这样。）</p>
     ` : `
