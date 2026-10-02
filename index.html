@@ -1183,7 +1183,7 @@ function switchTab(tab) {
   activeTab = tab;
   $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   const fab = $('#fab');
-  if (fab) fab.style.display = (tab === 'me' || tab === 'weekly') ? 'none' : 'flex';
+  if (fab) fab.style.display = (tab === 'me' || tab === 'weekly' || tab === 'monthly') ? 'none' : 'flex';
   if (tab === 'home') renderHome();
   else if (tab === 'expense') renderExpenseList();
   else if (tab === 'diary') renderDiaryList();
@@ -1191,6 +1191,7 @@ function switchTab(tab) {
   else if (tab === 'sport') renderSportList();
   else if (tab === 'health') renderHealthList();
   else if (tab === 'weekly') renderWeekly();
+  else if (tab === 'monthly') renderMonthly();
   else if (tab === 'me') renderProfile();
 }
 
@@ -3416,7 +3417,7 @@ function paintDiarySum(rows) {
     el.classList.remove('pending');
   });
 }
-async function ensureDiarySummaries(rows) {
+async function ensureDiarySummaries(rows, done) {
   const need = (rows || []).filter(r =>
     !String(r.title || '').trim() && !getDiarySum(r) && String(r.content || '').trim());
   if (!need.length || !diarySumCanRun()) return;
@@ -3465,10 +3466,13 @@ async function ensureDiarySummaries(rows) {
     clearTimeout(to);
     diarySumBusy = false;
     paintDiarySum(rows);
+    // ⛔ need 为空、或还在冷却里时，上面已经 return 了，压根走不到这里
+    //    ⇒ 回调只会在「真的跑了一轮」之后触发一次，不会自激成无限重渲染
+    if (typeof done === 'function') { try { done(); } catch (e) {} }
   }
 }
 /* 手动重试：清掉冷却和选好的模型，把行上的文案先改回「正在读」，再跑一轮 */
-function retryDiarySummaries(rows) {
+function retryDiarySummaries(rows, done) {
   diarySumFailAt = 0; diarySumBusy = false; diarySumBusyAt = 0;
   diaryModelId = ''; LS.set('llmModel', '');
   (rows || []).forEach(r => {
@@ -3478,8 +3482,9 @@ function retryDiarySummaries(rows) {
     el.textContent = '正在读原文，稍等…';
     el.classList.add('pending');
   });
-  const tip = $('#wk-sumfail'); if (tip) tip.remove();
-  ensureDiarySummaries(rows);
+  // 周报和月报各有一个 .wk-sumfail 条，同一个页面里不会同时出现，但保险起见全清
+  document.querySelectorAll('.wk-sumfail').forEach(t => t.remove());
+  ensureDiarySummaries(rows, done);
 }
 function openDiaryRead(id, rows) {
   const r = (rows || []).find(x => String(x.id) === String(id));
@@ -3494,7 +3499,8 @@ function openDiaryRead(id, rows) {
   setModalTitle(`${ymd(r).slice(5)} 的日记`);
 }
 
-async function renderWeekly() {
+async function renderWeekly(keepScroll) {
+  const sc0 = keepScroll ? window.scrollY : 0;
   const v = $('#view');
   if (!weeklyData) v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
 
@@ -3670,13 +3676,383 @@ async function renderWeekly() {
   v.querySelectorAll('.wk-diary li').forEach(li => {
     li.onclick = () => openDiaryRead(li.getAttribute('data-did'), s.diary);
   });
+  // 摘要跑完（含失败）就重画一次，失败条和重试入口才当场出现，不用退出重进
+  const redraw = () => { if (activeTab === 'weekly') renderWeekly(true); };
   const sumRetry = $('#wk-sumretry');
-  if (sumRetry) sumRetry.onclick = () => retryDiarySummaries(s.diary);
-  if (s.diary.length) ensureDiarySummaries(s.diary);   // 后台生成摘要，不阻塞首屏
+  if (sumRetry) sumRetry.onclick = () => retryDiarySummaries(s.diary, redraw);
+  if (s.diary.length) ensureDiarySummaries(s.diary, redraw);   // 后台生成摘要，不阻塞首屏
   const back = $('#wk-back'); if (back) back.onclick = () => switchTab('me');
   const pv = $('#wk-prev'); if (pv) pv.onclick = () => { weeklyAnchor = shiftDays(viewMon, -7); renderWeekly(); };
   const nx = $('#wk-next'); if (nx) nx.onclick = () => { if (isThisWeek) return; weeklyAnchor = shiftDays(viewMon, 7); renderWeekly(); };
-  window.scrollTo(0, 0);
+  window.scrollTo(0, sc0);
+}
+
+/* ================= 每月回顾（月报） ================= */
+// 自然月（1 日 ~ 月末）。周报看的是「周内节奏」，月报看的是「一个月的总量与结构」，
+// 所以两边的切法故意不一样：周报按周一为起点，月报按日历月。
+let monthlyAnchor = null;                 // 当前查看的那个月（存该月 1 号，Date）
+let monthlyData = null, monthlyDataAt = 0; // 近 12 个月原始数据缓存
+let monthlyDiaryAll = false;              // 日记是否已展开全部
+
+const MONTH_TABLES = WEEK_TABLES;         // 同一批表，不必再抄一份
+const MONTH_DIARY_SHOW = 8;               // 先铺最近 8 篇：整月 30 篇一次丢给模型，单请求会撑到 1.8 万字
+
+function monthStart(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+
+function monthRange(d) {
+  const y = d.getFullYear(), m = d.getMonth();
+  const first = new Date(y, m, 1);
+  const last = new Date(y, m + 1, 0);            // 「下月 0 号」= 本月最后一天，自动处理 2 月与闰年
+  const now = new Date();
+  const isCurrent = (y === now.getFullYear() && m === now.getMonth());
+  return {
+    ms: localDateStr(first), me: localDateStr(last), ym: localDateStr(first).slice(0, 7),
+    y, m, days: last.getDate(),
+    passed: isCurrent ? now.getDate() : last.getDate(),   // 当月已经过掉几天（历史月 = 整月）
+    isCurrent, label: `${y} 年 ${m + 1} 月`
+  };
+}
+function shiftMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+
+async function fetchMonthlyData() {
+  if (monthlyData && Date.now() - monthlyDataAt < 60000) return monthlyData;
+  const since = localDateStr(shiftMonths(monthStart(new Date()), -11));
+  const res = await Promise.all(MONTH_TABLES.map(t =>
+    cloud.database.from(t).select('*').gte('record_date', since).limit(5000)
+      .then(r => (r && r.data) || [], () => [])
+  ));
+  const out = {};
+  MONTH_TABLES.forEach((t, i) => { out[t] = res[i]; });
+  monthlyData = out; monthlyDataAt = Date.now();
+  return out;
+}
+
+function monthStats(data, rg) {
+  const cut = (t) => (data[t] || []).filter(r => inRange(r, rg.ms, rg.me));
+  const ex = cut('expense');
+  const out = ex.filter(r => r.kind === 'out');
+  const inc = ex.filter(r => r.kind === 'in');
+  const cats = {}, catN = {};
+  out.forEach(r => {
+    const k = (r.category || '').trim() || '未分类';
+    cats[k] = (cats[k] || 0) + (Number(r.amount) || 0);
+    catN[k] = (catN[k] || 0) + 1;
+  });
+  const sp = cut('sport'), he = cut('health');
+  const kinds = {};
+  sp.forEach(r => { const k = (r.kind || '运动').trim() || '运动'; kinds[k] = (kinds[k] || 0) + 1; });
+  const st = cut('steps').slice().sort((a, b) => ymd(a) < ymd(b) ? -1 : 1);
+  const hDates = [...new Set(he.map(ymd))].sort();
+  const diary = cut('diary').slice().sort((a, b) => ymd(a) < ymd(b) ? -1 : 1);
+
+  // ---- 月报才关心的几个「体量」指标 ----
+  // ⛔ 只数到「已过的那天」为止。日期输入框没设 max，用户（或导入的数据、手机时钟漂移）
+  //    可能把记录落在未来；不收紧的话 actDays 会超过已过天数，覆盖率算出 450% 这种数，
+  //    「月内最长连续」也会跟着虚高。当月夹到今天，历史月本来就整月都在范围内。
+  const today = localDateStr(new Date());
+  const rEff = rg.isCurrent ? (rg.ms > today ? '' : today) : rg.me;
+  const act = new Set();                       // 有任意一条记录的日子
+  if (rEff) MONTH_TABLES.forEach(t => cut(t).forEach(r => { const d = ymd(r); if (d && d <= rEff) act.add(d); }));
+  const dayOut = {};                           // 每天支出合计，找「花得最多的一天」
+  out.forEach(r => { const d = ymd(r); if (d) dayOut[d] = (dayOut[d] || 0) + (Number(r.amount) || 0); });
+  const dayKeys = Object.keys(dayOut).sort((a, b) => (dayOut[b] - dayOut[a]) || (a < b ? -1 : 1));
+  const maxSingle = out.reduce((m, r) => Math.max(m, Number(r.amount) || 0), 0);
+
+  return {
+    outTotal: sumBy(out, r => r.amount), outN: out.length,
+    inTotal: sumBy(inc, r => r.amount), inN: inc.length,
+    cats: Object.keys(cats).map(k => [k, cats[k]]).sort((a, b) => b[1] - a[1]),
+    catN, expRows: out,
+    diary, diaryDays: new Set(diary.map(ymd)).size,
+    sportN: sp.length, sportKinds: kinds,
+    load: loadSum(dayLoad(sp, st)),
+    healthN: he.length, healthDays: hDates.length, healthDates: hDates,
+    steps: st, stepTotal: sumBy(st, r => r.steps), stepDays: st.length,
+    stepGoal: Number((st[0] || {}).goal) || WEEK_STEP_GOAL,
+    stepHit: st.filter(r => (Number(r.steps) || 0) >= (Number(r.goal) || WEEK_STEP_GOAL)).length,
+    actDays: act.size, streak: longestStreak(act), expDays: new Set(out.map(ymd)).size,
+    topDay: dayKeys[0] || '', topDayAmt: dayKeys.length ? dayOut[dayKeys[0]] : 0,
+    maxSingle, maxSingleRow: maxSingle > 0 ? out.find(r => (Number(r.amount) || 0) === maxSingle) : null
+  };
+}
+
+// 环比文案要跟周报区分开：周报比「上周」，月报比「上月」
+function deltaHTMLM(cur, prev, unit, prevLabel, curLabel) {
+  const pl = prevLabel || '上月', cl = curLabel || '本月';
+  if (!prev) return cur > 0
+    ? `<span class="wk-delta wk-flat">${pl}无记录（${cl} ${unit}${fmtMoney(cur)}）</span>`
+    : `<span class="wk-delta wk-flat">两个月都无记录</span>`;
+  const p = (cur - prev) / prev * 100;
+  const abs = cur - prev;
+  const cls = p > 0.05 ? 'wk-up' : (p < -0.05 ? 'wk-dn' : 'wk-flat');
+  const sg = abs > 0 ? '+' : (abs < 0 ? '−' : '');
+  const av = unit === '¥' ? unit + fmtMoney(Math.abs(abs)) : Math.abs(abs);
+  return `<span class="wk-delta ${cls}">${sg}${Math.abs(p).toFixed(1)}% · ${sg}${av}</span>`;
+}
+
+// 一段话点评：全部由当月数据推出来，不写死
+function monthlyVerdict(s, p, rg) {
+  const tag = rg.isCurrent ? '本月' : rg.label;
+  const parts = [];
+  if (s.outN) {
+    let t = `${tag}支出 ¥${fmtMoney(s.outTotal)}（${s.outN} 笔）`;
+    if (p.outTotal > 0) {
+      const d = (s.outTotal - p.outTotal) / p.outTotal * 100;
+      t += `，环比${d >= 0 ? '涨' : '降'} ${Math.abs(d).toFixed(1)}%`;
+    } else t += '，上月没有支出记录';
+    if (s.cats.length && s.outTotal > 0) {
+      t += `；「${s.cats[0][0]}」¥${fmtMoney(s.cats[0][1])} 居首，占 ${Math.round(s.cats[0][1] / s.outTotal * 100)}%`;
+    }
+    parts.push(t);
+  } else parts.push(`${tag}没有支出记录`);
+
+  if (s.inN) parts.push(`收入 ¥${fmtMoney(s.inTotal)}（${s.inN} 笔），${s.inTotal - s.outTotal < 0 ? '净结余为负' : '净结余为正'}`);
+  else parts.push('没有收入记录');
+
+  const cov = Math.max(1, rg.passed);
+  const rec = [`有记录 ${s.actDays} 天（覆盖 ${Math.min(100, Math.round(s.actDays / cov * 100))}%）`];
+  if (s.diary.length) rec.push(`日记 ${s.diary.length} 篇、写了 ${s.diaryDays} 天`);
+  else rec.push('日记没写');
+  if (s.sportN) {
+    const l = s.load, bits = [];
+    if (l.km > 0) bits.push(`约 ${l.km.toFixed(2)} km`);
+    if (l.kcal > 0) bits.push(`${Math.round(l.kcal)} 千卡`);
+    const est = ['e', 'mix'].indexOf(l.src.km) >= 0 || ['e', 'mix'].indexOf(l.src.kcal) >= 0 || l.src.min === 'e';
+    rec.push(`运动 ${s.sportN} 次${bits.length ? `（${bits.join('、')}${est ? '，步数估算' : ''}）` : ''}`);
+  } else if (s.load.estDays) rec.push(`没记运动，步数折算约 ${s.load.km.toFixed(2)} km`);
+  else rec.push('没有运动记录');
+  if (s.stepDays) rec.push(`步数记了 ${s.stepDays} 天、达标 ${s.stepHit} 天`);
+  else rec.push('步数没记录');
+  parts.push(rec.join('，'));
+  return parts.join('。') + '。';
+}
+
+async function renderMonthly(keepScroll) {
+  const sc0 = keepScroll ? window.scrollY : 0;
+  const v = $('#view');
+  if (!monthlyData) v.innerHTML = `<div class="empty"><span class="loader"></span><div style="margin-top:10px">加载中</div></div>`;
+
+  let data;
+  try { data = await fetchMonthlyData(); }
+  catch (e) { v.innerHTML = `<div class="empty">读取失败<br>${escapeHtml(errMsg(e))}</div>`; return; }
+
+  if (!monthlyAnchor) monthlyAnchor = monthStart(new Date());
+  const rg = monthRange(monthlyAnchor);
+  const prg = monthRange(shiftMonths(monthlyAnchor, -1));
+  const s = monthStats(data, rg);
+  const p = monthStats(data, prg);
+
+  // 整月 1..days 铺满；日期轴只标 1 / 5 的倍数 / 月末，否则 31 个数字会挤成一坨
+  // 刻度：1 号、每 5 天、月末。⛔ 末日那格常常紧挨着 30（31 天的月份），
+  // 两个数字会黏成「3031」那种看不清的东西 —— 所以先算哪些日子要标，
+  // 如果某个 5 的倍数离末日不足两格，就把它去掉，只保末尾和 1 号。
+  const dayLabel = (() => {
+    const n = rg.days, marks = [];
+    for (let i = 1; i <= n; i++) { if (i === 1 || i % 5 === 0) marks.push(i); }
+    if (marks[marks.length - 1] !== n) marks.push(n);
+    for (let k = marks.length - 1; k > 1; k--) {
+      if (marks[k] - marks[k - 1] < 2) marks.splice(k - 1, 1);
+    }
+    const set = new Set(marks);
+    return (i) => (set.has(i) ? String(i) : '');
+  })();
+  const dayOf = (i) => localDateStr(new Date(rg.y, rg.m, i));
+  const dayRows = (() => {
+    const m = {};
+    s.expRows.forEach(r => { const d = ymd(r); m[d] = (m[d] || 0) + (Number(r.amount) || 0); });
+    return Array.from({ length: rg.days }, (_, k) => ({ label: dayLabel(k + 1), a: m[dayOf(k + 1)] || 0 }));
+  })();
+  const stepRows = (() => {
+    const m = {};
+    s.steps.forEach(r => { m[ymd(r)] = Number(r.steps) || 0; });
+    return Array.from({ length: rg.days }, (_, k) => ({ label: dayLabel(k + 1), a: m[dayOf(k + 1)] || 0 }));
+  })();
+  const stepAvg = s.stepDays ? s.stepTotal / s.stepDays : 0;
+
+  const topCats = s.cats.slice(0, 5);
+  // 运动量单元格：手记 / 步数估算分别标出来源，两样都没有就照实写「未记录」
+  const SRC_TXT = { m: '手记', e: '步数估算', mix: '手记 + 估算', none: '—' };
+  const loadCell = (label, val, unit, fix, key) => {
+    const src = s.load.src[key];
+    const has = val > 0;
+    const shown = has ? (fix === 2 ? val.toFixed(2) : Math.round(val).toLocaleString('zh-CN')) + unit : '<span class="nr">未记录</span>';
+    return `<div class="stat"><div class="label">${label}</div><div class="value" style="font-size:17px">${shown}</div>`
+      + `<div class="sub">${has ? SRC_TXT[src] : '—'}</div></div>`;
+  };
+  const estNote = s.load.estDays
+    ? `时长 / 距离 / 消耗：手记填了就用手记，没填按步数折算 —— 覆盖本月 ${s.load.estDays} 天（步幅 ${stepStrideM()} 米、体重 ${stepWeightKg()} 公斤、步频 ${stepSpm()} 步/分，可在「运动 → 调整折算」里改）`
+    : (s.sportN ? '本月运动量全部来自手记，没有用到步数折算' : '');
+  const thisMap = {}, prevMap = {};
+  s.cats.forEach(c => { thisMap[c[0]] = c[1]; });
+  p.cats.forEach(c => { prevMap[c[0]] = c[1]; });
+  const allCats = [...new Set([...s.cats.map(c => c[0]), ...p.cats.map(c => c[0])])]
+    .sort((a, b) => (thisMap[b] || 0) - (thisMap[a] || 0) || (prevMap[b] || 0) - (prevMap[a] || 0));
+
+  // 日记先铺最近 8 篇，摘要也只给这几篇跑 —— 整月三十来篇一次丢给模型，单请求会撑到一万多字
+  const dRows = monthlyDiaryAll ? s.diary : s.diary.slice(-MONTH_DIARY_SHOW);
+  const moreN = s.diary.length - dRows.length;
+  const sumNeed = dRows.filter(r => !String(r.title || '').trim() && String(r.content || '').trim());
+  const sumStuck = sumNeed.length > 0 && !sumNeed.some(r => getDiarySum(r)) && !diarySumCanRun();
+
+  // 本月亮点：只从已有数据里挑，一项都没有就整块不显示
+  const hi = [];
+  if (s.maxSingleRow) {
+    const r = s.maxSingleRow;
+    const note = String(r.note || '').replace(/\s+/g, ' ').trim().slice(0, 12);
+    const cat = String(r.category || '').trim() || '未分类';
+    hi.push(['单笔最大支出', `¥${fmtMoney(s.maxSingle)} · ${cat}${note ? ' · ' + note : ''} · ${ymd(r).slice(5)}`]);
+  }
+  if (s.topDay) hi.push(['花得最多的一天', `${s.topDay.slice(5)} · ¥${fmtMoney(s.topDayAmt)}`]);
+  if (s.streak) hi.push(['月内最长连续记录', `${s.streak} 天`]);
+  if (s.diary.length) hi.push(['日记', `${s.diary.length} 篇 · 写了 ${s.diaryDays} 天`]);
+  if (s.cats.length && s.outTotal > 0) {
+    const k = s.cats[0][0];
+    hi.push(['花得最多的分类', `${k} · ${s.catN[k]} 笔 · 占 ${Math.round(s.cats[0][1] / s.outTotal * 100)}%`]);
+  }
+  if (s.stepDays) hi.push(['日均步数', `${Math.round(stepAvg).toLocaleString('zh-CN')} 步 · 达标 ${s.stepHit} 天`]);
+  if (s.sportN) hi.push(['运动', `${s.sportN} 次 · ${s.sportKinds[Object.keys(s.sportKinds)[0]] ? Object.keys(s.sportKinds)[0] + ' 为主' : ''}`]);
+
+  v.innerHTML = `
+    <div class="wk-back" id="mo-back">‹ 返回</div>
+    <div class="wk-nav">
+      <button id="mo-prev" aria-label="上一月">‹</button>
+      <div class="rg">${escapeHtml(rg.label)}${rg.isCurrent ? `<em>本月 · 已过 ${rg.passed}/${rg.days} 天</em>` : ''}</div>
+      <button id="mo-next" aria-label="下一月" ${rg.isCurrent ? 'disabled' : ''}>›</button>
+    </div>
+
+    <div class="sec">收支</div>
+    <div class="wk-hero">
+      <div class="lbl">${rg.isCurrent ? '本月支出' : '当月支出'}</div>
+      <div class="big"${s.outN ? '' : ' style="font-size:21px;color:var(--amber)"'}>${s.outN ? '¥' + fmtMoney(s.outTotal) : (rg.isCurrent ? '本月还没有记账' : '当月无记录')}</div>
+      <div class="g">
+        <div><span class="k">支出笔数</span><span class="v">${s.outN ? s.outN + ' 笔' : '—'}</span></div>
+        <div><span class="k">收入</span><span class="v" style="color:var(--in)">${s.inN ? '¥' + fmtMoney(s.inTotal) + ' · ' + s.inN + ' 笔' : '无记录'}</span></div>
+        <div><span class="k">净结余</span><span class="v" style="color:${s.inTotal - s.outTotal < 0 ? 'var(--out)' : 'var(--in)'}">${(s.outN || s.inN) ? (s.inTotal - s.outTotal < 0 ? '−' : '') + '¥' + fmtMoney(Math.abs(s.inTotal - s.outTotal)) : '—'}</span></div>
+        <div><span class="k">笔均支出</span><span class="v">${s.outN ? '¥' + fmtMoney(s.outTotal / s.outN) : '—'}</span></div>
+        <div><span class="k">日均支出</span><span class="v">${s.outN ? '¥' + fmtMoney(s.outTotal / Math.max(1, rg.passed)) : '—'}</span></div>
+        <div><span class="k">记账天数</span><span class="v">${s.expDays} / ${rg.passed}</div></div>
+      </div>
+    </div>
+    <div class="muted" style="font-size:11.5px;line-height:1.9;margin:9px 2px 0">
+      对比上月（${escapeHtml(prg.ym)}）<br>
+      支出 ${deltaHTMLM(s.outTotal, p.outTotal, '¥')}<br>
+      收入 ${deltaHTMLM(s.inTotal, p.inTotal, '¥')}
+    </div>
+
+    <div class="sec">这个月记了多少</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">有记录天数</div><div class="value">${s.actDays}</div><div class="sub">覆盖 ${Math.min(100, Math.round(s.actDays / Math.max(1, rg.passed) * 100))}% · 上月 ${p.actDays} 天</div></div>
+      <div class="stat"><div class="label">最长连续</div><div class="value" style="color:${s.streak >= 7 ? 'var(--in)' : ''}">${s.streak}</div><div class="sub">天 · 上月 ${p.streak} 天</div></div>
+    </div>
+
+    ${hi.length ? `<div class="sec">本月亮点</div>
+    <div class="card" style="padding:4px 12px">
+      <table class="st-tb"><tbody>${hi.map(([k, val]) => `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(val)}</td></tr>`).join('')}</tbody></table>
+    </div>` : ''}
+
+    <div class="sec">每日支出</div>
+    <div class="chart-wrap">
+      <div class="chart-title">${rg.ms.slice(5)} ~ ${rg.me.slice(5)} · ${s.outN ? '合计 ¥' + fmtMoney(s.outTotal) : (rg.isCurrent ? '本月还没有记账' : '当月无记录')}</div>
+      ${s.outN
+        ? barChartSVG(dayRows, { h: 130, padTop: 14, color: 'var(--out)' })
+        : '<div class="dim" style="font-size:12px;padding:6px 4px">本月无记录</div>'}
+    </div>
+
+    <div class="sec">支出分类 Top 5</div>
+    <div class="chart-wrap">
+      ${topCats.length
+        ? hbarList(topCats.map(c => ({ label: c[0], v: c[1] })), { fmt: (x) => '¥' + fmtMoney(x) })
+        : '<div class="dim" style="font-size:12px;padding:4px">本月无记录</div>'}
+    </div>
+
+    <div class="sec">分类明细 · 含上月对比</div>
+    <div class="card" style="padding:4px 12px">
+      <table class="st-tb">
+        <thead><tr><th>分类</th><th>本月</th><th>笔</th><th>上月</th><th>变化</th></tr></thead>
+        <tbody>
+          ${allCats.length ? allCats.map(k => {
+            const cur = thisMap[k] || 0, pv = prevMap[k] || 0;
+            return `<tr><td>${escapeHtml(k)}</td><td>¥${fmtMoney(cur)}</td><td>${s.catN[k] || 0}</td>`
+              + `<td>${pv ? '¥' + fmtMoney(pv) : '—'}</td><td>${deltaShort(cur, pv)}</td></tr>`;
+          }).join('') + `<tr><td>合计</td><td>¥${fmtMoney(s.outTotal)}</td><td>${s.outN}</td><td>¥${fmtMoney(p.outTotal)}</td><td>${deltaShort(s.outTotal, p.outTotal)}</td></tr>`
+            : '<tr><td colspan="5" class="muted">本月无记录</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sec">日记 · ${s.diary.length} 篇${moreN > 0 ? `（先看最近 ${dRows.length} 篇）` : ''}</div>
+    <div class="card" style="padding:4px 14px">
+      ${dRows.length ? `<ul class="wk-diary">${dRows.map(r => {
+        const title = String(r.title || '').trim();
+        const sum = getDiarySum(r);
+        // 有正文才谈得上「读原文」——没正文就别挂一个永远不动的「正在读」
+        const canRead = !!String(r.content || '').trim();
+        const pending = !title && !sum && canRead && diarySumCanRun();
+        const label = title || sum || (pending ? '正在读原文，稍等…' : '点开看原文');
+        return `<li data-did="${r.id}"><span class="dd">${ymd(r).slice(5)}</span>`
+          + `<span class="tt"><span class="sum${pending ? ' pending' : ''}" data-sum="${r.id}">${escapeHtml(label)}</span></span>`
+          + `<span class="more">原文 ›</span></li>`;
+      }).join('')}</ul>` : '<div class="dim" style="font-size:12px;padding:8px 0">本月无记录</div>'}
+    </div>
+    ${sumStuck ? '<div class="wk-sumfail" id="mo-sumfail"><span>摘要没生成（模型暂时不可用）</span>'
+      + '<button class="btn-text" id="mo-sumretry">重试</button></div>' : ''}
+    ${moreN > 0 ? `<button class="btn-text" id="mo-more" style="display:block;margin:12px auto 0">展开其余 ${moreN} 篇 ›</button>` : ''}
+
+    <div class="sec">${s.sportN ? `运动 · ${s.sportN} 次` : '运动'}</div>
+    <div class="stat-grid">
+      ${loadCell('总时长', s.load.min, ' 分', 0, 'min')}
+      ${loadCell('总距离', s.load.km, ' km', 2, 'km')}
+      ${loadCell('总消耗', s.load.kcal, ' kcal', 0, 'kcal')}
+      <div class="stat"><div class="label">次数</div><div class="value">${s.sportN}</div><div class="sub">上月 ${p.sportN} 次</div></div>
+    </div>
+    ${s.sportN
+      ? `<div class="wk-days">${Object.keys(s.sportKinds).map(k => `<span class="wk-day on">${escapeHtml(k)} ×${s.sportKinds[k]}</span>`).join('')}</div>`
+      : (s.load.estDays ? '' : '<div class="muted" style="font-size:12px;margin:8px 2px">本月无记录</div>')}
+    ${estNote ? `<div class="muted" style="font-size:11.5px;line-height:1.85;margin:9px 2px 0">${escapeHtml(estNote)}</div>` : ''}
+
+    <div class="sec">健康 · ${s.healthN} 次 / ${s.healthDays} 天</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">记录次数</div><div class="value">${s.healthN}</div><div class="sub">上月 ${p.healthN} 次</div></div>
+      <div class="stat"><div class="label">涉及天数</div><div class="value">${s.healthDays}</div><div class="sub">上月 ${p.healthDays} 天</div></div>
+    </div>
+    ${s.healthN ? `<div class="muted" style="font-size:11.5px;line-height:1.9;margin:9px 2px 0">有记录的日子（日号）：${s.healthDates.map(d => d.slice(8)).join('、')}</div>`
+      : '<div class="muted" style="font-size:12px;margin:8px 2px">本月无记录</div>'}
+
+    <div class="sec">步数 · 达标线 ${s.stepGoal}</div>
+    <div class="chart-wrap">
+      <div class="chart-title">${s.stepDays ? `记录日均 ${Math.round(stepAvg).toLocaleString('zh-CN')} 步 · 达标 ${s.stepHit} 天` : (rg.isCurrent ? '本月还没有步数记录' : '当月无记录')}</div>
+      ${s.stepDays
+        ? barChartSVG(stepRows, { h: 122, padTop: 14, color: 'var(--cyan)' })
+        : `<div class="dim" style="font-size:12px;padding:6px 4px">${rg.ms.slice(5)} ~ ${rg.me.slice(5)} 都没有步数记录</div>`}
+    </div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">记录天数</div><div class="value">${s.stepDays} / ${rg.passed}</div><div class="sub">上月 ${p.stepDays} 天</div></div>
+      <div class="stat"><div class="label">日均步数</div><div class="value" style="font-size:18px">${s.stepDays ? Math.round(stepAvg).toLocaleString('zh-CN') : '—'}</div><div class="sub">整月摊平 ${Math.round(s.stepTotal / rg.days).toLocaleString('zh-CN')} 步</div></div>
+      <div class="stat"><div class="label">达标天数</div><div class="value" style="color:${s.stepHit ? 'var(--in)' : 'var(--out)'}">${s.stepHit}</div><div class="sub">目标 ${s.stepGoal} 步/天</div></div>
+      <div class="stat"><div class="label">合计步数</div><div class="value" style="font-size:18px">${s.stepTotal.toLocaleString('zh-CN')}</div><div class="sub">${s.stepDays} 天累计</div></div>
+    </div>
+
+    <div class="wk-verdict">
+      <div class="t">月度点评</div>
+      <p>${escapeHtml(monthlyVerdict(s, p, rg))}</p>
+      <div class="wc">按本地时间统计 · 覆盖 ${rg.ms} ~ ${rg.me}${rg.isCurrent ? `（已过 ${rg.passed} 天）` : ''} · 没有记录的项目照实写「无记录」，不做推算或补零</div>
+    </div>
+  `;
+
+  v.querySelectorAll('.wk-diary li').forEach(li => {
+    li.onclick = () => openDiaryRead(li.getAttribute('data-did'), s.diary);
+  });
+  // 摘要跑完（含失败）就重画一次，失败条和重试入口才当场出现，不用退出重进
+  const redraw = () => { if (activeTab === 'monthly') renderMonthly(true); };
+  const sumRetry = $('#mo-sumretry');
+  if (sumRetry) sumRetry.onclick = () => retryDiarySummaries(dRows, redraw);
+  if (dRows.length) ensureDiarySummaries(dRows, redraw);   // 后台生成摘要，不阻塞首屏
+  const more = $('#mo-more');
+  if (more) more.onclick = () => { monthlyDiaryAll = true; renderMonthly(); };
+  const back = $('#mo-back'); if (back) back.onclick = () => switchTab('me');
+  const pv2 = $('#mo-prev'); if (pv2) pv2.onclick = () => { monthlyAnchor = shiftMonths(monthlyAnchor, -1); monthlyDiaryAll = false; renderMonthly(); };
+  const nx2 = $('#mo-next'); if (nx2) nx2.onclick = () => { if (rg.isCurrent) return; monthlyAnchor = shiftMonths(monthlyAnchor, 1); monthlyDiaryAll = false; renderMonthly(); };
+  window.scrollTo(0, sc0);
 }
 
 async function renderProfile() {
@@ -3714,11 +4090,16 @@ async function renderProfile() {
       <div class="muted" style="font-size:11.5px;margin-top:8px">点头像可以换</div>
     </div>
 
-    <div class="sec">每周回顾</div>
+    <div class="sec">回顾</div>
     <div class="me-list">
       <div class="me-item" id="mi-weekly">
         <div class="me-ico" style="color:var(--brand-2)">${ICONS.chart}</div>
         <div class="me-txt"><div class="t">本周回顾</div><div class="s">收支 · 日记 · 运动 · 健康 · 步数，一页看完还能翻周</div></div>
+        <div class="me-arrow">›</div>
+      </div>
+      <div class="me-item" id="mi-monthly">
+        <div class="me-ico" style="color:var(--amber)">${ICONS.list}</div>
+        <div class="me-txt"><div class="t">每月回顾</div><div class="s">一个月的总量与结构 · 亮点、对比上月，可往回翻</div></div>
         <div class="me-arrow">›</div>
       </div>
     </div>
@@ -3816,6 +4197,8 @@ async function renderProfile() {
   if (miSteps) miSteps.onclick = openStepsForm;
   const miWeekly = $('#mi-weekly');
   if (miWeekly) miWeekly.onclick = () => { weeklyDataAt = 0; switchTab('weekly'); };
+  const miMonthly = $('#mi-monthly');
+  if (miMonthly) miMonthly.onclick = () => { monthlyDataAt = 0; monthlyDiaryAll = false; switchTab('monthly'); };
   const pcMe = $('#pet-card');
   if (pcMe) bindPetCard();
   $('#me-avatar').onclick = openAvatarPicker;
