@@ -3699,7 +3699,9 @@ const MONTH_DIARY_SHOW = 8;               // 先铺最近 8 篇：整月 30 篇�
 
 function monthStart(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 
-function monthRange(d) {
+// ⚠ 名字必须与文件上方那个 monthRange（返回 {start,end}、带默认参数）区分开——
+//   重名会让后者被提升覆盖，今日页 `monthRange()` 无参调用就会抛 getFullYear。
+function monthSpan(d) {
   const y = d.getFullYear(), m = d.getMonth();
   const first = new Date(y, m, 1);
   const last = new Date(y, m + 1, 0);            // 「下月 0 号」= 本月最后一天，自动处理 2 月与闰年
@@ -3837,8 +3839,8 @@ async function renderMonthly(keepScroll) {
   catch (e) { v.innerHTML = `<div class="empty">读取失败<br>${escapeHtml(errMsg(e))}</div>`; return; }
 
   if (!monthlyAnchor) monthlyAnchor = monthStart(new Date());
-  const rg = monthRange(monthlyAnchor);
-  const prg = monthRange(shiftMonths(monthlyAnchor, -1));
+  const rg = monthSpan(monthlyAnchor);
+  const prg = monthSpan(shiftMonths(monthlyAnchor, -1));
   const s = monthStats(data, rg);
   const p = monthStats(data, prg);
 
