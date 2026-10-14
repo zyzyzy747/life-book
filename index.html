@@ -22,9 +22,129 @@
   --grad:linear-gradient(135deg,var(--brand),var(--brand-2));
   --out:#FF6B6B;--in:#35D99B;--pink:#FF7BB0;--amber:#FFB454;--cyan:#4FD1E0;
   --r:18px;--r-sm:14px;
+  /* 「星环」版新令牌（2026-10-14）。设计调性 = Brutally minimal × 杂志编辑：
+     暖调近黑打底（非纯黑，OLED 上边缘发绿）、单一琥珀强调色、发丝线分栏代替卡片堆砌、
+     圆角只留 3 档。⚠ 强调色走 --star-a 而不是 --brand，因为 6 套主题色可选，
+     用主题色当强调会让 11 张页面失去统一视觉锚点。 */
+  --star-a:#FF9F1C;                          /* 琥珀：全站唯一强调色 */
+  --star-a-soft:rgba(255,159,28,.14);
+  --star-a-line:rgba(255,159,28,.34);
+  --star-line:rgba(245,240,232,.085);        /* 发丝线 */
+  --star-line-hi:rgba(245,240,232,.16);
+  --star-text:#F5F0E8;                       /* 暖调近白，不是纯白 */
+  --star-text-2:#9A9186;
+  --star-text-3:#6B6459;
+  --star-r-lg:28px;--star-r-md:14px;--star-r-pill:99px;   /* 圆角只有 3 档 */
+  --star-display:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",
+                 "Noto Serif SC",SimSun,Georgia,serif;    /* 系统衬线，零网络加载 */
+  --star-ease:cubic-bezier(.16,1,.3,1);
   --safe-top:env(safe-area-inset-top,0px);
   --safe-bottom:env(safe-area-inset-bottom,0px);
   color-scheme:dark;
+}
+
+/* ===== 星环版组件（今日页 02/03/04 区块）=====
+   ⚠ 命名统一 st- 前缀，不改既有类名 —— 6 个页面共用一套样式，
+   动 .card / .hero 这类会牵连报表页。 */
+.st-sec{display:flex;align-items:center;gap:9px;margin:22px 0 13px}
+.st-sec-i{font-family:var(--star-display);font-size:11px;color:var(--star-a);
+          letter-spacing:.1em;opacity:.85}
+.st-sec-t{font-size:11.5px;letter-spacing:.18em;color:var(--star-text-3)}
+.st-rule{height:1px;background:var(--star-line)}
+
+/* 记录星环：31 段弧 = 31 天，点亮 = 当天有记录，断签是灰的缺口 */
+.st-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:30px 0 22px}
+.st-ring-box{position:relative;width:272px;height:272px}
+.st-ring-box svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.st-ring-c{position:absolute;inset:0;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;pointer-events:none}
+.st-ring-n{font-family:var(--star-display);font-size:76px;line-height:.9;
+          font-weight:400;color:var(--star-text);letter-spacing:-.04em;
+          font-variant-numeric:tabular-nums}
+.st-ring-u{font-size:10.5px;letter-spacing:.2em;color:var(--star-text-3);margin-top:9px}
+.st-ring-sub{font-size:12.5px;color:var(--star-text-2);margin-top:13px}
+.st-ring-sub b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* 每日一句：左侧琥珀竖线 + 大衬线 */
+.st-quote{padding:4px 0 8px 16px;position:relative}
+.st-quote::before{content:"";position:absolute;left:0;top:4px;bottom:8px;width:2px;
+                  background:var(--star-a);opacity:.55;border-radius:2px}
+.st-quote-z{font-family:var(--star-display);font-size:22px;line-height:1.45;
+            letter-spacing:-.015em;color:var(--star-text)}
+.st-quote-e{font-family:var(--star-display);font-size:13.5px;font-style:italic;
+            line-height:1.5;color:var(--star-text-2);margin-top:8px}
+.st-quote-a{font-size:11.5px;color:var(--star-text-3);margin-top:8px;letter-spacing:.05em}
+
+/* 卡片 */
+.st-card{background:rgba(255,255,255,.032);border:1px solid var(--star-line);
+         border-radius:var(--star-r-lg);padding:17px 17px 15px;position:relative;overflow:hidden}
+.st-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+                 background:linear-gradient(168deg,rgba(245,240,232,.028),transparent 52%)}
+
+/* 喝水 */
+.st-water{display:flex;align-items:center;gap:16px}
+.st-water-arc{position:relative;width:86px;height:86px;flex:0 0 auto}
+.st-water-arc svg{width:100%;height:100%;transform:rotate(-90deg)}
+.st-water-arc .st-wm{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-family:var(--star-display);font-size:21px;
+  color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.st-water-info{flex:1;min-width:0}
+.st-water-n{font-family:var(--star-display);font-size:32px;line-height:1;
+            color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.st-water-n i{font-style:normal;font-size:13px;color:var(--star-text-3);
+              margin-left:4px;letter-spacing:0}
+.st-water-goal{font-size:12.5px;color:var(--star-text-2);margin-top:6px}
+.st-water-goal b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
+.st-btns{display:flex;gap:8px;margin-top:13px}
+.st-btn{flex:1;min-height:44px;border-radius:var(--star-r-md);
+        background:rgba(255,255,255,.055);border:1px solid var(--star-line-hi);
+        color:var(--star-text);font-size:14px;
+        transition:transform .16s var(--star-ease),background .16s var(--star-ease);
+        display:flex;align-items:center;justify-content:center;gap:6px}
+.st-btn:active{transform:scale(.965);background:var(--star-a-soft)}
+.st-btn-p{background:var(--star-a-soft);border-color:var(--star-a-line);color:var(--star-a)}
+.st-btn-undo{flex:0 0 auto;padding:0 15px;font-size:12.5px;color:var(--star-text-2)}
+
+/* 心情：⛔ 一周 7 列在 390 宽里每格只有 38.6px，达不到 44px 触摸目标
+   ⇒ 横向滚动 + 46px 定宽，滑动露半格暗示还有更多 */
+.st-mood-week{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;
+              scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.st-mood-week::-webkit-scrollbar{display:none}
+.st-mood-c{flex:0 0 46px;height:56px;border-radius:var(--star-r-md);
+           background:rgba(255,255,255,.055);border:1px solid transparent;
+           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+           transition:transform .16s var(--star-ease),background .2s var(--star-ease),border-color .2s var(--star-ease)}
+.st-mood-c:active{transform:scale(.93)}
+.st-mood-c.today{border-color:var(--star-a-line);background:var(--star-a-soft)}
+.st-mood-e{font-size:20px;line-height:1}
+.st-mood-d{font-size:10px;color:var(--star-text-3);font-family:var(--star-display)}
+.st-mood-c.today .st-mood-d{color:var(--star-a)}
+.st-mood-now{font-size:12.5px;color:var(--star-text-2);margin-top:14px}
+.st-mood-now b{color:var(--star-text);font-weight:500}
+/* ⛔ 10 个 44px 按钮 + 左侧文字在同一行必然挤爆（文字被压成竖排单字）
+   ⇒ 标题在上、按钮在下两行块布局，永不互相挤压 */
+.st-mood-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.st-mp{width:100%;height:44px;border-radius:var(--star-r-md);background:rgba(255,255,255,.055);
+       border:1px solid transparent;font-size:19px;line-height:1;
+       display:flex;align-items:center;justify-content:center;
+       transition:transform .16s var(--star-ease),border-color .16s var(--star-ease)}
+.st-mp:active{transform:scale(.9)}
+.st-mp.on{border-color:var(--star-a);background:var(--star-a-soft)}
+
+/* 今日速记：发丝线行，不是卡片 */
+.st-quick{display:flex;align-items:stretch}
+.st-qk{flex:1;padding:13px 0 12px;text-align:center;position:relative;
+       border-radius:var(--star-r-md)}
+.st-qk+.st-qk::before{content:"";position:absolute;left:0;top:14px;bottom:13px;
+                      width:1px;background:var(--star-line)}
+.st-qk-n{font-family:var(--star-display);font-size:23px;line-height:1;
+         color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.st-qk-n.has{color:var(--star-a)}
+.st-qk-t{font-size:11px;color:var(--star-text-3);margin-top:6px;letter-spacing:.06em}
+
+/* 动效降级 */
+@media (prefers-reduced-motion:reduce){
+  .st-btn,.st-mp,.st-mood-c{transition:none}
 }
 
 /* ===== 主题（个性化：覆盖品牌色，其余层级保持不变） ===== */
@@ -1730,11 +1850,11 @@ async function renderHome() {
         <div class="hero-grid">
           <div><span class="k">今日收入</span><span class="v" style="color:var(--in)">+¥${fmtMoney(todayIn)}</span></div>
           <div><span class="k">本月支出</span><span class="v num">¥${fmtMoney(monthOut)}</span></div>
-          <div><span class="k">本月收入</span><span class="v" style="color:var(--in)">+¥${fmtMoney(monthIn)}</span></div>
+          <div><span class="k">本月收入</span><span class="v num" style="color:var(--in)">+¥${fmtMoney(monthIn)}</span></div>
           <div><span class="k">今日步数</span><span class="v num" style="color:var(--cyan)">${stepRec ? Number(stepRec.steps).toLocaleString('zh-CN') : '—'}</span></div>
         </div>
       </div>
-      ${petCardHTML()}
+      <div id="st-zone"></div>
       <div class="sec">签到里程碑</div>
       <div class="badge-grid">
         ${MILESTONES.map(m => `<div class="badge ${best >= m ? 'got' : ''}"><div class="n num">${m}</div><div class="d">${best >= m ? '已达成' : '天'}</div></div>`).join('')}
@@ -1753,8 +1873,9 @@ async function renderHome() {
         <button class="quick" data-act="he">${ICONS.health}<span>记健康</span></button>
       </div>`;
     $$('.quick').forEach(b => b.onclick = () => quickAdd(b.dataset.act));
-    const pc = $('#pet-card');
-    if (pc) bindPetCard();
+    // 星环 / 喝水 / 每日一句 / 心情 —— 独立渲染并自带 try，
+    // ⛔ 不和上面这堆 Promise 混在一起：它们失败时不该把整个首页拖成「加载失败」
+    renderStZone();
     if (state.justChecked) {
       const j = state.justChecked;
       state.justChecked = null;
@@ -1771,6 +1892,417 @@ function quickAdd(act) {
   else if (act === 'dia') { switchTab('diary'); setTimeout(() => openDiaryForm(), 60); }
   else if (act === 'sp') { switchTab('sport'); setTimeout(() => openSportForm(), 60); }
   else if (act === 'he') { switchTab('health'); setTimeout(() => openHealthForm(), 60); }
+}
+
+/* ================= 记录星环 · 喝水 · 每日一句 · 每日心情 =================
+   2026-10-14 新增。设计上刻意把「宠物」换成这四块：
+   宠物原来只是 20 张静态贴图（4 形态 × 5 皮肤），进化方式是「等级到了换图」，
+   没有在场感；而星环直接读数据 —— 点亮 = 当天有记录，断签就是灰的缺口。
+   ⛔ 命名一律 st- 前缀，且函数名都带 st 前缀，加函数前必须查重名
+      （10-03 曾因月报 monthRange 覆盖同名函数、整页崩掉，见 skill）。 */
+
+const ST_WATER_GOAL = 2000;          // 每日饮水目标 ml
+const ST_WATER_STEP = 100;           // 自定义步进
+const ST_MOODS = ['😊','😌','🥰','😴','😐','😢','😡','💪','🎉','🤔'];
+const ST_WEEK_LABELS = ['一','二','三','四','五','六','日'];
+
+/* ---- 每日一句：本地句子库 ----
+   ⛔ 不用模型：模型每次输出都不同 ⇒ 同一天刷新看到的话不一样 ⇒ 用户以为 App 坏了；
+      而且为每天一句短语烧 token 不划算。固定库按日期取，稳定、离线、零成本。
+   ⛔ 全部为公版名言。中文首句不得重复（用户两天看到同一句会以为坏了）。 */
+const QUOTE_LIB = [
+  { z: '唯一安全的事，就是冒一次险。', e: 'The only safe thing is to take a chance.', a: 'Elaine May' },
+  { z: '我们最大的光荣，不在于从不跌倒，而在于每次跌倒后都能爬起来。', e: 'Our greatest glory is not in never falling, but in rising every time we fall', a: '孔子 / Confucius' },
+  { z: '生活不是等待暴风雨过去，而是学会在雨中起舞。', e: 'Life is not about waiting for the storm to pass, but learning to dance in the rain', a: '佚名' },
+  { z: '你无法用旧的力气，去达成新的目标。', e: 'You cannot use old strengths to get to new goals', a: '佚名' },
+  { z: '那些杀不死我的，使我更强大。', e: 'That which does not kill me makes me stronger', a: '尼采 / Nietzsche' },
+  { z: '决定我们成为什么样的人的，不是我们的能力，而是我们的选择。', e: 'It is not our abilities that tell who we are, but our choices', a: '邓布利多 / Dumbledore' },
+  { z: '你要做的事越多，能做好的就越少。', e: 'If you do too much, you will not do enough', a: '佚名' },
+  { z: '种一棵树最好的时间是十年前，其次是现在。', e: 'The best time to plant a tree was ten years ago; the second best time is now', a: '谚语' },
+  { z: '慢一点没关系，只要不停下来。', e: 'It does not matter how slowly you go as long as you do not stop', a: '孔子 / Confucius' },
+  { z: '失败是成功之母，别把它当继母。', e: 'Failure is the mother of success, not her stepmother', a: '佚名' },
+  { z: '真正的发现之旅不在于寻找新大陆，而在于拥有新眼光。', e: 'The real voyage of discovery consists not in seeking new lands, but in having new eyes', a: '普鲁斯特 / Proust' },
+  { z: '我最大的奢侈是思考的时间。', e: 'My greatest luxury is the time to think', a: '佚名' },
+  { z: '若想造一艘船，先教人渴望大海的永无止境。', e: 'If you want to build a ship, teach people to long for the endless immensity of the sea', a: '圣埃克苏佩里 / Saint-Exupéry' },
+  { z: '重要的不是活得最久，而是活得最好。', e: 'The important thing is not to live longest, but to live best', a: '塞涅卡 / Seneca' },
+  { z: '凡我不能创造的，我就不能理解。', e: 'What I cannot create, I do not understand', a: '费曼 / Feynman' },
+  { z: '不是我们拥有多少时间，而是我们给予多少注意力。', e: 'It is not how much time we have, but how much attention we give it', a: '佚名' },
+  { z: '把每一件平凡的事做好，就是不平凡。', e: 'Doing ordinary things extraordinarily well is extraordinary', a: '佚名' },
+  { z: '静水流深，智者寡言。', e: 'Still waters run deep; the wise are sparing with words', a: '谚语' },
+  { z: '成年人的崩溃是无声的，但成年人的坚持也是。', e: 'Adults break down silently, but adults also persist silently', a: '佚名' },
+  { z: '登高才能望远。', e: 'To see far, one must stand high', a: '古训' },
+  { z: '让今天胜过昨天，让明天胜过今天。', e: 'Let today surpass yesterday, and tomorrow surpass today', a: '佚名' },
+  { z: '沉舟侧畔千帆过，病树前头万木春。', e: 'Past the sunken boat a thousand sails glide by; before the withered tree ten thousand trees put forth leaves', a: '刘禹锡' },
+  { z: '路漫漫其修远兮，吾将上下而求索。', e: 'The road is long and winding; I will keep searching upward and downward', a: '屈原' },
+  { z: '长风破浪会有时，直挂云帆济沧海。', e: 'The time will come to ride the wind and cleave the waves; I will hoist the cloud sail and cross the sea', a: '李白' },
+  { z: '千里之行，始于足下。', e: 'A journey of a thousand miles begins with a single step', a: '老子' },
+  { z: '天行健，君子以自强不息。', e: 'As heaven moves ever vigorously, so should one strive without ceasing', a: '周易' },
+  { z: '业精于勤，荒于嬉；行成于思，毁于随。', e: 'Mastery grows from diligence and decays from idleness; conduct is formed by thought and ruined by drift', a: '韩愈' },
+  { z: '博观而约取，厚积而薄发。', e: 'Read widely but select sparingly; accumulate deeply and release slowly', a: '苏轼' },
+  { z: '苟日新，日日新，又日新。', e: 'If one day you are renewed, do it daily, and renew it again', a: '礼记' },
+  { z: '士不可以不弘毅，任重而道远。', e: 'A scholar must be both broad and resolute, for the task is heavy and the road long', a: '论语' },
+  { z: '天下难事，必作于易；天下大事，必作于细。', e: 'The hardest things are made easy by the easiest; the greatest things are made small by the smallest', a: '老子' },
+  { z: '致广大而尽精微。', e: 'Be broad in vision and meticulous in detail', a: '中庸' },
+  { z: '纸上得来终觉浅，绝知此事要躬行。', e: 'What you learn from books is ultimately shallow; to truly know, you must do', a: '陆游' },
+  { z: '问渠那得清如许？为有源头活水来。', e: 'How can it be so clear? Because fresh water flows from its source', a: '朱熹' },
+  { z: '山重水复疑无路，柳暗花明又一村。', e: 'Mountains overlap and waters double, I doubt there is a road; then willows darken and flowers brighten, another village', a: '陆游' },
+  { z: '不畏浮云遮望眼，只缘身在最高层。', e: 'Not fearing floating clouds to block my view, for I stand at the highest level', a: '王安石' },
+  { z: '宝剑锋从磨砺出，梅花香自苦寒来。', e: 'The sword’s edge comes from whetting; plum blossoms owe their fragrance to bitter cold', a: '古训' },
+  { z: '千磨万击还坚劲，任尔东西南北风。', e: 'Ground a thousand times and struck ten thousand, still hard; let the winds blow from any direction', a: '郑板桥' },
+  { z: '咬定青山不放松，立根原在破岩中。', e: 'Biting fast to the green mountain and never relaxing, its root stands in the broken rock', a: '郑板桥' },
+  { z: '曾经沧海难为水，除却巫山不是云。', e: 'Once you have seen the ocean, nothing else compares; apart from Mount Wu, no clouds are clouds', a: '元稹' },
+  { z: '莫愁前路无知己，天下谁人不识君。', e: 'Do not worry that no one knows you ahead; who in this world does not know you', a: '高适' },
+  { z: '海内存知己，天涯若比邻。', e: 'If friends are kept in the heart, even the ends of the earth feel close', a: '王勃' },
+  { z: '欲穷千里目，更上一层楼。', e: 'To see a thousand miles further, climb one more storey', a: '王之涣' },
+  { z: '春江潮水连海平，海上明月共潮生。', e: 'The spring river tide meets the sea; the bright moon rises with the tide', a: '张若虚' },
+  { z: '不以物喜，不以己悲。', e: 'Neither elated by things nor saddened by self', a: '范仲淹' },
+  { z: '先天下之忧而忧，后天下之乐而乐。', e: 'I worry before the people and enjoy after them', a: '范仲淹' },
+  { z: '穷则变，变则通，通则久。', e: 'In poverty, change; in change, open up; in openness, endure', a: '周易' },
+  { z: '祸兮福之所倚，福兮祸之所伏。', e: 'Misfortune leans on fortune; fortune hides within misfortune', a: '老子' },
+  { z: '合抱之木，生于毫末；九层之台，起于累土。', e: 'A tree of a thousand arms grows from a sprout; a tower of nine stories rises from clods of earth', a: '老子' },
+  { z: '大方无隅，大器晚成，大音希声。', e: 'The greatest square has no corners; the greatest vessel takes long to finish; the greatest sound is faint', a: '老子' },
+  { z: '善战者，求之于势，不责于人。', e: 'The skilled commander studies the momentum, not the men', a: '孙子' },
+  { z: '知彼知己，百战不殆。', e: 'Know yourself and know your enemy, and a hundred battles are without peril', a: '孙子' },
+  { z: '兵无常势，水无常形。', e: 'War has no fixed shape, just as water has no fixed form', a: '孙子' },
+  { z: '地势坤，君子以厚德载物。', e: 'As earth is fertile, so should one be generous and carry all things', a: '周易' },
+  { z: '三人行，必有我师焉。', e: 'Among three people walking, there is always one who can be my teacher', a: '论语' },
+  { z: '择其善者而从之，其不善者而改之。', e: 'Choose the good and follow it; see the bad and correct it', a: '论语' },
+  { z: '工欲善其事，必先利其器。', e: 'If the craftsman wishes to do good work, he must first sharpen his tools', a: '论语' },
+  { z: '君子求诸己，小人求诸人。', e: 'The noble man seeks his faults in himself; the small man seeks faults in others', a: '论语' },
+  { z: '己所不欲，勿施于人。', e: 'What you do not wish for yourself, do not do to others', a: '论语' },
+  { z: '知者不惑，仁者不忧，勇者不惧。', e: 'The wise are not perplexed; the benevolent are not worried; the brave are not fearful', a: '论语' },
+  { z: '岁寒，然后知松柏之后凋也。', e: 'Only in the cold of winter do we know that pine and cypress wither last', a: '论语' },
+  { z: '逝者如斯夫，不舍昼夜。', e: 'The time flows away like this, never stopping, day or night', a: '论语' },
+  { z: '朝闻道，夕死可矣。', e: 'If one hears the Way in the morning, dying in the evening would be enough', a: '论语' },
+  { z: '岁岁重阳，今又重阳。', e: 'The Double Ninth returns year after year, and here we are again', a: '佚名' },
+  { z: '学而时习之，不亦说乎。', e: 'Is it not a pleasure to learn and practice what one has learned', a: '论语' },
+  { z: '盛年不重来，一日难再晨。', e: 'The prime years do not return, and a day does not dawn twice', a: '陶渊明' },
+  { z: '及时当勉励，岁月不待人。', e: 'Seize the moment, for time waits for no one', a: '陶渊明' },
+  { z: '大鹏一日同风起，扶摇直上九万里。', e: 'The great peng rises with the wind and soars ninety thousand li', a: '李白' },
+  { z: '天生我材必有用。', e: 'Heaven has made me useful', a: '李白' },
+  { z: '安得广厦千万间，大庇天下寒士俱欢颜。', e: 'If only I had a million grand houses to shelter all the poor under heaven', a: '杜甫' },
+  { z: '读书破万卷，下笔如有神。', e: 'Read ten thousand volumes and your writing will be as if divinely inspired', a: '杜甫' },
+  { z: '书山有路勤为径，学海无涯苦作舟。', e: 'The mountain of books has diligence as its path; the sea of learning is boundless and hardship is the boat', a: '韩愈' },
+  { z: '锲而舍之，朽木不折；锲而不舍，金石可镂。', e: 'Stop and the rotten wood will not break; persist and metal and stone can be carved', a: '荀子' },
+  { z: '青，取之于蓝，而青于蓝。', e: 'Indigo comes from blue, yet is bluer than the blue', a: '荀子' },
+  { z: '天时不如地利，地利不如人和。', e: 'Timeliness is not as good as terrain; terrain is not as good as harmony', a: '孟子' },
+  { z: '穷则独善其身，达则兼济天下。', e: 'In poverty I tend my own virtue alone; in success I share it with the world', a: '孟子' },
+  { z: '生于忧患，死于安乐。', e: 'One is born into anxiety and dies of ease', a: '孟子' },
+  { z: '得道者多助，失道者寡助。', e: 'Those who follow the Way have many helpers; those who lose it have few', a: '孟子' },
+  { z: '富贵不能淫，贫贱不能移，威武不能屈。', e: 'Wealth cannot seduce me; poverty cannot move me; power cannot bend me', a: '孟子' },
+  { z: '不患寡，而患不均；不患贫，而患不安。', e: 'Do not worry about being few but about inequality; not about poverty but about unrest', a: '论语' },
+  { z: '己欲立而立人，己欲达而达人。', e: 'Let those who would stand for me stand; let those who would reach for me reach', a: '论语' },
+  { z: '德不孤，必有邻。', e: 'Virtue is never alone; it always has neighbors', a: '论语' }
+];
+/* 按日期取：同一天永远同一句（刷新不变），跨天自动换。
+   ⛔ 用 yyyymmdd 数值做哈希而不是日期字符串 —— 字符串在不同时区下可能算出不同结果。 */
+function stQuoteOfDay(d) {
+  const dt = d ? new Date(d) : new Date();
+  const key = dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate();
+  return QUOTE_LIB[Math.abs(key) % QUOTE_LIB.length];
+}
+
+/* 句子库自检。⛔ 这条是被真坑逼出来的：手工往页面里复制句子时漏过一条，
+   而漏条/重复都不会报错、只会静默少一句或两天显示同一句。
+   判据：条数够、三字段齐全、中文首句无重复。开发期断言会调它。 */
+function stAssertQuoteLib() {
+  if (!Array.isArray(QUOTE_LIB) || QUOTE_LIB.length < 30) return false;
+  if (!QUOTE_LIB.every(q => q && q.z && q.e && q.a)) return false;
+  const zs = QUOTE_LIB.map(q => q.z);
+  return new Set(zs).size === zs.length;
+}
+
+/* ---- 数据层：星环 / 喝水 / 心情 ---- */
+let stData = null, stDataAt = 0, stDataDay = '';   // 当天缓存，60s 内不重复拉
+
+/* 哪些表算「当天有记录」——星环点亮条件。刻意不含 water/mood：
+   喝水和心情是随手记的，权重比「写了日记」轻，不该和写日记同级点亮。 */
+const ST_RING_TABLES = ['expense','diary','life','sport','health','steps'];
+const ST_DAY_LIMIT = 400;
+
+async function fetchStData(force) {
+  const today = todayStr();
+  if (!force && stData && stDataDay === today && Date.now() - stDataAt < 60000) return stData;
+  const monthStart = localDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const res = await Promise.all([
+    ...ST_RING_TABLES.map(t =>
+      cloud.database.from(t).select('record_date').gte('record_date', monthStart)
+        .lt('record_date', localDateStr(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)))
+        .limit(ST_DAY_LIMIT).then(r => (r && r.data) || [], () => [])),
+    cloud.database.from('water').select('*').eq('record_date', today).limit(20),
+    cloud.database.from('mood').select('*').eq('record_date', today).limit(1).maybeSingle()
+  ]);
+  const out = { days: new Set(), waterRows: [], mood: '' };
+  ST_RING_TABLES.forEach((t, i) => {
+    (res[i] || []).forEach(r => { const d = ymdLite(r); if (d) out.days.add(d); });
+  });
+  out.waterRows = (res[ST_RING_TABLES.length] && res[ST_RING_TABLES.length].data) || [];
+  const m = res[ST_RING_TABLES.length + 1];
+  out.mood = (m && !m.error && m.data && m.data.mood) || '';
+  // ⛔ 整条 mood 记录（含 id）要留着：改心情时靠 id 走 update，
+  //    拿不到 id 就只能「删了再插」，那会丢掉 created_at
+  out.moodRow = (m && !m.error && m.data && m.data.id) ? m.data : null;
+  stData = out; stDataAt = Date.now(); stDataDay = today;
+  return out;
+}
+const ymdLite = (r) => String((r && r.record_date) || '').slice(0, 10);
+
+/* 今天喝了多少 ml：water 表按「每笔增量」存，求和即可 */
+function stWaterTotal(data) {
+  return (data.waterRows || []).reduce((s, r) => s + (Number(r.ml) || 0), 0);
+}
+/* 连续点亮天数：从今天往回数，缺一天就断（今天还没记不算断，从昨天算起） */
+function stStreak(days, today) {
+  const d = new Date();
+  let n = 0;
+  if (!days.has(today)) d.setDate(d.getDate() - 1);      // 今天还没记 → 从昨天开始数
+  for (;;) {
+    const k = localDateStr(d);
+    if (!days.has(k)) break;
+    n++;
+    d.setDate(d.getDate() - 1);
+  }
+  return n;
+}
+/* 本月点亮 / 断签天数。当月天数按日历算，未来日期不参与（与月报口径一致） */
+function stMonthDays(days) {
+  const now = new Date();
+  const total = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const passed = now.getDate();
+  let lit = 0, missed = 0;
+  for (let i = 1; i <= passed; i++) {
+    const k = localDateStr(new Date(now.getFullYear(), now.getMonth(), i));
+    if (days.has(k)) lit++; else missed++;
+  }
+  return { total, passed, lit, missed };
+}
+
+/* ---- 渲染：星环 31 段弧 ----
+   ⛔ 分段用 stroke-dasharray 画在同一个 <circle> 上靠 dashoffset 错开，
+   比画 31 个 <path> 便宜得多；rotate(-90deg) 让 1 号从正上方开始。 */
+function stRingHTML(days, today) {
+  const md = stMonthDays(days);
+  const R = 122, C = 2 * Math.PI * R, N = 31, GAP = 3.2, L = C / N - GAP;
+  let h = `<circle cx="160" cy="160" r="${R}" fill="none" stroke="rgba(245,240,232,.055)" stroke-width="3"/>`;
+  for (let i = 0; i < N; i++) {
+    const day = i + 1;
+    let col, wid;
+    if (day > md.passed) { col = 'rgba(245,240,232,.07)'; wid = 3; }
+    else if (days.has(localDateStr(new Date(new Date().getFullYear(), new Date().getMonth(), day)))) { col = '#FF9F1C'; wid = day === md.passed ? 6 : 4.4; }
+    else { col = 'rgba(245,240,232,.13)'; wid = 4.4; }
+    h += `<circle class="st-seg" cx="160" cy="160" r="${R}" fill="none" stroke="${col}" stroke-width="${wid}" stroke-dasharray="${L.toFixed(2)} ${(C - L + 1).toFixed(2)}" stroke-dashoffset="${(-i * (C / N)).toFixed(2)}"/>`;
+  }
+  const streak = stStreak(days, today);
+  return { svg: h, streak, ...md };
+}
+
+/* 喝水弧：同款 stroke-dasharray 画法 */
+function stWaterArcHTML(pct) {
+  const R = 42, C = 2 * Math.PI * R;
+  const on = C * Math.max(0, Math.min(1, pct));
+  return `<circle cx="50" cy="50" r="${R}" fill="none" stroke="rgba(245,240,232,.09)" stroke-width="6"/>` +
+    `<circle id="st-water-arc" cx="50" cy="50" r="${R}" fill="none" stroke="#FF9F1C" stroke-width="6" stroke-linecap="round" stroke-dasharray="${on.toFixed(2)} ${(C - on).toFixed(2)}"/>`;
+}
+
+/* 本周七格（周一起），今天所在格高亮；有心情的那天显示表情 */
+function stMoodWeekHTML(moodMap, todayIdx) {
+  let h = '';
+  for (let i = 0; i < 7; i++) {
+    const m = moodMap[ST_WEEK_LABELS[i]] || '';
+    h += `<div class="st-mood-c${i === todayIdx ? ' today' : ''}">
+      <span class="st-mood-e">${m || '&nbsp;'}</span>
+      <span class="st-mood-d">${ST_WEEK_LABELS[i]}</span></div>`;
+  }
+  return h;
+}
+
+/* ---- 主渲染：写进 #st-zone，并绑事件 ----
+   ⛔ 自带 try/catch 且只影响自己那块 —— 星环挂掉不该让整个首页变「加载失败」。 */
+async function renderStZone(force) {
+  const zone = $('#st-zone');
+  if (!zone) return;
+  if (zone.dataset.state !== 'ok') zone.innerHTML = '<div class="st-rule"></div><div class="empty"><span class="loader"></span></div>';
+  try {
+    const data = await fetchStData(force);
+    if (!zone.isConnected) return;              // 用户已经切走了，别往废弃节点里写
+    const today = todayStr();
+    const ring = stRingHTML(data.days, today);
+    const ml = stWaterTotal(data);
+    const q = stQuoteOfDay();
+    const pct = Math.round(ml / ST_WATER_GOAL * 100);
+    const left = Math.max(0, ST_WATER_GOAL - ml);
+    const now = new Date();
+    // 今天在本周的第几格（0=周一）。用 getDay 换算：周日 getDay=0 ⇒ 落到第 6 格
+    const todayIdx = (now.getDay() + 6) % 7;
+    // 本周心情：只拉 7 天，避免为画七格去拉整月
+    const monday = new Date(now); monday.setDate(monday.getDate() - todayIdx);
+    const weekEnd = new Date(monday); weekEnd.setDate(weekEnd.getDate() + 7);
+    const weekRows = await cloud.database.from('mood').select('record_date,mood')
+      .gte('record_date', localDateStr(monday)).lt('record_date', localDateStr(weekEnd))
+      .limit(10).then(r => (r && r.data) || [], () => []);
+    const moodMap = {};
+    weekRows.forEach(r => {
+      const d = new Date(String(r.record_date).slice(0, 10) + 'T00:00:00');
+      if (!isNaN(d)) moodMap[ST_WEEK_LABELS[(d.getDay() + 6) % 7]] = r.mood;
+    });
+
+    zone.dataset.state = 'ok';
+    zone.innerHTML = `
+      <div class="st-ring-wrap">
+        <div class="st-ring-box">
+          <svg viewBox="0 0 320 320" role="img" aria-label="本月记录星环">${ring.svg}</svg>
+          <div class="st-ring-c">
+            <div class="st-ring-n">${ring.streak}</div>
+            <div class="st-ring-u">天连续</div>
+          </div>
+        </div>
+        <div class="st-ring-sub">本月点亮 <b>${ring.lit} / ${ring.passed}</b> 天${ring.missed ? ` · 断签 ${ring.missed} 天` : ''}</div>
+      </div>
+
+      <div class="st-rule"></div>
+      <div class="st-sec"><span class="st-sec-i">01</span><span class="st-sec-t">每日一句</span></div>
+      <div class="st-quote">
+        <div class="st-quote-z">${escapeHtml(q.z)}</div>
+        <div class="st-quote-e">“${escapeHtml(q.e)}”</div>
+        <div class="st-quote-a">— ${escapeHtml(q.a)}</div>
+      </div>
+
+      <div class="st-rule"></div>
+      <div class="st-sec"><span class="st-sec-i">02</span><span class="st-sec-t">喝水量</span></div>
+      <div class="st-card">
+        <div class="st-water">
+          <div class="st-water-arc">
+            <svg viewBox="0 0 100 100" aria-label="饮水进度">${stWaterArcHTML(ml / ST_WATER_GOAL)}</svg>
+            <div class="st-wm">${pct}</div>
+          </div>
+          <div class="st-water-info">
+            <div class="st-water-n" id="st-water-n">${ml}<i>ml</i></div>
+            <div class="st-water-goal">目标 ${ST_WATER_GOAL}ml · 还差 <b id="st-water-left">${left}ml</b></div>
+          </div>
+        </div>
+        <div class="st-btns">
+          <button class="st-btn st-btn-p" data-st-water="200">+ 200ml</button>
+          <button class="st-btn st-btn-p" data-st-water="500">+ 500ml</button>
+        </div>
+        <div class="st-btns">
+          <button class="st-btn" id="st-water-custom">自定义</button>
+          <button class="st-btn st-btn-undo" id="st-water-undo">撤销</button>
+        </div>
+      </div>
+
+      <div class="st-rule"></div>
+      <div class="st-sec"><span class="st-sec-i">03</span><span class="st-sec-t">每日心情</span></div>
+      <div class="st-card">
+        <div class="st-mood-week">${stMoodWeekHTML(moodMap, todayIdx)}</div>
+        <div class="st-mood-now">今天：<b id="st-mood-now">${data.mood ? escapeHtml(data.mood) : '还没记'}</b></div>
+        <div class="st-mood-picks" id="st-mood-picks">
+          ${ST_MOODS.map(m => `<button class="st-mp${data.mood === m ? ' on' : ''}" data-st-mood="${m}" aria-label="心情 ${m}">${m}</button>`).join('')}
+        </div>
+      </div>`;
+    bindStZone();
+  } catch(e) {
+    // 静默降级：留一条发丝线 + 一句可点重试，不惊动整页
+    zone.dataset.state = 'fail';
+    zone.innerHTML = `<div class="st-rule"></div><div class="empty"><div class="ico">·</div>星环加载失败<button class="btn-text" id="st-retry">点此重试</button></div>`;
+    const rt = $('#st-retry'); if (rt) rt.onclick = () => renderStZone(true);
+    console.warn('st zone', e);
+  }
+}
+
+function bindStZone() {
+  $$('[data-st-water]').forEach(b => b.onclick = () => addWater(Number(b.getAttribute('data-st-water'))));
+  $$('[data-st-mood]').forEach(b => b.onclick = () => setMood(b.getAttribute('data-st-mood')));
+  const cu = $('#st-water-custom'); if (cu) cu.onclick = openWaterCustom;
+  const un = $('#st-water-undo'); if (un) un.onclick = undoWater;
+}
+
+/* 只刷新喝水那一小块，不重画整页 —— 否则输入焦点和滚动位置都会丢 */
+function paintStWater() {
+  if (!stData) return;
+  const ml = stWaterTotal(stData);
+  const pct = Math.round(ml / ST_WATER_GOAL * 100);
+  const n = $('#st-water-n'), l = $('#st-water-left'), wm = document.querySelector('.st-wm');
+  if (n) n.innerHTML = `${ml}<i>ml</i>`;
+  if (l) l.textContent = Math.max(0, ST_WATER_GOAL - ml) + 'ml';
+  if (wm) wm.textContent = pct;
+  const arc = $('#st-water-arc');
+  if (arc) {
+    const C = 2 * Math.PI * 42;
+    const on = C * Math.max(0, Math.min(1, ml / ST_WATER_GOAL));
+    arc.setAttribute('stroke-dasharray', `${on.toFixed(2)} ${(C - on).toFixed(2)}`);
+  }
+}
+
+/* 喝水：按「每笔增量」存一行，不做累加更新 ——
+   并发点两下按钮时累加更新会丢一笔，插多行则天然正确。撤销删最后一笔。 */
+async function addWater(ml) {
+  if (!ml || ml < 1) { toastErr('至少 1ml'); return; }
+  const day = todayStr();
+  const { error } = await cloud.database.from('water').insert({ ml, record_date: day });
+  if (error) { toastErr(errMsg(error)); return; }
+  // 本地缓存先加上，避免等一次网络往返才看到数字动
+  if (stData && stDataDay === day) stData.waterRows = (stData.waterRows || []).concat([{ ml }]);
+  paintStWater();
+  awardRecordExp();
+  toast(`+${ml}ml`, `今天 ${stWaterTotal(stData)}ml / ${ST_WATER_GOAL}ml`);
+}
+
+async function undoWater() {
+  const day = todayStr();
+  if (!stData || stDataDay !== day || !(stData.waterRows || []).length) { toastErr('今天还没有记录'); return; }
+  const rows = stData.waterRows;
+  const last = rows[rows.length - 1];
+  const { error } = await cloud.database.from('water').delete().eq('id', last.id).select();
+  if (error) { toastErr(errMsg(error)); return; }
+  stData.waterRows = rows.slice(0, -1);
+  paintStWater();
+  toast(`已撤销 ${Number(last.ml) || 0}ml`);
+}
+
+/* 自定义水量：走既有 openModal，⛔ 不用 prompt() —— 部分 WebView 里 prompt 直接返回 null */
+function openWaterCustom() {
+  openModal(`
+    <div class="field"><label>这次喝了多少（ml）</label>
+      <input id="st-custom-ml" type="number" inputmode="numeric" min="1" step="50" value="${ST_WATER_STEP}"></div>
+    <div class="msg" id="st-custom-msg"></div>
+    <button class="btn" id="st-custom-save">保存</button>`);
+  setModalTitle('记录饮水');
+  $('#st-custom-save').onclick = async () => {
+    const v = parseInt($('#st-custom-ml').value, 10);
+    if (!v || v < 1) { showMsg($('#st-custom-msg'), '填一个大于 0 的数字', 'err'); return; }
+    closeModal();
+    await addWater(v);
+  };
+}
+
+/* 心情：一天一条，重复点同一个 = 清除 */
+async function setMood(m) {
+  const day = todayStr();
+  const cur = (stData && stData.mood) || '';
+  const next = cur === m ? '' : m;
+  if (next) {
+    // 已有行就 update，没有就 insert —— 不依赖 upsert 语法（各 SDK 支持不一）
+    const exist = (stData && stData.moodRow && stData.moodRow.id) || 0;
+    const res = exist
+      ? await cloud.database.from('mood').update({ mood: next }).eq('id', exist).select()
+      : await cloud.database.from('mood').insert({ mood: next, record_date: day }).select();
+    if (res.error) { toastErr(errMsg(res.error)); return; }
+    if (!exist && res.data && res.data[0]) stData.moodRow = res.data[0];
+  } else {
+    const exist = (stData && stData.moodRow && stData.moodRow.id) || 0;
+    if (!exist) { toastErr('今天还没记心情'); return; }
+    const { error } = await cloud.database.from('mood').delete().eq('id', exist).select();
+    if (error) { toastErr(errMsg(error)); return; }
+    stData.moodRow = null;
+  }
+  stData.mood = next;
+  const label = $('#st-mood-now');
+  if (label) label.textContent = next || '还没记';
+  $$('[data-st-mood]').forEach(b => b.classList.toggle('on', b.getAttribute('data-st-mood') === next));
+  const cell = document.querySelector('.st-mood-c.today .st-mood-e');
+  if (cell) cell.innerHTML = next || '&nbsp;';
+  awardRecordExp();
+  toast(next ? `心情记为 ${next}` : '已清除今天的心情');
 }
 
 /* ================= Expense ================= */
@@ -4191,7 +4723,7 @@ async function renderProfile() {
       </div>
       <div class="me-item">
         <div class="me-ico" style="color:var(--text-3)">${ICONS.info}</div>
-        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.5${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
+        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.6${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
       </div>
     </div>
     `;
