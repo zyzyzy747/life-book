@@ -7,26 +7,32 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="生活手账">
-<meta name="theme-color" content="#0B0D13">
+<meta name="theme-color" content="#0C0B0A">
 <title>生活手账</title>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9J2cnIHgxPScwJyB5MT0nMCcgeDI9JzEnIHkyPScxJz48c3RvcCBvZmZzZXQ9JzAnIHN0b3AtY29sb3I9JyM3QjhDRkYnLz48c3RvcCBvZmZzZXQ9JzEnIHN0b3AtY29sb3I9JyNCMDZCRkYnLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzI0JyBmaWxsPSd1cmwoI2cpJy8+PGcgZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmJyBzdHJva2Utd2lkdGg9JzgnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHJlY3QgeD0nMjYnIHk9JzIwJyB3aWR0aD0nNDgnIGhlaWdodD0nNjAnIHJ4PScxMScvPjxwYXRoIGQ9J000MSAzMHY0MCcvPjxwYXRoIGQ9J001MSA2Mmw3IDcgMTUtMTYnLz48L2c+PC9zdmc+">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0B0D13;--bg-2:#11141C;
-  --card:rgba(255,255,255,.045);--card-hi:rgba(255,255,255,.075);
-  --line:rgba(255,255,255,.08);--line-hi:rgba(255,255,255,.16);
-  --text:#EAECF2;--text-2:#A2A9B8;--text-3:#6E7686;
-  --brand:#7B8CFF;--brand-2:#B06BFF;
-  --brand-rgb:123,140,255;--brand2-rgb:176,107,255;
-  --grad:linear-gradient(135deg,var(--brand),var(--brand-2));
-  --out:#FF6B6B;--in:#35D99B;--pink:#FF7BB0;--amber:#FFB454;--cyan:#4FD1E0;
+  /* ⚠ 全站只允许一个强调色。v2.7 起把「主题色」从强调色改成「底色色温」——
+     6 套主题改的是 --bg/--bg-2（都很暗，不抢戏），--brand 恒为琥珀。
+     之前 --brand 跟着主题走，导致同一页里星环是琥珀、按钮是粉紫、图标是绿的，
+     视觉锚点散在四处，这就是「配色不好看」的根因，不是某几个控件没调好。 */
+  --bg:#0C0B0A;--bg-2:#15120E;         /* 暖调近黑：OLED 上纯黑边缘发绿 */
+  --card:rgba(245,240,232,.045);--card-hi:rgba(245,240,232,.078);
+  --line:rgba(245,240,232,.085);--line-hi:rgba(245,240,232,.17);
+  --text:#F5F0E8;--text-2:#9A9186;--text-3:#6B6459;
+  /* --brand 是「主色」的通用入口，全站 90+ 处引用它。锁死成琥珀 = 一次改全站生效。 */
+  --brand:#FF9F1C;--brand-2:#E8890C;
+  --brand-rgb:255,159,28;--brand2-rgb:232,137,12;
+  --grad:linear-gradient(135deg,#FFB454,#F0913C);   /* 同色系微渐变，不做撞色 */
+  /* 语义色：全部降饱和一档，别跟琥珀抢。支出红 / 收入绿要能一眼分开，所以色相保留。 */
+  --out:#E8695F;--in:#4FB98A;--pink:#E08A96;--amber:#FFB454;--cyan:#5FB4C4;
   --r:18px;--r-sm:14px;
   /* 「星环」版新令牌（2026-10-14）。设计调性 = Brutally minimal × 杂志编辑：
      暖调近黑打底（非纯黑，OLED 上边缘发绿）、单一琥珀强调色、发丝线分栏代替卡片堆砌、
      圆角只留 3 档。⚠ 强调色走 --star-a 而不是 --brand，因为 6 套主题色可选，
      用主题色当强调会让 11 张页面失去统一视觉锚点。 */
-  --star-a:#FF9F1C;                          /* 琥珀：全站唯一强调色 */
+  --star-a:var(--brand);                       /* 琥珀：全站唯一强调色，锁死，不跟主题走 */
   --star-a-soft:rgba(255,159,28,.14);
   --star-a-line:rgba(255,159,28,.34);
   --star-line:rgba(245,240,232,.085);        /* 发丝线 */
@@ -76,7 +82,7 @@
 .st-quote-a{font-size:11.5px;color:var(--star-text-3);margin-top:8px;letter-spacing:.05em}
 
 /* 卡片 */
-.st-card{background:rgba(255,255,255,.032);border:1px solid var(--star-line);
+.st-card{background:rgba(245,240,232,.032);border:1px solid var(--star-line);
          border-radius:var(--star-r-lg);padding:17px 17px 15px;position:relative;overflow:hidden}
 .st-card::before{content:"";position:absolute;inset:0;pointer-events:none;
                  background:linear-gradient(168deg,rgba(245,240,232,.028),transparent 52%)}
@@ -97,7 +103,7 @@
 .st-water-goal b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
 .st-btns{display:flex;gap:8px;margin-top:13px}
 .st-btn{flex:1;min-height:44px;border-radius:var(--star-r-md);
-        background:rgba(255,255,255,.055);border:1px solid var(--star-line-hi);
+        background:rgba(245,240,232,.055);border:1px solid var(--star-line-hi);
         color:var(--star-text);font-size:14px;
         transition:transform .16s var(--star-ease),background .16s var(--star-ease);
         display:flex;align-items:center;justify-content:center;gap:6px}
@@ -111,7 +117,7 @@
               scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .st-mood-week::-webkit-scrollbar{display:none}
 .st-mood-c{flex:0 0 46px;height:56px;border-radius:var(--star-r-md);
-           background:rgba(255,255,255,.055);border:1px solid transparent;
+           background:rgba(245,240,232,.055);border:1px solid transparent;
            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
            transition:transform .16s var(--star-ease),background .2s var(--star-ease),border-color .2s var(--star-ease)}
 .st-mood-c:active{transform:scale(.93)}
@@ -124,7 +130,7 @@
 /* ⛔ 10 个 44px 按钮 + 左侧文字在同一行必然挤爆（文字被压成竖排单字）
    ⇒ 标题在上、按钮在下两行块布局，永不互相挤压 */
 .st-mood-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
-.st-mp{width:100%;height:44px;border-radius:var(--star-r-md);background:rgba(255,255,255,.055);
+.st-mp{width:100%;height:44px;border-radius:var(--star-r-md);background:rgba(245,240,232,.055);
        border:1px solid transparent;font-size:19px;line-height:1;
        display:flex;align-items:center;justify-content:center;
        transition:transform .16s var(--star-ease),border-color .16s var(--star-ease)}
@@ -147,21 +153,96 @@
   .st-btn,.st-mp,.st-mood-c{transition:none}
 }
 
-/* ===== 主题（个性化：覆盖品牌色，其余层级保持不变） ===== */
-[data-theme="aurora"]{--brand:#7B8CFF;--brand-2:#B06BFF;--brand-rgb:123,140,255;--brand2-rgb:176,107,255}
-[data-theme="ocean"] {--brand:#5AA9FF;--brand-2:#2E6BF6;--brand-rgb:90,169,255;--brand2-rgb:46,107,246}
-[data-theme="peach"] {--brand:#FF8FA3;--brand-2:#FF6FB5;--brand-rgb:255,143,163;--brand2-rgb:255,111,181}
-[data-theme="forest"]{--brand:#5BE095;--brand-2:#22C3A6;--brand-rgb:91,224,149;--brand2-rgb:34,195,166}
-[data-theme="sunset"]{--brand:#FFB454;--brand-2:#FF7A59;--brand-rgb:255,180,84;--brand2-rgb:255,122,89}
-[data-theme="ink"]   {--brand:#A9B2C2;--brand-2:#6E7686;--brand-rgb:169,178,194;--brand2-rgb:110,118,134}
+/* ===== 主题 =====
+   v2.7 起主题只改「底色色温」，不再改强调色。6 套都是刻意压暗的暖-中性色，
+   差异克制到「换个氛围」而不是「换个世界」，全站强调色始终是琥珀。
+   ⚠ 改这里必须同步改 THEMES 数组（第 ~1040 行）里的 name / c，否则
+   「我的」页色板圆点会和实际底色对不上。 */
+[data-theme="ink"]   {--bg:#0C0B0A;--bg-2:#15120E}   /* 墨黑（默认） */
+[data-theme="dawn"]  {--bg:#100C09;--bg-2:#1B1511}   /* 晨褐 */
+[data-theme="dusk"]  {--bg:#0D0B10;--bg-2:#17141C}   /* 夜紫 */
+[data-theme="sea"]   {--bg:#090D0F;--bg-2:#121A1D}   /* 深青 */
+[data-theme="clay"]  {--bg:#110D0A;--bg-2:#1C1712}   /* 陶土 */
+[data-theme="moss"]  {--bg:#0A0D0A;--bg-2:#131712}   /* 苔绿 */
+
+/* ===== 背景层 =====
+   三层，从下到上：
+     #bg-photo  用户自定义底图（localStorage 存 dataURL，可关）
+     #bg-grain   颗粒噪点（SVG feTurbulence 一次性生成，data URI）
+     #bg-dots    粒子星点（canvas 一次性画出静态点位，CSS 动画做漂移）
+   ⛔ 绝不用 requestAnimationFrame 每帧重绘 —— 单文件 App 开 6 个页面
+   常驻 WebView，跑 rAF 会持续占 GPU，在低端机上直接把滚动拖卡。
+   粒子只需要「位置随机 + 缓慢漂移」，一次性生成后交给 CSS transform 即可。 */
+
+/* 用户自定义底图：铺满 + 压暗，保证文字可读 */
+#bg-photo{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-position:center;background-size:cover;background-repeat:no-repeat;
+  opacity:0;transition:opacity .5s ease;
+}
+body.has-bg #bg-photo{opacity:var(--bg-dim,.42)}
+/* 底图上再压一层暖调渐变，避免自定义图片把琥珀强调色衬得发灰 */
+#bg-veil{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(12,11,10,.30),rgba(12,11,10,.72));
+  transition:opacity .5s ease;
+}
+body.has-bg #bg-veil{opacity:1}
+
+/* 颗粒：给纯色底一点纸感，避免大面积近黑显得「塑料」 */
+#bg-grain{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+}
+
+/* 粒子星点：位置由 JS 随机写进 inline style，漂移交 CSS。
+   ⚠ keyframes 里两帧都要写**完整** transform（浏览器不会为 transform
+   做「未列出的属性保持不变」的插值补全）—— 中间那帧只改 opacity 的话，
+   位移会退化成 0 → 0，粒子只闪不飘。
+   --dx 是每颗粒子各自的横向振幅（JS 随机给），两端取正负号 = 从一侧漂到另一侧再回来。 */
+#bg-dots{position:fixed;inset:0;z-index:0;pointer-events:none}
+#bg-dots i{
+  position:absolute;border-radius:50%;background:var(--star-a);
+  animation-name:bd;animation-timing-function:ease-in-out;animation-iteration-count:infinite;
+  will-change:transform,opacity;
+}
+@keyframes bd{
+  0%   {transform:translate3d(calc(var(--dx,6px) * -1), 12px, 0) scale(.82);opacity:.14}
+  50%  {transform:translate3d(var(--dx,6px), -14px, 0) scale(1.1);opacity:.68}
+  100% {transform:translate3d(calc(var(--dx,6px) * -1), 12px, 0) scale(.82);opacity:.14}
+}
+/* ⛔ 必须给**负的** animation-delay 打散相位：全部 delay=0 就是整片同起同落，
+   看着像屏幕在亮灭而不是有粒子在飘。JS 里给的是 -(r*dur) 秒。 */
+body.no-motion #bg-dots i{animation:none;opacity:.34}
+
+/* 背景设置控件 */
+.bg-prev{
+  height:96px;border-radius:var(--r-sm);background:var(--card) center/cover no-repeat;
+  border:1px solid var(--line);display:flex;align-items:flex-end;padding:8px 10px;
+  color:var(--text-3);font-size:11.5px;
+}
+.bg-prev.set{border-color:rgba(255,159,28,.4)}
+.bg-picks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 4px}
+.bg-pick{aspect-ratio:9/14;border-radius:10px;border:1px solid var(--line);overflow:hidden;position:relative}
+.bg-pick.on{border-color:var(--star-a);box-shadow:0 0 0 2px rgba(255,159,28,.18)}
+.bg-pick.on::after{content:'✓';position:absolute;right:3px;top:3px;width:15px;height:15px;border-radius:50%;
+  background:var(--star-a);color:#151009;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.bg-pick span{position:absolute;left:0;right:0;bottom:0;padding:3px 0 4px;text-align:center;font-size:10px;
+  background:rgba(12,11,10,.72);color:var(--text-2)}
 
 /* ===== 个性化设置控件 ===== */
 .theme-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.theme-dot{aspect-ratio:1;border-radius:14px;border:2px solid transparent;transition:transform .16s,border-color .16s}
-.theme-dot.on{border-color:#fff}
+/* 主题色板：6 套底色都很暗，光填一个色块在深色面板上根本分不出来。
+   改成「上下双色对分」—— 上半是 bg、下半是 bg-2，中间一道发丝线，
+   于是六颗点各自有可辨的明度/色温差，选中态再叠一圈琥珀。 */
+.theme-dot{aspect-ratio:1;border-radius:14px;border:1px solid var(--line);
+           transition:transform .16s,border-color .16s;position:relative;overflow:hidden}
+.theme-dot::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;
+                  background:rgba(245,240,232,.22)}
+.theme-dot.on{border-color:var(--star-a);box-shadow:0 0 0 2px rgba(255,159,28,.2)}
 .theme-dot:active{transform:scale(.93)}
 .cat-edit{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.cat-x{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(255,255,255,.07);border-radius:9px;font-size:12px;color:var(--text-2)}
+.cat-x{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(245,240,232,.07);border-radius:9px;font-size:12px;color:var(--text-2)}
 .cat-x em{font-style:normal;color:var(--text-3);font-size:15px;line-height:1}
 
 /* ===== 月份切换 ===== */
@@ -180,24 +261,24 @@ body{
   background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
-  background-image:
-    radial-gradient(880px 520px at 12% -8%, rgba(var(--brand-rgb),.14), transparent 62%),
-    radial-gradient(700px 420px at 105% 2%, rgba(var(--brand2-rgb),.11), transparent 58%);
-  background-attachment:fixed;
 }
+/* 背景三层在 #bg-* 上，body 只剩纯底色 */
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
 input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;outline:none}
-select option{background:#161A24;color:var(--text)}
+select option{background:#15120E;color:var(--text)}
 a{color:var(--brand);text-decoration:none}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
-#root{min-height:100%}
+/* ⛔ #root 必须显式 z-index:1：背景三层是 position:fixed;z-index:0，
+   #root 是普通流元素，没有 z-index 就会被 fixed 层盖住（点不到按钮）。
+   position:relative 是必需的 —— 只有 z-index 不生效。 */
+#root{position:relative;z-index:1;min-height:100%}
 
 /* ===== Header ===== */
 .hd{
   position:sticky;top:var(--neth,0px);z-index:20;
   display:flex;align-items:center;justify-content:space-between;gap:12px;
   padding:calc(var(--safe-top) + 13px) 18px 12px;
-  background:rgba(11,13,19,.72);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  background:rgba(12,11,10,.74);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(180%);
   border-bottom:1px solid var(--line);
 }
 /* 断网提示条：放在 #root 外面（登录页也要有），sticky 粘顶。
@@ -207,27 +288,33 @@ a{color:var(--brand);text-decoration:none}
   position:sticky;top:0;z-index:30;display:none;
   align-items:center;justify-content:center;gap:7px;
   padding:calc(var(--safe-top) + 8px) 14px 8px;
-  background:linear-gradient(135deg,var(--amber),#F0913C);color:#241703;
+  background:var(--grad);color:#241703;
   font-size:12.5px;font-weight:700;letter-spacing:.01em;
 }
 .net-bar.on{display:flex}
 
-.brand{font-size:19px;font-weight:700;letter-spacing:-.02em}
-.brand em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-.brand.hi{line-height:1.25}
-.brand .hi-t{display:block;font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:.02em}
+/* 顶部栏：杂志编辑风 —— 站名用衬线体（与星环数字同一套展示字），
+   不再用渐变文字。紫蓝渐变在深底上发灰、缩小后糊成一团，是「配色不好看」最显眼的一处。
+   「手账」二字用琥珀实色做重音，比彩色渐变更稳，也和星环呼应。 */
+.brand{font-family:var(--star-display);font-size:20px;font-weight:600;letter-spacing:.02em;color:var(--star-text);line-height:1.1}
+.brand em{font-style:normal;color:var(--star-a);font-weight:700}
+.brand.hi{line-height:1.3}
+.brand .hi-t{display:block;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHe",sans-serif;
+             font-size:10.5px;font-weight:500;color:var(--star-text-3);letter-spacing:.18em;margin-bottom:2px}
+/* 头像：从实心渐变球改成「描边圈 + 暖白字母」。实心球在小尺寸下就是一团糊色。 */
 .avatar{
-  width:34px;height:34px;border-radius:50%;background:var(--grad);
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(245,240,232,.06);
+  border:1px solid var(--star-line-hi);
   display:flex;align-items:center;justify-content:center;
-  color:#fff;font-weight:700;font-size:14px;flex:0 0 auto;
-  box-shadow:0 4px 14px rgba(var(--brand-rgb),.3);
+  color:var(--star-text);font-weight:600;font-size:14px;flex:0 0 auto;
+  letter-spacing:.02em;
 }
 .avatar:active{transform:scale(.93)}
-.avatar svg{width:19px;height:19px;stroke-width:2}
+.avatar svg{width:18px;height:18px;stroke-width:1.7;color:var(--star-text-2)}
 /* 自定义头像：图片铺满圆形，皮肤立绘按脸部位置取景 */
 .avatar,.me-avatar{overflow:hidden}
 .av-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
-.av-img.skin{object-position:50% 20%}
 .view{flex:1;padding:16px 16px calc(146px + var(--safe-bottom));max-width:680px;margin:0 auto;width:100%}
 .view>*{animation:fade .26s ease both}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -235,7 +322,7 @@ a{color:var(--brand);text-decoration:none}
 /* ===== Tab bar ===== */
 .tab-bar{
   position:fixed;bottom:0;left:0;right:0;display:flex;
-  background:rgba(11,13,19,.82);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  background:rgba(12,11,10,.86);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(180%);
   border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-bottom));z-index:20;
 }
 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--text-3);font-size:10.5px;transition:color .18s}
@@ -243,12 +330,45 @@ a{color:var(--brand);text-decoration:none}
 .tab svg{width:21px;height:21px;stroke-width:1.7}
 .tab.active{color:#fff}
 .tab.active .pill{background:rgba(var(--brand-rgb),.18)}
-.tab:active .pill{background:rgba(255,255,255,.07)}
+.tab:active .pill{background:rgba(245,240,232,.07)}
 
 /* ===== Login ===== */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative}
+/* 登录页氛围：两团琥珀/暖白光晕缓慢游走。
+   这是**两团纯 CSS radial-gradient**（不是 canvas、不是滤镜），所以合成器能直接
+   插值 transform，滚动和不动的输入框都不掉帧。
+   ⚠ 别用 filter:blur() 做这种大面积光晕 —— blur 要按像素跑，1080p 上单帧就能吃掉几毫秒。 */
+.login-wrap::before,.login-wrap::after{
+  content:'';position:absolute;border-radius:50%;pointer-events:none;
+  filter:none;
+}
+.login-wrap::before{
+  width:min(420px,86vw);height:min(420px,86vw);top:-8%;left:-14%;
+  background:radial-gradient(circle,rgba(255,159,28,.15),rgba(255,159,28,.04) 52%,transparent 72%);
+  animation:bgFloat1 19s ease-in-out infinite;
+}
+.login-wrap::after{
+  width:min(360px,74vw);height:min(360px,74vw);bottom:-6%;right:-12%;
+  background:radial-gradient(circle,rgba(245,240,232,.10),rgba(245,240,232,.025) 55%,transparent 74%);
+  animation:bgFloat2 25s ease-in-out infinite;
+}
+@keyframes bgFloat1{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%    {transform:translate3d(24px,32px,0) scale(1.1)}
+}
+@keyframes bgFloat2{
+  0%,100%{transform:translate3d(0,0,0) scale(1.04)}
+  50%    {transform:translate3d(-28px,-24px,0) scale(1)}
+}
+/* 登录页粒子更亮一档：这里没有内容要读，可以更「有空气」 */
+body.on-login #bg-dots i{opacity:.72}
+body.on-login #bg-grain{opacity:.75}
+/* ⛔ 光晕在登录卡下面，必须让卡片不透明地压住它，否则 backdrop-filter
+   会在两层叠加的半透明上取样，看着发灰 */
 .login-card{
-  width:100%;max-width:390px;background:rgba(255,255,255,.05);
+  position:relative;z-index:1;
+  width:100%;max-width:390px;background:rgba(245,240,232,.05);
   border:1px solid var(--line);border-radius:24px;padding:30px 24px 26px;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   box-shadow:0 24px 60px rgba(0,0,0,.45);
@@ -260,15 +380,15 @@ a{color:var(--brand);text-decoration:none}
 .login-logo svg{width:26px;height:26px;stroke:#fff;stroke-width:7;stroke-linecap:round}
 .login-title{font-size:23px;font-weight:700;text-align:center;letter-spacing:-.02em}
 .login-sub{color:var(--text-3);font-size:13px;text-align:center;margin-top:5px;margin-bottom:24px}
-.login-tabs{display:flex;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;margin-bottom:20px;gap:2px}
+.login-tabs{display:flex;background:rgba(245,240,232,.05);border-radius:12px;padding:4px;margin-bottom:20px;gap:2px}
 .login-tab{flex:1;padding:8px 4px;border-radius:9px;color:var(--text-3);font-size:13px;text-align:center;transition:.18s}
-.login-tab.active{background:rgba(255,255,255,.09);color:#fff;font-weight:600}
+.login-tab.active{background:rgba(245,240,232,.09);color:#fff;font-weight:600}
 
 /* ===== Form ===== */
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12px;color:var(--text-3);margin-bottom:7px;padding-left:2px}
 .inp,.field input,.field textarea,.field select{
-  width:100%;padding:13px 14px;background:rgba(255,255,255,.05);
+  width:100%;padding:13px 14px;background:rgba(245,240,232,.05);
   border:1px solid var(--line);border-radius:13px;font-size:15px;transition:.16s;
 }
 .field input:focus,.field textarea:focus,.field select:focus{
@@ -280,34 +400,37 @@ a{color:var(--brand);text-decoration:none}
 .field-row{display:flex;gap:10px;align-items:flex-end}
 .field-row .field{flex:1;min-width:0}
 .btn{
-  width:100%;padding:14px;border-radius:14px;background:var(--grad);color:#fff;
-  font-weight:600;font-size:15px;box-shadow:0 8px 22px rgba(var(--brand-rgb),.28);
+  width:100%;padding:14px;border-radius:14px;background:var(--grad);color:#241703;
+  font-weight:600;font-size:15px;box-shadow:0 8px 22px rgba(0,0,0,.42);
   transition:transform .12s,opacity .12s;margin-top:4px;
 }
 .btn:active{transform:scale(.985);opacity:.9}
 .btn:disabled{opacity:.55;box-shadow:none}
 .btn-ghost{
   width:100%;padding:13px;border-radius:14px;border:1px solid var(--line-hi);
-  color:var(--text-2);font-size:15px;background:rgba(255,255,255,.03);margin-top:10px;
+  color:var(--text-2);font-size:15px;background:rgba(245,240,232,.03);margin-top:10px;
 }
 .btn-ghost.danger{color:var(--out);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.06)}
 .btn-text{padding:8px;color:var(--text-3);font-size:13px}
 .btn-text:active{color:var(--text)}
 .btn-code{
-  padding:13px 15px;background:rgba(255,255,255,.06);border:1px solid var(--line-hi);
+  padding:13px 15px;background:rgba(245,240,232,.06);border:1px solid var(--line-hi);
   border-radius:13px;color:var(--brand);font-size:13px;white-space:nowrap;flex:0 0 auto;margin-bottom:14px;
 }
 .btn-code:disabled{color:var(--text-3);cursor:not-allowed}
 .msg{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:13px;display:none;line-height:1.5}
 .msg.show{display:block}
-.msg.err{background:rgba(255,107,107,.13);color:#FFB3B3;border:1px solid rgba(255,107,107,.22)}
-.msg.ok{background:rgba(53,217,155,.13);color:#8DF0C6;border:1px solid rgba(53,217,155,.22)}
+.msg.err{background:rgba(232,105,95,.13);color:#F3B5AF;border:1px solid rgba(232,105,95,.24)}
+.msg.ok{background:rgba(79,185,138,.13);color:#9ADEC0;border:1px solid rgba(79,185,138,.24)}
 
 /* ===== Section / Card ===== */
-.sec{font-size:12px;color:var(--text-3);margin:20px 2px 10px;font-weight:600;letter-spacing:.03em}
+/* 小节标题改成杂志式的「细字 + 短琥珀标记」，跟星环区的 .st-sec-i 同一套语言 */
+.sec{font-size:11.5px;color:var(--star-text-3);margin:24px 2px 11px;font-weight:600;letter-spacing:.18em;
+     display:flex;align-items:center;gap:8px}
+.sec::before{content:'';width:12px;height:1px;background:var(--star-a);opacity:.7;flex:0 0 auto}
 .card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
-  padding:15px 16px;margin-bottom:10px;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:16px 17px;margin-bottom:10px;
 }
 .card-tap:active{background:var(--card-hi)}
 .row{display:flex;align-items:center;gap:10px}
@@ -317,18 +440,22 @@ a{color:var(--brand);text-decoration:none}
 .amt-in{color:var(--in);font-weight:700;font-size:17px}
 .muted{color:var(--text-3)}
 .dim{color:var(--text-2)}
-.tag{display:inline-block;padding:3px 9px;background:rgba(255,255,255,.07);border-radius:8px;font-size:11px;color:var(--text-2);margin:0 5px 5px 0}
+.tag{display:inline-block;padding:3px 9px;background:rgba(245,240,232,.07);border-radius:8px;font-size:11px;color:var(--text-2);margin:0 5px 5px 0}
 .mood{font-size:19px;margin-right:6px}
 .chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
 
-/* ===== Hero (今日) ===== */
+/* ===== Hero (今日) =====
+   原来是大面积琥珀色晕染 + 紫蓝渐变描边，卡片感重、把下面的星环压住了。
+   改成「发丝线框 + 极淡琥珀晕」：数字仍是全页最大的一处视觉重量，但容器本身退到背景里。 */
 .hero{
-  background:linear-gradient(140deg, rgba(var(--brand-rgb),.24), rgba(var(--brand2-rgb),.10) 60%, rgba(255,255,255,.04));
-  border:1px solid rgba(var(--brand-rgb),.26);border-radius:22px;padding:20px 20px 18px;margin-bottom:6px;
+  background:radial-gradient(120% 130% at 8% -20%, rgba(var(--brand-rgb),.14), transparent 62%);
+  border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 20px 20px;margin-bottom:2px;
 }
-.hero-label{font-size:12px;color:rgba(234,236,242,.72);letter-spacing:.04em}
-.hero-num{font-size:36px;font-weight:800;letter-spacing:-.03em;margin:4px 0 14px;color:#fff}
-.hero-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 8px;border-top:1px solid rgba(255,255,255,.12);padding-top:13px}
+.hero-label{font-size:11.5px;color:var(--star-text-3);letter-spacing:.16em;text-transform:none}
+.hero-num{font-family:var(--star-display);font-size:44px;font-weight:400;letter-spacing:-.03em;
+          margin:6px 0 16px;color:var(--star-text);font-variant-numeric:tabular-nums;line-height:1}
+.hero-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px 10px;
+           border-top:1px solid var(--star-line);padding-top:15px}
 .hero-grid .k{display:block;font-size:11px;color:var(--text-3);margin-bottom:2px}
 .hero-grid .v{font-size:15px;font-weight:700}
 
@@ -361,21 +488,24 @@ a{color:var(--brand);text-decoration:none}
 .quick .ico{width:24px;height:24px;display:block;margin:0 auto 6px;color:var(--brand)}
 .quick svg{width:24px;height:24px;display:block;margin:0 auto 7px;color:var(--brand);stroke-width:1.8}
 
-/* ===== FAB ===== */
+/* ===== FAB =====
+   从「紫色圆角方块 + 紫蓝渐变」改成「琥珀实心圆 + 近黑图标」。
+   圆角方块在这个 UI 里没有对应物（其余元素不是方形容器）⇒ 看着像个贴上去的控件；
+   而全站唯一的实心琥珀正好落在「今天记一笔」这个主动作上，视觉锚点唯一。 */
 .fab{
   position:fixed;right:17px;bottom:calc(78px + var(--safe-bottom));
-  width:52px;height:52px;border-radius:17px;background:var(--grad);color:#fff;
+  width:54px;height:54px;border-radius:50%;background:var(--star-a);color:#241703;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 10px 26px rgba(var(--brand-rgb),.36);z-index:15;transition:transform .12s;
+  box-shadow:0 8px 22px rgba(0,0,0,.5);z-index:15;transition:transform .12s;
 }
-.fab svg{width:24px;height:24px;stroke-width:2.2}
-.fab:active{transform:scale(.92)}
+.fab svg{width:23px;height:23px;stroke-width:2.4}
+.fab:active{transform:scale(.9)}
 
 /* ===== Modal ===== */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:40;display:none;align-items:flex-end;justify-content:center}
 .modal-bg.show{display:flex}
 .modal{
-  width:100%;max-width:680px;background:#14171F;
+  width:100%;max-width:680px;background:#15120E;
   border-top-left-radius:24px;border-top-right-radius:24px;border:1px solid var(--line);
   padding:8px 18px calc(20px + var(--safe-bottom) + var(--kb,0px));
   max-height:calc(92vh - var(--kb,0px));overflow-y:auto;animation:slideUp .26s cubic-bezier(.2,.8,.3,1);
@@ -383,8 +513,8 @@ a{color:var(--brand);text-decoration:none}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 0 14px}
 .modal-title{font-size:17px;font-weight:700}
-.btn-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.07);color:var(--text-2);font-size:17px;display:flex;align-items:center;justify-content:center}
-.grab{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin:8px auto 0}
+.btn-close{width:30px;height:30px;border-radius:50%;background:rgba(245,240,232,.07);color:var(--text-2);font-size:17px;display:flex;align-items:center;justify-content:center}
+.grab{width:38px;height:4px;border-radius:2px;background:rgba(245,240,232,.18);margin:8px auto 0}
 
 /* ===== Charts ===== */
 .chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px;margin-bottom:6px}
@@ -395,13 +525,13 @@ a{color:var(--brand);text-decoration:none}
 .chart-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px;vertical-align:middle}
 .bar-stack{display:flex;flex-direction:column;gap:9px}
 .bar-row{display:grid;grid-template-columns:58px 1fr 66px;align-items:center;gap:9px;font-size:12px}
-.bar-track{height:9px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}
+.bar-track{height:9px;border-radius:5px;background:rgba(245,240,232,.06);overflow:hidden}
 .bar-fill{height:100%;border-radius:5px;background:var(--grad)}
 .bar-row .nm{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bar-row .vl{text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;font-size:11px}
 
 /* ===== Segmented control ===== */
-.seg{display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg{display:flex;gap:4px;background:rgba(245,240,232,.05);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
 .seg button{flex:1;height:34px;border-radius:9px;font-size:13px;color:var(--text-2);font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
 .seg button.on{background:var(--grad);color:#fff}
 .seg button svg{width:15px;height:15px}
@@ -413,32 +543,27 @@ a{color:var(--brand);text-decoration:none}
 .streak .big{font-size:25px;font-weight:800;color:var(--amber);letter-spacing:-.02em;line-height:1.1}
 .streak .lb{font-size:11px;color:var(--text-3);margin-top:1px}
 .streak .side{margin-left:auto;text-align:right;font-size:11px;color:var(--text-3);line-height:1.65}
-.badge-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
-.badge{text-align:center;padding:11px 2px;border-radius:14px;background:var(--card);border:1px solid var(--line);opacity:.34}
-.badge.got{opacity:1;border-color:rgba(255,180,84,.42);background:rgba(255,180,84,.11)}
-.badge .n{font-size:16px;font-weight:800;color:var(--amber);letter-spacing:-.02em}
-.badge .d{font-size:9px;color:var(--text-3);margin-top:2px}
 
 /* ===== Search ===== */
 .search{position:relative;margin-bottom:12px}
 .search input{width:100%;padding-left:36px;padding-right:34px}
 .search .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3);pointer-events:none}
 .search .si svg{width:100%;height:100%;display:block}
-.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--text-3);font-size:13px;display:flex;align-items:center;justify-content:center}
+.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:rgba(245,240,232,.08);color:var(--text-3);font-size:13px;display:flex;align-items:center;justify-content:center}
 mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 
 /* ===== Steps ===== */
-.step-hero{background:linear-gradient(140deg,rgba(79,209,224,.2),rgba(91,224,149,.07) 60%,rgba(255,255,255,.04));border:1px solid rgba(79,209,224,.26);border-radius:22px;padding:17px 20px 16px;margin-bottom:6px;transition:transform .12s}
+.step-hero{background:linear-gradient(140deg,rgba(79,209,224,.2),rgba(91,224,149,.07) 60%,rgba(245,240,232,.04));border:1px solid rgba(79,209,224,.26);border-radius:22px;padding:17px 20px 16px;margin-bottom:6px;transition:transform .12s}
 .step-hero:active{transform:scale(.99)}
 .step-top{display:flex;align-items:baseline;justify-content:space-between}
 .step-num{font-size:33px;font-weight:800;letter-spacing:-.03em;color:#fff}
-.step-track{height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:11px}
+.step-track{height:8px;border-radius:4px;background:rgba(245,240,232,.1);overflow:hidden;margin-top:11px}
 .step-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--in))}
 .step-hint{font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.6}
-.step-calib{margin-top:8px;border-top:1px solid rgba(255,255,255,.09);padding-top:7px}
+.step-calib{margin-top:8px;border-top:1px solid rgba(245,240,232,.09);padding-top:7px}
 .step-calib .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
 /* 步数卡里的「距离 / 消耗」—— 按步数折算出来的，UI 上必须写明是估算 */
-.step-extra{display:flex;align-items:flex-end;gap:26px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09)}
+.step-extra{display:flex;align-items:flex-end;gap:26px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(245,240,232,.09)}
 .step-extra .m{display:flex;flex-direction:column;gap:3px}
 .step-extra .m i{font-style:normal;font-size:11px;color:var(--text-3)}
 .step-extra .m b{font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
@@ -446,62 +571,6 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .step-extra .adj{margin-left:auto}
 .step-extra .adj .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
 
-/* ===== 宠物 / 签到 ===== */
-.pet-card{
-  position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;
-  background:linear-gradient(135deg,rgba(255,123,176,.17),rgba(var(--brand-rgb),.08) 62%,rgba(255,255,255,.03));
-  border:1px solid rgba(255,123,176,.28);border-radius:22px;padding:13px 16px 14px;margin-bottom:6px;
-  transition:transform .12s
-}
-.pet-card:active{transform:scale(.99)}
-.pet-stage{position:relative;flex:0 0 auto;width:100px;height:100px;display:flex;align-items:center;justify-content:center}
-.pet-stage::before{
-  content:'';position:absolute;inset:-8px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,140,190,.4),rgba(255,140,190,0) 68%);
-  animation:breathe 3.6s ease-in-out infinite
-}
-.pet-img{position:relative;width:100%;height:100%;object-fit:contain;animation:float 3.8s ease-in-out infinite;filter:drop-shadow(0 6px 14px rgba(255,110,165,.34))}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes breathe{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.07)}}
-.pet-info{flex:1;min-width:0}
-.pet-head{display:flex;align-items:center;gap:7px}
-.pet-name{font-size:15px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lv-chip{flex:0 0 auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:rgba(255,123,176,.22);color:var(--pink)}
-.pet-sub{font-size:11px;color:var(--text-3);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap}
-.pet-sub b{color:var(--pink);font-weight:700}
-.exp-track{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:9px}
-.exp-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#FF9EC4,#FF6FA8);transition:width .6s cubic-bezier(.2,.9,.3,1)}
-.pet-tip{font-size:10.5px;color:var(--text-3);margin-top:6px}
-/* 宠物卡上的换装入口 */
-.pet-dress{margin-left:auto;flex:0 0 auto;font-size:10px;font-weight:600;color:var(--pink);background:rgba(255,123,176,.14);border:1px solid rgba(255,123,176,.32);border-radius:99px;padding:2px 9px;line-height:1.5}
-.pet-dress:active{background:rgba(255,123,176,.26)}
-/* 换皮光晕：跟着皮肤换色调 */
-.pet-stage.skin-xinghong::before{background:radial-gradient(circle,rgba(255,168,205,.46),rgba(255,168,205,0) 68%)}
-.pet-stage.skin-xingshi::before{background:radial-gradient(circle,rgba(158,126,255,.44),rgba(158,126,255,0) 68%)}
-.pet-stage.skin-wedding::before{background:radial-gradient(circle,rgba(186,214,255,.44),rgba(186,214,255,0) 68%)}
-/* 换装选择 */
-.skins{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.skin{border-radius:16px;background:var(--card);border:1px solid var(--line);padding:10px 4px 9px;text-align:center;opacity:.5;transition:opacity .16s,border-color .16s,background .16s}
-.skin img{width:100%;height:84px;object-fit:contain;display:block}
-.skin .sn{font-size:11px;color:var(--text-2);margin-top:5px;font-weight:600;letter-spacing:-.01em}
-.skin .st{font-size:9px;color:var(--text-3);margin-top:2px}
-.skin.on{opacity:1;border-color:rgba(255,123,176,.5);background:rgba(255,123,176,.1)}
-.skin.on .sn{color:var(--pink)}
-
-/* 签到日历 */
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:11px}
-.cal .d{aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:9.5px;color:var(--text-3);border:1px solid transparent}
-.cal .d.on{background:linear-gradient(135deg,#FF9EC4,#FF6FA8);color:#fff;font-weight:700}
-.cal .d.today{border-color:rgba(255,158,196,.85)}
-.cal .d.mute{opacity:.35}
-
-/* 进化路线 */
-.evo{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:11px}
-.evo .e{text-align:center;padding:9px 2px 7px;border-radius:15px;background:var(--card);border:1px solid var(--line);opacity:.38}
-.evo .e.got{opacity:1;border-color:rgba(255,123,176,.42);background:rgba(255,123,176,.1)}
-.evo .e img{width:46px;height:46px;object-fit:contain;display:block;margin:0 auto 5px}
-.evo .e .n{font-size:9.5px;color:var(--text-3);line-height:1.35}
-.evo .e.got .n{color:var(--pink);font-weight:600}
 
 /* Toast
    ⭐ 收起位必须"几何上一定出屏"：旧写法是 top:66px+safe-top 配 translateY(-190%)，
@@ -513,21 +582,22 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .toast{
   position:fixed;left:50%;top:0;transform:translate(-50%,calc(-100% - 24px));
   opacity:0;visibility:hidden;pointer-events:none;
-  background:rgba(26,20,32,.97);border:1px solid rgba(255,123,176,.38);color:#fff;
+  background:rgba(22,19,15,.97);border:1px solid rgba(245,240,232,.14);color:var(--star-text);
   padding:10px 17px 10px 13px;border-radius:99px;font-size:13px;font-weight:600;z-index:120;
   box-shadow:0 14px 34px rgba(0,0,0,.5);
   transition:transform .34s cubic-bezier(.2,.9,.3,1),opacity .2s ease,visibility .34s;
   display:flex;align-items:center;gap:9px;max-width:92vw
 }
 .toast.show{transform:translate(-50%,calc(var(--safe-top) + 66px));opacity:1;visibility:visible;pointer-events:auto}
-/* 出错提示：红描边 + 叹号，别和「签到成功 +20 经验」那种带宠物头像的鼓励提示混在一起 */
-.toast.err{border-color:rgba(255,107,107,.55)}
+/* 出错提示：红描边 + 叹号，一眼和普通成功提示分开 */
+.toast.err{border-color:rgba(232,105,95,.55)}
 .toast .ti{
   width:23px;height:23px;border-radius:50%;flex:0 0 auto;
-  background:var(--out);color:#210808;display:flex;align-items:center;justify-content:center;
+  background:var(--out);color:#2A0A08;display:flex;align-items:center;justify-content:center;
   font-weight:800;font-size:14px;line-height:1
 }
-.toast img{width:26px;height:26px;object-fit:contain;flex:0 0 auto}
+/* 成功提示：琥珀圆点（v2.7 取代原来的宠物立绘） */
+.toast .tdot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--star-a);margin:0 7px}
 .toast .tt{line-height:1.35}
 .toast .tt i{display:block;font-style:normal;font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:1px}
 /* 自动同步结果条：手机端自动化打开本页（?steps=…&a=1）时显示，一眼就能看到结果 */
@@ -542,7 +612,7 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
   transition:opacity .26s,transform .3s cubic-bezier(.2,.8,.3,1),visibility .3s;
 }
 .sync-bar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(calc(var(--safe-top) + 10px))}
-.sync-bar .ico{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.24)}
+.sync-bar .ico{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(245,240,232,.24)}
 .sync-bar .ico svg{width:17px;height:17px}
 .sync-bar i{display:block;font-style:normal;font-size:11px;font-weight:500;opacity:.88;margin-top:2px}
 
@@ -552,24 +622,32 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .loader{display:inline-block;width:15px;height:15px;border:2px solid var(--line-hi);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ===== Profile (我的) ===== */
+/* ===== Profile (我的) =====
+   大头像也从实心渐变球改成描边圈 —— 和顶部栏小头像同一套语言。
+   72px 的实心渐变球在小尺寸下就是一块糊色，放大到 72px 也只是更大的糊色。 */
 .me-hero{text-align:center;padding:26px 16px 22px}
 .me-avatar{
-  width:72px;height:72px;border-radius:50%;background:var(--grad);margin:0 auto 14px;
-  display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:700;
-  box-shadow:0 12px 32px rgba(var(--brand-rgb),.35);
+  width:72px;height:72px;border-radius:50%;margin:0 auto 14px;
+  background:rgba(245,240,232,.05);border:1px solid var(--star-line-hi);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--star-text);font-size:28px;font-weight:600;letter-spacing:.02em;
 }
-.me-avatar svg{width:34px;height:34px;stroke-width:1.9}
+.me-avatar svg{width:32px;height:32px;stroke-width:1.5;color:var(--star-text-2)}
 .me-avatar:active{transform:scale(.95)}
 .me-avatar{cursor:pointer;transition:transform .16s}
 /* 头像选择器 */
-.av-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 2px}
+.av-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 2px}
 .av-opt{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 6px 9px;text-align:center;transition:border-color .16s,background .16s}
 .av-opt.on{border-color:var(--brand);background:rgba(var(--brand-rgb),.1)}
 .av-opt.on .av-name{color:var(--brand)}
-.av-thumb{width:52px;height:52px;margin:0 auto 7px;border-radius:50%;overflow:hidden;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff}
-.av-thumb svg{width:24px;height:24px;stroke-width:2}
+/* 缩略图底：描边圈而不是实心渐变球 —— 和顶部栏头像同一套语言 */
+.av-thumb{width:52px;height:52px;margin:0 auto 7px;border-radius:50%;overflow:hidden;
+          background:rgba(245,240,232,.05);border:1px solid var(--line-hi);
+          display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.av-thumb svg{width:24px;height:24px;stroke-width:1.7}
 .av-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* 「邮箱首字母」那张卡的字母：琥珀，和站名重音一致 */
+.av-letter{font-size:20px;font-weight:600;color:var(--brand);letter-spacing:.02em}
 .av-name{font-size:11.5px;color:var(--text-2);line-height:1.3}
 /* 文件选择：把透明 input 铺满整块按钮区域。
    用户点到的一定是 file 控件本身 = 浏览器眼中的"真用户手势"，
@@ -584,7 +662,7 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .tagpick{display:flex;flex-wrap:wrap;gap:8px}
 .tchip{
   padding:8px 13px;border-radius:11px;border:1px solid var(--line-hi);
-  background:rgba(255,255,255,.04);color:var(--text-2);font-size:13px;line-height:1.2;transition:.15s;
+  background:rgba(245,240,232,.04);color:var(--text-2);font-size:13px;line-height:1.2;transition:.15s;
 }
 .tchip.on{background:rgba(var(--brand-rgb),.18);border-color:rgba(var(--brand-rgb),.6);color:#fff;font-weight:600}
 .tchip.add{border-style:dashed;color:var(--brand)}
@@ -614,12 +692,12 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .tagbar::-webkit-scrollbar{display:none}
 .filter{
   flex:0 0 auto;padding:7px 13px;border-radius:99px;border:1px solid var(--line-hi);
-  font-size:12px;color:var(--text-2);background:rgba(255,255,255,.03);transition:.15s;
+  font-size:12px;color:var(--text-2);background:rgba(245,240,232,.03);transition:.15s;
 }
 .filter.on{background:rgba(var(--brand-rgb),.2);border-color:rgba(var(--brand-rgb),.55);color:#fff;font-weight:600}
 /* 同步说明里的步骤与代码 */
 .sy-ver{
-  font-size:12.5px;color:var(--text-2);background:rgba(255,255,255,.04);
+  font-size:12.5px;color:var(--text-2);background:rgba(245,240,232,.04);
   border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin:2px 0 12px;
 }
 .sy-steps{margin:0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)}
@@ -640,7 +718,7 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .me-item{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line)}
 .me-item:last-child{border-bottom:none}
 .me-item:active{background:var(--card-hi)}
-.me-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px}
+.me-ico{width:32px;height:32px;border-radius:10px;background:rgba(245,240,232,.07);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px}
 .me-ico svg{width:17px;height:17px}
 .me-txt{flex:1;min-width:0}
 .me-txt .t{font-size:14.5px}
@@ -660,13 +738,13 @@ hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
 .wk-nav button{width:33px;height:33px;flex:0 0 auto;border-radius:11px;background:var(--card);border:1px solid var(--line);
   color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center}
 .wk-nav button:disabled{opacity:.3}
-.wk-hero{background:linear-gradient(140deg,rgba(var(--brand-rgb),.24),rgba(var(--brand2-rgb),.10) 60%,rgba(255,255,255,.04));
+.wk-hero{background:linear-gradient(140deg,rgba(var(--brand-rgb),.24),rgba(var(--brand2-rgb),.10) 60%,rgba(245,240,232,.04));
   border:1px solid rgba(var(--brand-rgb),.26);border-radius:22px;padding:18px 18px 16px}
-.wk-hero .lbl{font-size:12px;color:rgba(234,236,242,.72);letter-spacing:.03em}
+.wk-hero .lbl{font-size:12px;color:rgba(245,240,232,.72);letter-spacing:.03em}
 .wk-hero .big{font-size:31px;font-weight:800;letter-spacing:-.03em;color:#fff;margin:3px 0 13px}
 .wk-hero .g{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 8px;
-  border-top:1px solid rgba(255,255,255,.12);padding-top:13px}
-.wk-hero .g .k{display:block;font-size:11px;color:rgba(234,236,242,.6);margin-bottom:2px}
+  border-top:1px solid rgba(245,240,232,.12);padding-top:13px}
+.wk-hero .g .k{display:block;font-size:11px;color:rgba(245,240,232,.6);margin-bottom:2px}
 .wk-hero .g .v{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
 .wk-delta{font-weight:700}
 .wk-up{color:var(--out)}.wk-dn{color:var(--in)}.wk-flat{color:var(--text-3)}
@@ -706,6 +784,10 @@ hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
 </style>
 </head>
 <body>
+<div id="bg-photo"></div>
+<div id="bg-veil"></div>
+<div id="bg-grain"></div>
+<div id="bg-dots"></div>
 <div class="net-bar" id="net-bar"><span>⚠</span><span>当前没有网络 · 显示的是上次的数据，联网后自动刷新</span></div>
 <div id="root"></div>
 <script src="sdk.index.global.js"></script>
@@ -726,6 +808,7 @@ const ICONS = {
   sport:   S('<path d="M13.2 2.5 5 13.4h5.6L9.4 21.5 19 10.4h-5.8z"/>'),
   health:  S('<path d="M12 20.4S4.6 15.7 4.6 10.4A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7.4 2.4c0 5.3-7.4 10-7.4 10z"/>'),
   plus:    S('<path d="M12 5v14M5 12h14"/>'),
+  image:   S('<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4.5 17.5 9.5 13l3 2.6 3-2.4 4.5 3.6"/>'),
   lock:    S('<rect x="4.5" y="10.5" width="15" height="10" rx="3"/><path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9"/>'),
   mail:    S('<rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m3.8 7 7.3 5.4a1.6 1.6 0 0 0 1.9 0L20.2 7"/>'),
   shield:  S('<path d="M12 3 20 6v5.5c0 4.6-3.4 7.9-8 9.5-4.6-1.6-8-4.9-8-9.5V6z"/><path d="m9 12 2.2 2.2L15.3 10"/>'),
@@ -746,7 +829,9 @@ const ICONS = {
 let cloud = null;
 let currentUser = null;
 let activeTab = "home";
-const state = { expense: [], diary: [], life: [], sport: [], health: [], steps: [], activeDays: null, diaryQ: '', expView: 'list', pet: null, petLoadedDate: '', todayCheckin: null, checkinDays: null, streakNow: 0, justChecked: null, pendingSteps: null };
+// v2.7：删掉了 pet / todayCheckin / checkinDays / streakNow / justChecked（宠物 + 签到经验整套下线）。
+// 连续天数改由记录星环自己算（stStreak，读真实记录），不再依赖 checkin 表。
+const state = { expense: [], diary: [], life: [], sport: [], health: [], steps: [], activeDays: null, diaryQ: '', expView: 'list', pendingSteps: null };
 
 /* ================= Helpers ================= */
 const $ = (s, p=document) => p.querySelector(s);
@@ -792,7 +877,7 @@ function barChartSVG(rows, opt = {}) {
     return { h, y: base - h };
   };
   let out = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img">`;
-  out += `<line x1="${padX}" y1="${base}" x2="${W - padX}" y2="${base}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`;
+  out += `<line x1="${padX}" y1="${base}" x2="${W - padX}" y2="${base}" stroke="rgba(245,240,232,.10)" stroke-width="1"/>`;
   rows.forEach((r, i) => {
     const cx = padX + slot * i + slot / 2;
     const A = yOf(r.a);
@@ -849,7 +934,9 @@ function longestStreak(set) {
   });
   return best;
 }
-const MILESTONES = [3, 7, 14, 30, 100];
+// longestStreak 仍被周报 / 月报用来算「最长连续记录」，保留。
+// ⛔ MILESTONES（签到里程碑 3/7/14/30/100）随宠物一起下线：它统计的是 checkin 表，
+// 而星环已经把「连续记录天数」讲清楚了，同一件事摆两处只会互相打架。
 
 // 截取匹配位置附近的片段，让搜索结果看得见关键词上下文
 function excerpt(text, q, len = 72) {
@@ -884,7 +971,9 @@ async function fetchActiveDays() {
   return set;
 }
 /* ================= 自定义头像 ================= */
-// 云端 profile.avatar 的值：'' 默认 | 'upload' 自己上传的图 | 'skin:<皮肤id>' 用伙伴立绘
+// 云端 profile.avatar 的值：'' 默认 | 'upload' 自己上传的图
+// ⛔ 旧值还有 'skin:<皮肤id>'（借伙伴立绘当头像）。宠物已下线、pet/ 目录已删，
+//    留着这个分支只会让老用户看到永久 404 的破图 ⇒ 读到就在 loadAvatar 里洗回默认。
 let avatarVal = '';
 let avatarURL = '';           // avatarVal==='upload' 时解析出的可显示地址（签名 URL）
 let avatarBusy = false;
@@ -893,12 +982,10 @@ const avatarStoragePath = () => {
   const uid = (currentUser && (currentUser.id || currentUser.sub)) || '';
   return uid ? cloud.storage.userPath(uid, 'avatars/avatar.webp') : '';
 };
-const skinAvatarSrc = (sid) => `pet/pet_${(PET_SKINS.find(s => s.id === sid) || PET_SKINS[0]).id}_4_grown.webp`;
 
 // 头像内容：有自定义就用图，否则回退邮箱首字母 / 人形图标
 function avatarInner(email) {
   if (avatarVal === 'upload' && avatarURL) return `<img class="av-img" src="${avatarURL}" alt="">`;
-  if (avatarVal.indexOf('skin:') === 0) return `<img class="av-img skin" src="${skinAvatarSrc(avatarVal.slice(5))}" alt="">`;
   const c = ((email || '').trim()[0] || '');
   return /[a-zA-Z]/.test(c) ? c.toUpperCase() : ICONS.user;
 }
@@ -922,7 +1009,12 @@ async function loadAvatar() {
   try {
     const r = await cloud.database.from('profile').select('avatar').limit(1).maybeSingle();
     if (r && !r.error && r.data) {
-      const v = r.data.avatar || '';
+      let v = r.data.avatar || '';
+      // 宠物立绘头像已下线：老用户的 skin:xxx 洗成默认，并顺手改回云端，别每次登录都再洗一遍
+      if (v.indexOf('skin:') === 0) {
+        v = '';
+        try { await cloud.database.from('profile').update({ avatar: '' }).select(); } catch (e) {}
+      }
       if (v !== avatarVal) {
         avatarVal = v;
         LS.set('avatar', v);
@@ -994,6 +1086,7 @@ async function uploadAvatar(file) {
 }
 function openAvatarPicker() {
   const up = avatarVal === 'upload';
+  const initial = ((currentUser && currentUser.email) || '').trim()[0] || '';
   openModal(`
     <div class="av-grid">
       <label class="av-opt file-pick ${up ? 'on' : ''}" id="av-up">
@@ -1001,14 +1094,13 @@ function openAvatarPicker() {
         <div class="av-name">上传图片</div>
         <input type="file" id="av-file" accept="image/*">
       </label>
-      ${PET_SKINS.map(s => `
-      <button class="av-opt ${avatarVal === 'skin:' + s.id ? 'on' : ''}" data-skin="${s.id}">
-        <div class="av-thumb"><img src="${skinAvatarSrc(s.id)}" alt="" style="object-position:50% 20%"></div>
-        <div class="av-name">${s.name}</div>
-      </button>`).join('')}
+      <div class="av-opt ${up ? '' : 'on'}">
+        <div class="av-thumb av-letter">${/[a-zA-Z]/.test(initial) ? initial.toUpperCase() : ICONS.user}</div>
+        <div class="av-name">邮箱首字母</div>
+      </div>
     </div>
     <div class="note" style="text-align:left;padding:12px 2px 8px">
-      上传的图片会压成 256×256 存进云端文件（原图不上传），换设备登录也在；选伙伴皮肤直接借立绘，不占空间。
+      上传的图片会压成 256×256 存进云端文件（原图不上传），换设备登录也在；不上传就用邮箱首字母，不占空间。
     </div>
     ${avatarVal ? '<button class="btn-ghost danger" id="av-reset">恢复默认（邮箱首字母）</button>' : ''}`);
   setModalTitle('我的头像');
@@ -1017,10 +1109,6 @@ function openAvatarPicker() {
   const avIn = $('#av-file');
   avIn.onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) uploadAvatar(f); };
   watchFilePick(avIn);
-  $$('.av-opt[data-skin]').forEach(b => b.onclick = async () => {
-    try { await setAvatar('skin:' + b.dataset.skin); afterAvatarChanged(); toast('头像已更新', '用的是伙伴立绘'); }
-    catch (e) { toastErr(errMsg(e)); }
-  });
   const rs = $('#av-reset');
   if (rs) rs.onclick = async () => {
     try {
@@ -1038,21 +1126,207 @@ const LS = {
   set(k, v) { try { localStorage.setItem('lb_' + k, JSON.stringify(v)); } catch (e) {} }
 };
 
+/* 6 套主题：c1 = 上半（--bg），c2 = 下半（--bg-2）。
+   ⚠ 这两个值必须和 <style> 里 [data-theme=...] 声明的完全一致，
+   改一处就要改两处 —— 色板圆点画的就是这两块底色本身。 */
 const THEMES = [
-  { id:'aurora', name:'极光紫', c:'linear-gradient(135deg,#7B8CFF,#B06BFF)' },
-  { id:'ocean',  name:'深海蓝', c:'linear-gradient(135deg,#5AA9FF,#2E6BF6)' },
-  { id:'peach',  name:'蜜桃粉', c:'linear-gradient(135deg,#FF8FA3,#FF6FB5)' },
-  { id:'forest', name:'森野绿', c:'linear-gradient(135deg,#5BE095,#22C3A6)' },
-  { id:'sunset', name:'落日橙', c:'linear-gradient(135deg,#FFB454,#FF7A59)' },
-  { id:'ink',    name:'石墨灰', c:'linear-gradient(135deg,#A9B2C2,#6E7686)' }
+  { id:'ink',  name:'墨黑', c1:'#0C0B0A', c2:'#15120E' },
+  { id:'dawn', name:'晨褐', c1:'#100C09', c2:'#1B1511' },
+  { id:'dusk', name:'夜紫', c1:'#0D0B10', c2:'#17141C' },
+  { id:'sea',  name:'深青', c1:'#090D0F', c2:'#121A1D' },
+  { id:'clay', name:'陶土', c1:'#110D0A', c2:'#1C1712' },
+  { id:'moss', name:'苔绿', c1:'#0A0D0A', c2:'#131712' }
 ];
 
 function applyTheme(id) {
-  document.documentElement.dataset.theme = THEMES.some(t => t.id === id) ? id : 'aurora';
-  const hex = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim();
+  // 老用户 localStorage 里存的是 aurora/ocean/peach/... 这套旧 id，
+  // 这里做一次映射，免得全部回落到墨黑、看着像设置被重置了
+  const LEGACY = { aurora:'dusk', ocean:'sea', peach:'clay', forest:'moss', sunset:'dawn' };
+  const want = (id && String(id).startsWith('l')) ? LEGACY[id] : id;
+  document.documentElement.dataset.theme = THEMES.some(t => t.id === want) ? want : 'ink';
+  // theme-color 要跟「底色」走，不是强调色 —— 状态栏染色用底色才不突兀
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta && hex) meta.setAttribute('content', hex);
+  if (meta && bg) meta.setAttribute('content', bg);
 }
+
+/* ================= 背景系统 =================
+   三层：#bg-photo（自定义底图）/ #bg-grain（颗粒）/ #bg-dots（粒子）。
+   ⚠ 性能铁律：粒子**不跑 requestAnimationFrame**。单文件 App 常驻 WebView，
+   每帧重绘 canvas 在低端机上会持续吃 GPU、滚动直接掉帧。做法是
+   「JS 一次性生成随机点位 → 写成 DOM + CSS keyframes 漂移」，
+   动画交给合成器线程（will-change:transform），主线程零参与。
+   ⛔ 每个粒子必须给**负的 animation-delay** 打散相位，否则整片同起同落，
+   看着像屏幕在呼吸而不是有粒子。 */
+
+/* 4 档背景强度。level 越大粒子越多越亮；0 = 完全关闭（省电/低端机）。 */
+const BG_LEVELS = [
+  { id:0, name:'关闭', n:0,  a:0 },
+  { id:1, name:'极简', n:10, a:.30 },
+  { id:2, name:'适中', n:22, a:.48 },
+  { id:3, name:'丰富', n:38, a:.66 }
+];
+
+// 用户底图：存的是 dataURL（压到 720 宽的 webp，一般 30~80 KB）。
+// localStorage 单键上限 ~5 MB，一张压过的图远够用，不用上云存储 ——
+// 底图是「装饰」不是「数据」，丢了重设一次就行，不值得为它加一张表。
+let bgPhotoURL = '';
+let bgLevel = 2;
+
+function bgInit() {
+  bgLevel = Number(LS.get('bgLevel', 2));
+  if (!BG_LEVELS.some(l => l.id === bgLevel)) bgLevel = 2;
+  bgPhotoURL = LS.get('bgPhoto', '') || '';
+  if (bgPhotoURL) {
+    const el = $('#bg-photo');
+    if (el) el.style.backgroundImage = `url("${bgPhotoURL}")`;
+    document.body.classList.add('has-bg');
+  }
+  const dim = Number(LS.get('bgDim', 42));
+  document.documentElement.style.setProperty('--bg-dim', (dim / 100).toFixed(2));
+  // 系统开了「减少动效」就只画静态点，不给动画
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  bgBuildDots(reduce);
+}
+
+function bgBuildDots(reduce) {
+  const host = $('#bg-dots');
+  if (!host) return;
+  const lv = BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2];
+  // 面积越大粒子越多，但设硬上限 —— 粒子是氛围，不是星空
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const area = vw * vh;
+  const n = Math.min(60, Math.round(lv.n * Math.max(.6, Math.min(1.8, area / 380000))));
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    // 用线性同余造伪随机，避免连续 Math.random 让某个 JS 引擎上分布不均
+    const r1 = pseudo(i * 7919 + 13), r2 = pseudo(i * 6271 + 91), r3 = pseudo(i * 5171 + 47);
+    const r4 = pseudo(i * 3313 + 29), r5 = pseudo(i * 2417 + 71);
+    const size = (1 + r3 * 2.4).toFixed(2);          // 1 ~ 3.4px
+    const left = (r1 * 100).toFixed(2), top = (r2 * 100).toFixed(2);
+    const dx = ((r4 * 2 - 1) * 16).toFixed(1);       // 横向漂移 ±16px
+    const dur = (9 + r5 * 12).toFixed(1);            // 9~21s 一轮，慢
+    // 负 delay：让粒子在「过去某一刻」就出发，进页面即是稳定状态，不会集体闪一下
+    const neg = (-(r3 * dur)).toFixed(2);
+    const op = (lv.a * (0.5 + r4 * 0.5)).toFixed(3);
+    html += `<i style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;`
+         +  `opacity:${op};--dx:${dx}px;animation-duration:${dur}s;animation-delay:${neg}s"></i>`;
+  }
+  host.innerHTML = html;
+  document.body.classList.toggle('no-motion', !!reduce);
+}
+
+// 确定性伪随机（mulberry32 简化版）：同一个 seed 永远同一串，
+// 这样 resize 重建时粒子不会整片换位置
+function pseudo(seed) {
+  let t = (seed + 0x6D2B79F5) >>> 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+function bgSetLevel(v) {
+  bgLevel = Number(v);
+  if (!BG_LEVELS.some(l => l.id === bgLevel)) bgLevel = 0;
+  LS.set('bgLevel', bgLevel);
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  bgBuildDots(reduce);
+}
+
+/* 上传自定义底图：压到 720 宽的 webp。
+   ⛔ 必须压：不压的话一张手机照片 4~6 MB，dataURL 再 base64 膨胀 33%，
+   localStorage 直接写爆（QuotaExceededError），而且首屏解析这张图要几百毫秒。 */
+async function bgPickFile(file) {
+  if (!file) return '';
+  const bmp = await createImageBitmap(file).catch(async () => {
+    // 老 WebView 没有 createImageBitmap，退回 <img> 解码
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((res, rej) => {
+        const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url;
+      });
+      return img;
+    } finally { setTimeout(() => URL.revokeObjectURL(url), 3000); }
+  });
+  const W = 720;
+  const scale = Math.min(1, W / (bmp.width || W));
+  const w = Math.round((bmp.width || W) * scale), h = Math.round((bmp.height || W) * scale);
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  const cx = cv.getContext('2d');
+  cx.drawImage(bmp, 0, 0, w, h);
+  // 质量 0.72：肉眼在「压暗 42% + 有颗粒」的底图上看不出差别，但体积省一半
+  const out = cv.toDataURL('image/webp', 0.72);
+  // toDataURL 在极老 WebView 上可能退回 png，那就宁可降到 560 宽也别爆存储
+  if (out.length > 1400000) {
+    cv.width = Math.round(w * 0.7); cv.height = Math.round(h * 0.7);
+    cx.drawImage(bmp, 0, 0, cv.width, cv.height);
+    return cv.toDataURL('image/webp', 0.6);
+  }
+  return out;
+}
+
+async function bgSetPhoto(dataURL) {
+  bgPhotoURL = dataURL || '';
+  LS.set('bgPhoto', bgPhotoURL);
+  const el = $('#bg-photo');
+  if (el) el.style.backgroundImage = bgPhotoURL ? `url("${bgPhotoURL}")` : '';
+  document.body.classList.toggle('has-bg', !!bgPhotoURL);
+}
+
+function bgSetDim(pct) {
+  const v = Math.max(0, Math.min(80, Number(pct) || 0));
+  LS.set('bgDim', v);
+  document.documentElement.style.setProperty('--bg-dim', (v / 100).toFixed(2));
+}
+
+/* 打开背景设置面板 */
+function openBgSettings() {
+  const lv = BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2];
+  openModal(`
+    <div class="st-sec" style="margin-top:2px"><span class="st-sec-i">BG</span><span class="st-sec-t">背景</span><span class="st-rule" style="flex:1"></span></div>
+    <div class="cat-edit" style="gap:6px">
+      ${BG_LEVELS.map(l => `<button class="cat-x" data-lv="${l.id}" style="${l.id === lv.id
+        ? 'background:rgba(255,159,28,.16);border:1px solid rgba(255,159,28,.4);color:#FF9F1C' : ''}">${l.name}</button>`).join('')}
+    </div>
+    <div class="note" style="margin:2px 0 14px">粒子只做缓慢漂移，不占用处理器运算；系统开了「减少动效」时会自动静止。</div>
+
+    <div class="st-sec"><span class="st-sec-i">IMG</span><span class="st-sec-t">自定义底图</span><span class="st-rule" style="flex:1"></span></div>
+    <div class="bg-prev ${bgPhotoURL ? 'set' : ''}" ${bgPhotoURL ? `style="background-image:url(&quot;${bgPhotoURL}&quot;)"` : ''}>${bgPhotoURL ? '已设置 · 点击下方可更换或清除' : '还没有设置'}</div>
+    <label class="st-btn st-btn-p" style="margin-top:10px;width:100%" id="bg-file-lb">选择图片</label>
+    <input type="file" id="bg-file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+    ${bgPhotoURL ? `<button class="btn-ghost danger" style="margin-top:8px" id="bg-clear">清除底图</button>` : ''}
+
+    <div class="st-sec" id="bg-dim-sec"><span class="st-sec-i">DIM</span><span class="st-sec-t">底图明暗</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11.5px;color:var(--star-text-3)" id="bg-dim-v">${Number(LS.get('bgDim', 42))}%</span></div>
+    <input type="range" id="bg-dim" min="0" max="80" step="5" value="${Number(LS.get('bgDim', 42))}"
+      style="width:100%;height:34px;accent-color:#FF9F1C" ${bgPhotoURL ? '' : 'disabled'}>
+  `);
+  setModalTitle('背景');
+  $$('[data-lv]').forEach(b => b.onclick = () => { bgSetLevel(b.dataset.lv); closeModal(); openBgSettings(); });
+  const inp = $('#bg-file');
+  inp.onchange = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      const d = await bgPickFile(f);
+      await bgSetPhoto(d);
+      closeModal();
+      openBgSettings();
+      toast('底图已更新');
+    } catch (err) { toastErr('图片处理失败：' + (err && err.message ? err.message : err)); }
+  };
+  const cl = $('#bg-clear');
+  if (cl) cl.onclick = async () => { await bgSetPhoto(''); closeModal(); toast('底图已清除'); };
+  const dim = $('#bg-dim');
+  if (dim) {
+    dim.oninput = () => {
+      $('#bg-dim-v').textContent = dim.value + '%';
+      bgSetDim(dim.value);
+    };
+  }
+}
+
 const getNick = () => (LS.get('nick', '') || '').trim();
 const greeting = () => {
   const h = new Date().getHours();
@@ -1088,7 +1362,8 @@ function initCloud() {
 }
 
 async function boot() {
-  applyTheme(LS.get('theme', 'aurora'));
+  applyTheme(LS.get('theme', 'ink'));
+  bgInit();
   // 手机快捷指令带来的 ?steps=8321：先收下，等登录后自动落库
   const sp = readStepsParam();
   if (sp) { state.pendingSteps = sp; LS.set('pendingSteps', sp); clearStepsParam(); }
@@ -1117,6 +1392,8 @@ async function boot() {
 
 /* ================= Login ================= */
 function renderLogin() {
+  // 登录页的氛围更浓：粒子点亮 + 两团光晕游走（见 CSS .login-wrap::before/::after）
+  document.body.classList.add('on-login');
   $('#root').innerHTML = `
     <div class="login-wrap">
       <div class="login-card">
@@ -1271,6 +1548,7 @@ function renderLogin() {
 /* ================= App Shell ================= */
 function renderApp() {
   const nick = getNick();
+  document.body.classList.remove('on-login');
   $('#root').innerHTML = `
     <div class="hd">
       ${nick
@@ -1395,134 +1673,6 @@ function openModal(html) {
 function closeModal() { $('#modal-bg').classList.remove('show'); }
 function setModalTitle(t) { $('#modal-title').textContent = t; }
 
-/* ================= 签到 & 养成伙伴 ================= */
-// 换皮：同一套进化形态可以换不同外观（立绘在 pet/ 目录，跟页面一起部署，不依赖外部图床）
-// 美术参考自鸣潮爱弥斯的几套 mod 皮肤，重绘成 Q 版四形态
-const PET_SKINS = [
-  { id:'vow',      name:'晨光',     tag:'粉白天使', desc:'最初陪着你的样子，粉发与羽翼' },
-  { id:'xinghong', name:'星虹狐梦', tag:'粉狐灵装', desc:'狐耳与彩虹全息光环，水晶翅膀' },
-  { id:'xingshi',  name:'星蚀夜歌', tag:'暗夜哥特', desc:'黑蕾丝与蝶翼，赤瞳的夜之侧' },
-  { id:'wedding',  name:'誓约',     tag:'银白婚纱', desc:'银发蕾丝婚纱，珍珠与蓝白光环' }
-];
-const petSkinId = () => {
-  const v = LS.get('petSkin', 'vow');
-  return PET_SKINS.some(s => s.id === v) ? v : 'vow';
-};
-const petSkin = () => PET_SKINS.find(s => s.id === petSkinId()) || PET_SKINS[0];
-// 四个进化形态（立绘文件名 pet_<皮肤>_<序号>_<形态>.webp）
-const PET_FORMS = [
-  { lv: 1,  n: '1_egg',   name: '光卵',   tip: '还在壳里，听得见你的心跳' },
-  { lv: 3,  n: '2_baby',  name: '幼生体', tip: '刚破壳，走路还晃' },
-  { lv: 6,  n: '3_child', name: '成长期', tip: '会挥手了，翅膀还没长齐' },
-  { lv: 10, n: '4_grown', name: '辉耀体', tip: '羽翼全开，和你并肩' }
-];
-const petImg = (form, skinId) => `pet/pet_${skinId || petSkinId()}_${form.n}.webp`;
-const CHECKIN_BASE = 20;   // 每日签到基础经验
-const RECORD_EXP = 5;      // 当天每记一条记录的经验
-const RECORD_CAP = 4;      // 每天最多计 4 条
-const expNeed = (lv) => 40 + (lv - 1) * 20;
-const expTotalFor = (lv) => { let s = 0; for (let i = 1; i < lv; i++) s += expNeed(i); return s; };
-const levelOf = (exp) => { let lv = 1; while (lv < 99 && exp >= expTotalFor(lv + 1)) lv++; return lv; };
-const formOf = (lv) => { let f = PET_FORMS[0]; PET_FORMS.forEach(x => { if (lv >= x.lv) f = x; }); return f; };
-const moodLabel = (m) => m >= 85 ? '元气满满' : m >= 60 ? '心情不错' : m >= 35 ? '有点蔫' : '想你了';
-const clampNum = (v, a, b) => Math.max(a, Math.min(b, Number(v) || 0));
-const streakBonus = (n) => Math.min(25, Math.floor(n / 7) * 5);
-
-// 截止到某一天的连续天数
-function streakEndingAt(set, endStr) {
-  const p = String(endStr).split('-').map(Number);
-  const d = new Date(p[0], p[1] - 1, p[2]);
-  let n = 0;
-  while (set.has(localDateStr(d))) { n++; d.setDate(d.getDate() - 1); }
-  return n;
-}
-
-let petBusy = false;
-async function ensurePet(force) {
-  if (!currentUser) return null;
-  if (!force && state.pet && state.petLoadedDate === todayStr()) return state.pet;
-  if (petBusy) return state.pet;
-  petBusy = true;
-  try {
-    const today = todayStr();
-    let { data: pet } = await cloud.database.from('pet').select('*').limit(1).maybeSingle();
-    if (!pet) {
-      const ins = await cloud.database.from('pet').insert({ name: '爱弥斯' }).select();
-      pet = (ins.data && ins.data[0]) || { id: null, name: '爱弥斯', exp: 0, mood: 80, last_checkin: null };
-    }
-    const [chkRes, histRes] = await Promise.all([
-      cloud.database.from('checkin').select('*').eq('record_date', today).limit(1).maybeSingle(),
-      cloud.database.from('checkin').select('record_date').limit(LIMIT_LIST)
-    ]);
-    const chk = chkRes && !chkRes.error ? chkRes.data : null;
-    const days = new Set(((histRes && histRes.data) || []).map(r => String(r.record_date).slice(0, 10)));
-
-    if (!chk) {
-      // 今天还没签 —— 自动签
-      const y = new Date(); y.setDate(y.getDate() - 1);
-      const streak = streakEndingAt(days, localDateStr(y)) + 1;
-      const gain = CHECKIN_BASE + streakBonus(streak);
-      let mood = clampNum(pet.mood == null ? 80 : pet.mood, 15, 100);
-      if (pet.last_checkin) {
-        const gap = dayGap(String(pet.last_checkin).slice(0, 10), today);
-        if (gap > 1) mood -= Math.min(60, (gap - 1) * 15);
-      }
-      mood = Math.round(clampNum(mood + 8, 15, 100));
-      const beforeLv = levelOf(Number(pet.exp || 0));
-      const exp = Number(pet.exp || 0) + gain;
-      const afterLv = levelOf(exp);
-      if (pet.id) {
-        await cloud.database.from('pet')
-          .update({ exp, mood, last_checkin: today, updated_at: new Date().toISOString() })
-          .eq('id', pet.id).select();
-      }
-      const insC = await cloud.database.from('checkin').insert({ record_date: today, exp: gain }).select();
-      pet = Object.assign({}, pet, { exp, mood, last_checkin: today });
-      days.add(today);
-      state.todayCheckin = (insC.data && insC.data[0]) || { record_date: today, exp: gain, record_count: 0 };
-      state.streakNow = streak;
-      state.justChecked = { gain, streak, levelUp: afterLv > beforeLv, level: afterLv, form: formOf(afterLv) };
-    } else {
-      state.todayCheckin = chk;
-      state.streakNow = streakEndingAt(days, today);
-    }
-    state.pet = pet;
-    state.checkinDays = days;
-    state.petLoadedDate = today;
-    return pet;
-  } catch (e) {
-    console.warn('ensurePet failed', e);
-    return state.pet;
-  } finally {
-    petBusy = false;
-  }
-}
-
-// 保存一条记录后给伙伴加经验（每天最多计 4 条）
-async function awardRecordExp() {
-  const c = state.todayCheckin, pet = state.pet;
-  if (!c || !pet || !pet.id || !c.id) return;
-  const used = Number(c.record_count || 0);
-  if (used >= RECORD_CAP) return;
-  const beforeLv = levelOf(Number(pet.exp || 0));
-  c.record_count = used + 1;
-  const exp = Number(pet.exp || 0) + RECORD_EXP;
-  pet.exp = exp;
-  state.pet = pet;
-  const afterLv = levelOf(exp);
-  try {
-    await Promise.all([
-      cloud.database.from('checkin').update({ record_count: c.record_count }).eq('id', c.id).select(),
-      cloud.database.from('pet').update({ exp, updated_at: new Date().toISOString() }).eq('id', pet.id).select()
-    ]);
-  } catch (e) { /* 经验加不上不影响记录本身 */ }
-  if (afterLv > beforeLv) {
-    toast(`升级了！Lv.${afterLv}`, `${pet.name || '爱弥斯'} ${formOf(afterLv).tip}`, petImg(formOf(afterLv)));
-  } else {
-    toast(`+${RECORD_EXP} 经验`, `${pet.name || '爱弥斯'} 看着你记完了`);
-  }
-}
-
 // 顶部轻提示
 /* 顶部提示条（toast / 同步结果条）左右一划就移除，不用干等它自己消失。
    两处细节：① toast 会被反复重建、sync-bar 每次都是新元素，所以监听挂在 document 上，
@@ -1584,7 +1734,9 @@ async function awardRecordExp() {
 })();
 
 let toastTimer = null, toastGoneTimer = null;
-function toast(text, sub, img, kind) {
+// ⛔ 第 3 参别再加回来。旧签名是 (text, sub, img, kind)，img 走宠物立绘；
+// 现在形态由 kind 唯一决定，kind 是第 3 参 —— 若保持旧位，调用方写 kind 会被当成 img 静默丢掉。
+function toast(text, sub, kind) {
   let el = document.getElementById('toast');
   if (!el) {
     el = document.createElement('div');
@@ -1592,12 +1744,16 @@ function toast(text, sub, img, kind) {
     el.className = 'toast';
     document.body.appendChild(el);
   }
-  const exp = Number((state.pet && state.pet.exp) || 0);
   const err = kind === 'err';
   el.classList.toggle('err', err);          // 用 classList 而不是重写 className，免得把正在显示的 .show 抹掉
-  el.innerHTML = err
-    ? `<span class="ti">!</span><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`
-    : `<img src="${img || petImg(formOf(levelOf(exp)))}" alt=""><div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
+  // 两种形态只差左边那个记号：正常 = 琥珀圆点，出错 = 红底叹号。
+  // 原来这里塞的是宠物立绘，宠物下线后一律改成记号 —— 圆点比图片轻，
+  // 也不会因为图片 404 在 toast 里留一个破图框。
+  const mark = err
+    ? `<span class="ti">!</span>`
+    : `<span class="tdot"></span>`;
+  el.innerHTML = mark +
+    `<div class="tt">${escapeHtml(text)}${sub ? `<i>${escapeHtml(sub)}</i>` : ''}</div>`;
   el.style.transition = ''; el.style.transform = ''; el.style.opacity = '';   // 清掉上次左右滑动留下的内联位移
   requestAnimationFrame(() => el.classList.add('show'));
   clearTimeout(toastTimer); clearTimeout(toastGoneTimer);
@@ -1613,7 +1769,7 @@ function toast(text, sub, img, kind) {
 
 /* 出错提示：替换原生 alert。安卓 WebView 里的 alert 又丑又会卡住整个界面，
    而且样式和 App 完全不搭。 */
-const toastErr = (text, sub) => toast(text, sub, null, 'err');
+const toastErr = (text, sub) => toast(text, sub, 'err');
 
 /* ---------- 列表页通用：秒开 / 静默刷新 / 失败重试 ---------- */
 
@@ -1659,162 +1815,7 @@ function softFail(e) { toast('刷新失败 · 显示的是上次的数据', errM
   window.__netStatus = apply;
 })();
 
-function petCardHTML() {
-  const pet = state.pet;
-  if (!pet) return '';
-  const exp = Number(pet.exp || 0);
-  const lv = levelOf(exp);
-  const form = formOf(lv);
-  const cur = exp - expTotalFor(lv);
-  const need = expNeed(lv);
-  const pct = Math.max(2, Math.min(100, cur / need * 100));
-  const streak = state.streakNow || 0;
-  const mood = clampNum(pet.mood == null ? 80 : pet.mood, 0, 100);
-  return `
-    <div class="pet-card" id="pet-card">
-      <div class="pet-stage skin-${petSkinId()}"><img class="pet-img" src="${petImg(form)}" alt="${form.name}"></div>
-      <div class="pet-info">
-        <div class="pet-head">
-          <span class="pet-name">${escapeHtml(pet.name || '爱弥斯')}</span>
-          <span class="lv-chip">Lv.${lv} ${form.name}</span>
-        </div>
-        <div class="pet-sub"><span>连续签到 <b>${streak}</b> 天</span><span>${moodLabel(mood)}</span><span class="pet-dress" id="pet-dress">换装 ›</span></div>
-        <div class="exp-track"><div class="exp-fill" style="width:${pct.toFixed(1)}%"></div></div>
-        <div class="pet-tip">${petSkin().name} · 距 Lv.${lv + 1} 还差 ${need - cur} 点经验</div>
-      </div>
-    </div>`;
-}
 
-// 宠物卡上的「换装」入口：只换外观，不动等级
-function bindPetCard() {
-  const pc = $('#pet-card');
-  if (!pc) return;
-  pc.onclick = openPet;
-  const d = $('#pet-dress');
-  if (d) d.onclick = (e) => { e.stopPropagation(); openSkinPicker(); };
-}
-
-// 选皮肤：3 张缩略图（用成长期那张当封面）
-function openSkinPicker() {
-  const cur = petSkinId();
-  const petals = PET_FORMS[2];
-  openModal(`
-    <div class="skins">
-      ${PET_SKINS.map(s => `
-        <div class="skin ${s.id === cur ? 'on' : ''}" data-skin="${s.id}">
-          <img src="${petImg(petals, s.id)}" alt="${s.name}">
-          <div class="sn">${s.name}</div>
-          <div class="st">${s.tag}</div>
-        </div>`).join('')}
-    </div>
-`);
-  setModalTitle('给伙伴换装');
-  $$('.skin').forEach(el => {
-    el.onclick = () => {
-      const id = el.dataset.skin;
-      if (id === petSkinId()) { closeModal(); return; }
-      LS.set('petSkin', id);
-      const s = PET_SKINS.find(x => x.id === id);
-      closeModal();
-      // 底层页面要跟着换
-      if (activeTab === 'me') renderProfile(); else if (activeTab === 'home') renderHome();
-      toast(`已换上「${s.name}」`, s.desc, petImg(petals, id));
-    };
-  });
-}
-
-function openPet() {
-  const pet = state.pet;
-  if (!pet) { toast('伙伴还没准备好', '稍后再打开看看'); return; }
-  const exp = Number(pet.exp || 0);
-  const lv = levelOf(exp);
-  const form = formOf(lv);
-  const cur = exp - expTotalFor(lv);
-  const need = expNeed(lv);
-  const mood = clampNum(pet.mood == null ? 80 : pet.mood, 0, 100);
-  const days = state.checkinDays || new Set();
-  const next = PET_FORMS.find(f => f.lv > lv);
-  const today = todayStr();
-  // 近 28 天签到日历
-  let cal = '';
-  const base = new Date(); base.setDate(base.getDate() - 27);
-  for (let i = 0; i < 28; i++) {
-    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
-    const k = localDateStr(d);
-    cal += `<div class="d ${days.has(k) ? 'on' : ''} ${k === today ? 'today' : ''}">${d.getDate()}</div>`;
-  }
-  openModal(`
-    <div style="text-align:center;padding:4px 0 2px">
-      <div class="pet-stage skin-${petSkinId()}" style="margin:0 auto;width:156px;height:156px"><img class="pet-img" src="${petImg(form)}" alt=""></div>
-      <div class="pet-name" style="font-size:19px;margin-top:6px">${escapeHtml(pet.name || '爱弥斯')}</div>
-      <div class="pet-sub" style="justify-content:center;margin-top:6px">
-        <span>Lv.${lv} · ${form.name}</span><span>${moodLabel(mood)}</span><span>${petSkin().name}</span>
-      </div>
-      <div class="pet-tip">${form.tip}</div>
-      ${state.todayCheckin ? '' : '<button class="btn" id="pet-checkin" style="margin-top:12px">补签今天</button>'}
-    </div>
-    <div class="sec">经验</div>
-    <div class="card">
-      <div class="row-between" style="font-size:12px"><span class="dim">Lv.${lv} → Lv.${lv + 1}</span><span class="num">${cur} / ${need}</span></div>
-      <div class="exp-track"><div class="exp-fill" style="width:${Math.max(2, Math.min(100, cur / need * 100)).toFixed(1)}%"></div></div>
-      <div class="pet-tip">${next ? `再攒 <b>${expTotalFor(next.lv) - exp}</b> 点经验进化成「${next.name}」` : '已达成最终形态「辉耀体」'}</div>
-    </div>
-    <div class="sec">进化路线</div>
-    <div class="evo">
-      ${PET_FORMS.map(f => `<div class="e ${lv >= f.lv ? 'got' : ''}"><img src="${petImg(f)}" alt=""><div class="n">${f.name}<br>Lv.${f.lv}</div></div>`).join('')}
-    </div>
-    <div class="sec">签到</div>
-    <div class="stat-grid">
-      <div class="stat"><div class="label">连续签到</div><div class="value num" style="color:var(--pink)">${state.streakNow || 0}<span style="font-size:12px;color:var(--text-3)"> 天</span></div></div>
-      <div class="stat"><div class="label">最长连续</div><div class="value num" style="color:var(--pink)">${longestStreak(days)}<span style="font-size:12px;color:var(--text-3)"> 天</span></div></div>
-    </div>
-    <div class="card" style="margin-top:10px">
-      <div class="row-between" style="font-size:12px"><span class="dim">近 28 天</span><span class="num">共签到 ${days.size} 天</span></div>
-      <div class="cal">${cal}</div>
-      <div class="pet-tip">每天进来自动签到 +${CHECKIN_BASE} 经验，连续满 7 天再 +5（最高 +25）；每天前 ${RECORD_CAP} 条记录各 +${RECORD_EXP} 经验。断签不清零，只是伙伴心情会掉。</div>
-    </div>
-    <div class="sec">伙伴设置</div>
-    <div class="me-list">
-      <div class="me-item" id="pet-skin"><div class="me-ico" style="color:var(--pink)">${ICONS.sparkle}</div><div class="me-txt"><div class="t">给伙伴换装</div><div class="s">当前：${petSkin().name} · ${petSkin().tag}</div></div><div class="me-arrow">›</div></div>
-      <div class="me-item" id="pet-rename"><div class="me-ico" style="color:var(--pink)">${ICONS.paw}</div><div class="me-txt"><div class="t">给伙伴改名</div><div class="s">当前：${escapeHtml(pet.name || '爱弥斯')}</div></div><div class="me-arrow">›</div></div>
-    </div>`);
-  setModalTitle('我的伙伴');
-  $('#pet-skin').onclick = openSkinPicker;
-  $('#pet-rename').onclick = openPetRename;
-  const cb = $('#pet-checkin');
-  if (cb) cb.onclick = async () => {
-    await ensurePet(true);
-    const j = state.justChecked;
-    if (j) { state.justChecked = null; toast(`签到成功 +${j.gain} 经验`, `连续签到 ${j.streak} 天 · ${j.form.name}`, petImg(j.form)); }
-    closeModal(); openPet();
-  };
-}
-
-function openPetRename() {
-  const pet = state.pet;
-  if (!pet) return;
-  const cur = pet.name || '爱弥斯';
-  openModal(`
-    <div class="field">
-      <label>伙伴名字</label>
-      <input id="pet-name" type="text" maxlength="12" placeholder="最多 12 个字" value="${escapeHtml(cur)}">
-    </div>
-    <button class="btn" id="pet-save">保存</button>`);
-  setModalTitle('给伙伴改名');
-  $('#pet-save').onclick = async () => {
-    const name = $('#pet-name').value.trim().slice(0, 12) || '爱弥斯';
-    if (pet.id) {
-      const res = await cloud.database.from('pet').update({ name, updated_at: new Date().toISOString() }).eq('id', pet.id).select();
-      if (res.error) { toastErr(errMsg(res.error)); return; }
-    }
-    pet.name = name;
-    state.pet = pet;
-    closeModal();
-    if (activeTab === 'me') renderProfile(); else renderHome();
-  };
-}
-
-/* ================= Home ================= */
 async function renderHome() {
   const v = $('#view');
   v.innerHTML = loadingHTML();
@@ -1822,8 +1823,7 @@ async function renderHome() {
     const today = todayStr();
     // 本月汇总原本是串行跟在后面单独 await 的 —— 白多一个网络往返，一起并行掉
     const { start: monthStart, end: monthEnd } = monthRange();
-    const [, exp, dia, sp, li, stepRes, monthExp] = await Promise.all([
-      ensurePet(),
+    const [exp, dia, sp, li, stepRes, monthExp] = await Promise.all([
       cloud.database.from('expense').select('*').eq('record_date', today),
       cloud.database.from('diary').select('*').eq('record_date', today).limit(1).maybeSingle(),
       cloud.database.from('sport').select('*').eq('record_date', today),
@@ -1840,7 +1840,6 @@ async function renderHome() {
     const sportCount = sp.data ? sp.data.length : 0;
     const lifeCount = li.data ? li.data.length : 0;
     const stepRec = (stepRes && !stepRes.error && stepRes.data) ? stepRes.data : null;
-    const best = longestStreak(state.checkinDays || new Set());
     const d = new Date();
 
     v.innerHTML = `
@@ -1855,10 +1854,6 @@ async function renderHome() {
         </div>
       </div>
       <div id="st-zone"></div>
-      <div class="sec">签到里程碑</div>
-      <div class="badge-grid">
-        ${MILESTONES.map(m => `<div class="badge ${best >= m ? 'got' : ''}"><div class="n num">${m}</div><div class="d">${best >= m ? '已达成' : '天'}</div></div>`).join('')}
-      </div>
       <div class="sec">今日打卡</div>
       <div class="check-grid">
         <div class="check ${hasDiary?'on':'off'}"><span class="ico">${ICONS.diary}</span><div class="t">日记</div><div class="v">${hasDiary?'已写':'未记'}</div></div>
@@ -1876,12 +1871,6 @@ async function renderHome() {
     // 星环 / 喝水 / 每日一句 / 心情 —— 独立渲染并自带 try，
     // ⛔ 不和上面这堆 Promise 混在一起：它们失败时不该把整个首页拖成「加载失败」
     renderStZone();
-    if (state.justChecked) {
-      const j = state.justChecked;
-      state.justChecked = null;
-      toast(j.levelUp ? `签到成功 · 升到 Lv.${j.level}` : `签到成功 +${j.gain} 经验`,
-        `连续签到 ${j.streak} 天 · ${j.form.name}`, petImg(j.form));
-    }
   } catch(e) {
     v.innerHTML = failHTML('加载', e, 'renderHome()');
   }
@@ -2243,7 +2232,6 @@ async function addWater(ml) {
   // 本地缓存先加上，避免等一次网络往返才看到数字动
   if (stData && stDataDay === day) stData.waterRows = (stData.waterRows || []).concat([{ ml }]);
   paintStWater();
-  awardRecordExp();
   toast(`+${ml}ml`, `今天 ${stWaterTotal(stData)}ml / ${ST_WATER_GOAL}ml`);
 }
 
@@ -2301,7 +2289,6 @@ async function setMood(m) {
   $$('[data-st-mood]').forEach(b => b.classList.toggle('on', b.getAttribute('data-st-mood') === next));
   const cell = document.querySelector('.st-mood-c.today .st-mood-e');
   if (cell) cell.innerHTML = next || '&nbsp;';
-  awardRecordExp();
   toast(next ? `心情记为 ${next}` : '已清除今天的心情');
 }
 
@@ -2544,7 +2531,6 @@ async function saveExpense(id) {
     : await cloud.database.from('expense').insert(payload).select();
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (!id) awardRecordExp();
   // 记到别的月份时自动跟过去，避免「保存完看不到」
   const ym = payload.record_date ? payload.record_date.slice(0,7) : null;
   if (ym && ym !== state.expYM && ym <= monthStr()) state.expYM = ym;
@@ -2686,7 +2672,6 @@ async function saveDiary(id) {
     : await cloud.database.from('diary').insert(payload).select();
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (!id) awardRecordExp();
   renderDiaryList();
 }
 
@@ -2916,7 +2901,6 @@ async function saveLife(id, sel) {
     : await cloud.database.from('life').insert(payload).select();
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (!id) awardRecordExp();
   renderLifeList();
 }
 
@@ -3183,7 +3167,6 @@ async function saveSport(id) {
     : await cloud.database.from('sport').insert(payload).select();
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (!id) awardRecordExp();
   renderSportList();
 }
 
@@ -3289,7 +3272,6 @@ async function saveHealth(id) {
     : await cloud.database.from('health').insert(payload).select();
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (!id) awardRecordExp();
   renderHealthList();
 }
 
@@ -3383,7 +3365,6 @@ async function saveSteps() {
   const { res, isNew } = await saveStepsValue(date, steps, goal);
   if (res.error) { toastErr(errMsg(res.error)); return; }
   closeModal();
-  if (isNew) awardRecordExp();
   if (activeTab === 'sport') renderSportList(); else switchTab('sport');
 }
 
@@ -3466,7 +3447,6 @@ async function flushPendingSteps() {
       toast('步数同步失败', errMsg(res.error));
       return;
     }
-    if (isNew) awardRecordExp();
     const line = `${fmt(p.steps)} 步 · ${p.date}`;
     if (p.auto) { showSyncBar('已同步手机步数', line + ' · 这个页面可以关掉了'); autoLeave(); }
     else toast('已同步手机步数', line);
@@ -3534,7 +3514,6 @@ window.lbNativeSteps = async function (steps, date, fresh) {
     const { res, isNew } = await saveStepsValue(d, n, goal);
     if (res.error) return;              // 静默失败，不打扰正在用的用户
 
-    if (isNew) awardRecordExp();
     if (fresh) freshStepTip(d);
     else showSyncBar('已同步手机步数', `${n.toLocaleString('zh-CN')} 步 · ${d}`, 3200);
     afterStepsSaved();
@@ -3551,7 +3530,7 @@ window.lbNativeSteps = async function (steps, date, fresh) {
       不加参数的话下载到的可能还是上一版（叠加覆盖改不动老键）；
    ② 版本门槛也用它，旧壳会看到"建议重新下载安装包"。
    ⚠ 忘了改它，用户就会一直下到旧包 —— 这是最容易漏的一步。 */
-const APP_VER = '1.5';
+const APP_VER = '1.6';
 
 function isInApp() { return /LifeBookApp/.test(navigator.userAgent); }
 
@@ -3638,7 +3617,6 @@ window.lbCalibResult = async function (today, date) {
     closeModal();
     const { res, isNew } = await saveStepsValue(d, n, goal);
     if (res.error) { toast('校准成功，但保存失败', errMsg(res.error)); return; }
-    if (isNew) awardRecordExp();
     toast('校准完成', `${n.toLocaleString('zh-CN')} 步 · 以后每天自动算准`);
     afterStepsSaved();
   } catch (e) { toast('校准失败，请重试'); }
@@ -4596,8 +4574,7 @@ async function renderProfile() {
   const uid = (currentUser && (currentUser.id || currentUser.sub)) || '';
   let counts = { expense:'-', diary:'-', life:'-', sport:'-', health:'-', steps:'-' };
   try {
-    const [, e, d, l, s, h, st] = await Promise.all([
-      ensurePet(),
+    const [e, d, l, s, h, st] = await Promise.all([
       cloud.database.from('expense').select('id').limit(5000),
       cloud.database.from('diary').select('id').limit(5000),
       cloud.database.from('life').select('id').limit(5000),
@@ -4613,7 +4590,7 @@ async function renderProfile() {
 
   const nick = getNick();
   const extra = LS.get('cats', []);
-  const themeId = LS.get('theme', 'aurora');
+  const themeId = LS.get('theme', 'ink');
   const themeName = (THEMES.find(t => t.id === themeId) || THEMES[0]).name;
 
   v.innerHTML = `
@@ -4638,14 +4615,11 @@ async function renderProfile() {
       </div>
     </div>
 
-    <div class="sec">我的伙伴</div>
-    ${petCardHTML()}
-
     <div class="sec">外观与个性化</div>
     <div class="me-list">
       <div class="me-item" id="mi-avatar">
         <div class="me-ico" style="color:var(--pink)">${ICONS.user}</div>
-        <div class="me-txt"><div class="t">我的头像</div><div class="s">${avatarVal === 'upload' ? '自己上传的图片 · 存在云端' : avatarVal.indexOf('skin:') === 0 ? '伙伴立绘 · ' + escapeHtml((PET_SKINS.find(s => s.id === avatarVal.slice(5)) || {}).name || '') : '默认 · 用邮箱首字母'}</div></div>
+        <div class="me-txt"><div class="t">我的头像</div><div class="s">${avatarVal === 'upload' ? '自己上传的图片 · 存在云端' : '默认 · 用邮箱首字母'}</div></div>
         <div class="me-arrow">›</div>
       </div>
       <div class="me-item" id="mi-nick">
@@ -4663,7 +4637,16 @@ async function renderProfile() {
     <div class="sec">主题色 · ${escapeHtml(themeName)}</div>
     <div class="card">
       <div class="theme-grid">
-        ${THEMES.map(t => `<button class="theme-dot ${themeId === t.id ? 'on' : ''}" data-theme-id="${t.id}" aria-label="${t.name}" title="${t.name}" style="background:${t.c}"></button>`).join('')}
+        ${THEMES.map(t => `<button class="theme-dot ${themeId === t.id ? 'on' : ''}" data-theme-id="${t.id}" aria-label="${t.name}" title="${t.name}" style="background:linear-gradient(180deg,${t.c1} 0 50%,${t.c2} 50% 100%)"></button>`).join('')}
+      </div>
+    </div>
+
+    <div class="sec">背景</div>
+    <div class="me-list">
+      <div class="me-item" id="mi-bg">
+        <div class="me-ico" style="color:var(--star-a)">${ICONS.image}</div>
+        <div class="me-txt"><div class="t">粒子与底图</div><div class="s">${bgPhotoURL ? '已设自定义底图' : '无底图'} · 粒子${escapeHtml((BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2]).name)}</div></div>
+        <div class="me-arrow">›</div>
       </div>
     </div>
 
@@ -4723,7 +4706,7 @@ async function renderProfile() {
       </div>
       <div class="me-item">
         <div class="me-ico" style="color:var(--text-3)">${ICONS.info}</div>
-        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.6${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
+        <div class="me-txt"><div class="t">版本</div><div class="s">生活手账 v2.8${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
       </div>
     </div>
     `;
@@ -4733,13 +4716,12 @@ async function renderProfile() {
   if (miWeekly) miWeekly.onclick = () => { weeklyDataAt = 0; switchTab('weekly'); };
   const miMonthly = $('#mi-monthly');
   if (miMonthly) miMonthly.onclick = () => { monthlyDataAt = 0; monthlyDiaryAll = false; switchTab('monthly'); };
-  const pcMe = $('#pet-card');
-  if (pcMe) bindPetCard();
   $('#me-avatar').onclick = openAvatarPicker;
   $('#mi-avatar').onclick = openAvatarPicker;
   $('#mi-sync').onclick = openStepSync;
   $('#mi-nick').onclick = openNick;
   $('#mi-cats').onclick = openCats;
+  $('#mi-bg').onclick = openBgSettings;
   $('#mi-export').onclick = exportData;
   $('#mi-import').onclick = openImport;
   $$('.theme-dot').forEach(b => b.onclick = () => {
@@ -4805,7 +4787,8 @@ async function exportData() {
   const btn = $('#mi-export');
   if (btn) btn.style.opacity = '.5';
   try {
-    const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps', 'checkin', 'pet'];
+    // v2.7：checkin / pet 两张表随宠物一起下线，不再读写，也不再进备份
+    const tables = ['expense', 'diary', 'life', 'sport', 'health', 'steps', 'water', 'mood'];
     const out = { app: '生活手账', exported_at: new Date().toISOString(), account: (currentUser && currentUser.email) || '', counts: {}, data: {} };
     for (const t of tables) {
       const { data, error } = await cloud.database.from(t).select('*').order('record_date', { ascending: false }).limit(LIMIT_ALL);
