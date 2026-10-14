@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 用系统 Material 主题，不引 AppCompat，省掉整套 androidx 依赖 -->
+    <!-- 三处底色必须跟 index.html 的 bg 令牌（#0C0B0A）保持一致，否则从桌面点图标
+         到页面绘好之间会闪一下旧冷调蓝。statusBar / navigationBar 同理。
+         注意：XML 注释里不能出现连续两个减号，所以这里不能直接写 CSS 变量名。 -->
     <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">#0B0D13</item>
-        <item name="android:statusBarColor">#0B0D13</item>
-        <item name="android:navigationBarColor">#0B0D13</item>
+        <item name="android:windowBackground">#0C0B0A</item>
+        <item name="android:statusBarColor">#0C0B0A</item>
+        <item name="android:navigationBarColor">#0C0B0A</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
