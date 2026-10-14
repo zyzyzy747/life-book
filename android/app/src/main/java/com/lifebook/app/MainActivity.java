@@ -62,8 +62,13 @@ public class MainActivity extends Activity {
         return "https://" + HOST + "/?app=1&d=" + day;
     }
 
-    /** 和页面一致的深色底，避免加载时白闪。 */
-    private static final int BG = 0xFF0B0D13;
+    /**
+     * 和页面一致的加载底色，避免白闪。
+     * ⚠ 必须跟 index.html 的 --bg 一起改：v2.8 之前这里是冷调 0x0B0D13，
+     *    页面换成暖调近黑之后，启动那一瞬会闪出一下蓝底，跟整体配色打架。
+     *    暖调近黑而不是纯黑：OLED 上纯黑的边缘会发绿。
+     */
+    private static final int BG = 0xFF0C0B0A;
 
     private static final int REQ_ACTIVITY = 1001;
     private static final int REQ_FILE = 1002;
@@ -204,13 +209,13 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("连不上服务器");
-        title.setTextColor(0xFFE8EAF2);
+        title.setTextColor(0xFFF5F0E8);
         title.setTextSize(17f);
         title.setGravity(Gravity.CENTER);
 
         TextView sub = new TextView(this);
         sub.setText("检查一下网络，再点下面重试");
-        sub.setTextColor(0xFF8A90A6);
+        sub.setTextColor(0xFF9A9186);
         sub.setTextSize(12.5f);
         sub.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams subLp = new LinearLayout.LayoutParams(
