@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 应用图标底色，和页面主题紫一致 -->
-    <color name="ic_launcher_background">#7C5CFF</color>
+    <!-- 这个色值不再用于自适应图标（背景改走 drawable/ic_launcher_bg.xml 的暖黑渐变），
+         保留它只为不让 @color/ic_launcher_background 这个引用名断掉。
+         v2.8 之前它是旧主题的紫蓝，千万别再改回去。 -->
+    <color name="ic_launcher_background">#0C0B0A</color>
 </resources>
