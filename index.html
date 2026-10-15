@@ -140,7 +140,9 @@
   width:52px;height:52px;flex:0 0 auto;border-radius:50%;
   background:rgba(245,240,232,.06);border:1px solid var(--star-line);
   display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;
+  overflow:hidden;      /* SVG 脸自带圆底，外圈这层就不需要再圆一次 */
 }
+.st-mc-face .st-mc-svg{width:100%;height:100%;display:block}
 .st-mood-card.on .st-mc-face{background:rgba(255,159,28,.14);border-color:var(--star-a-line)}
 .st-mc-txt{flex:1;min-width:0}
 .st-mc-t{display:block;font-size:14px;color:var(--star-text);line-height:1.3}
@@ -148,6 +150,32 @@
    不写 display:block 会挤在同一行，"今天记为 😊点这里挑一个" 连成一坨。 */
 .st-mc-s{display:block;font-size:11.5px;color:var(--star-text-3);margin-top:3px}
 .st-mc-go{font-size:18px;color:var(--star-text-3);flex:0 0 auto}
+
+/* 心情弹窗：三列网格，大表情 + 中文标签。
+   13 个表情在 390 宽里放三列 ⇒ 每格 ~110px，emoji 给到 30px 才不至于看不清。
+   触摸目标由 .mp-opt 整体撑到 ≥88px，远超 44px 下限。 */
+.mp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 16px}
+.mp-opt{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  padding:11px 4px 9px;min-height:96px;border-radius:var(--star-r-md);
+  background:rgba(245,240,232,.045);border:1px solid transparent;
+  transition:transform .14s var(--star-ease),background .18s,border-color .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mp-opt:active{transform:scale(.94)}
+.mp-opt.on{background:rgba(255,159,28,.15);border-color:rgba(255,159,28,.45)}
+/* SVG 脸：撑满整格。原来 .mp-f 是 30px 的 emoji，现在换 SVG，尺寸跟着格走 */
+.mp-face{display:block;line-height:0}
+.mp-svg{width:46px;height:46px;display:block}
+.mp-l{font-size:11.5px;color:var(--star-text-2);line-height:1.2;text-align:center;margin-top:2px}
+.mp-opt.on .mp-l{color:var(--star-a)}
+.mp-hint{font-size:12px;color:var(--star-text-3);text-align:center;margin:0 0 12px}
+/* 图例：告诉用户颜色是按情绪分的，不然「为什么蓝色代表难过」没人知道 */
+.mp-legend{display:flex;justify-content:center;gap:12px;margin:2px 0 16px;flex-wrap:wrap}
+.mp-lg{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--star-text-3)}
+.mp-lg i{width:9px;height:9px;border-radius:50%;display:block}
+/* 未选时确定按钮置灰 —— 截图里就是禁用的，用户得先选一个 */
+#mp-ok.is-off,.btn.is-off{opacity:.34;pointer-events:none}
 
 /* 今日速记：发丝线行，不是卡片 */
 .st-quick{display:flex;align-items:stretch}
@@ -189,8 +217,13 @@
 /* 用户自定义底图：铺满 + 压暗，保证文字可读 */
 #bg-photo{
   position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-position:center;background-size:cover;background-repeat:no-repeat;
+  background-position:var(--bg-pos,50% 50%);background-size:cover;background-repeat:no-repeat;
   opacity:0;transition:opacity .5s ease;
+  /*⛔ 模糊要放大再向左上挪 —— 否则 blur 会把边缘也吃进来，露出底色一圈。
+     scale 的倍数要跟着 --bg-blur 走：blur 8px 时放大 1.06 就够盖住边缘。 */
+  filter:blur(calc(var(--bg-blur,0) * 1px));
+  transform:scale(calc(1 + var(--bg-blur,0) * 0.011));
+  will-change:filter;
 }
 body.has-bg #bg-photo{opacity:var(--bg-dim,.42)}
 /* 底图上再压一层暖调渐变，避免自定义图片把琥珀强调色衬得发灰 */
@@ -199,7 +232,13 @@ body.has-bg #bg-photo{opacity:var(--bg-dim,.42)}
   background:linear-gradient(180deg,rgba(12,11,10,.30),rgba(12,11,10,.72));
   transition:opacity .5s ease;
 }
-body.has-bg #bg-veil{opacity:1}
+body.has-bg #bg-veil{
+  /* ⛔ 顶/底两层都要够厚：只有 42% 压暗时，亮色底图（白天拍的照）会让
+     文字区对比度掉下来，标题被底图吃掉（截图里"先天下之忧"那行就糊了）。
+     这里给到 .40→.86，比原来更沉。 */
+  opacity:1;
+  background:linear-gradient(180deg,rgba(12,11,10,.40),rgba(12,11,10,.86));
+}
 
 /* 颗粒：给纯色底一点纸感，避免大面积近黑显得「塑料」 */
 #bg-grain{
@@ -214,7 +253,11 @@ body.has-bg #bg-veil{opacity:1}
    --dx 是每颗粒子各自的横向振幅（JS 随机给），两端取正负号 = 从一侧漂到另一侧再回来。 */
 #bg-dots{position:fixed;inset:0;z-index:0;pointer-events:none}
 #bg-dots i{
-  position:absolute;border-radius:50%;background:var(--star-a);
+  /*⛔ 粒子颜色不再写死 var(--star-a)（永远是琥珀，六套主题下长得一模一样）。
+     改读 --bg-dot：JS 按「主题色 × 时间色温」算出来写进 :root。*/
+  position:absolute;border-radius:50%;background:var(--bg-dot, #FF9F1C);
+  /* 每颗粒子 hue 偏移 ±14°，全部同一个颜色会像「一层噪点」而不是「一群星」 */
+  filter:hue-rotate(var(--dh,0deg));
   animation-name:bd;animation-timing-function:ease-in-out;animation-iteration-count:infinite;
   will-change:transform,opacity;
 }
@@ -248,6 +291,46 @@ body.no-motion #bg-dots i{animation:none;opacity:.34}
   background:var(--star-a);color:#151009;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
 .bg-pick span{position:absolute;left:0;right:0;bottom:0;padding:3px 0 4px;text-align:center;font-size:10px;
   background:rgba(12,11,10,.72);color:var(--text-2)}
+/* v3.0：删除角标。⛔ 不能用 .bg-pick span 承载（那条规则是给「再加一张」的字加底衬的），
+   各自独立类名，别复用。 */
+.bg-pick-del{
+  position:absolute;right:2px;top:2px;width:20px;height:20px;border-radius:50%;border:0;z-index:2;
+  background:rgba(12,11,10,.78);color:#fff;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-pick-del:active{background:var(--out)}
+.bg-pick.add{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border-style:dashed;cursor:pointer;background:rgba(245,240,232,.04);
+}
+.bg-pick.add span{position:static;background:none;color:var(--star-a);font-size:20px;padding:0;line-height:1}
+.bg-pick.add small{font-size:9.5px;color:var(--star-text-3)}
+
+/* 开关行：整行可点，label 包 input + 视觉滑块 + 文案。
+   ⛔ input 用 appearance:none + opacity:0 藏起来，**不能 display:none** ——
+      display:none 的表单控件在部分 WebView 里点label 不触发。 */
+.bg-sw{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;margin-bottom:8px;cursor:pointer;
+  border-radius:var(--star-r-md);background:rgba(245,240,232,.04);border:1px solid var(--star-line);
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-sw input{position:absolute;opacity:0;width:1px;height:1px}
+.bg-sw-b{
+  flex:0 0 auto;width:38px;height:22px;border-radius:99px;position:relative;
+  background:rgba(245,240,232,.14);transition:background .2s;
+}
+.bg-sw-b::after{
+  content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;
+  background:#F5F0E8;transition:transform .2s var(--star-ease);
+}
+.bg-sw.on{background:rgba(255,159,28,.1);border-color:var(--star-a-line)}
+/* ⛔ 开启态的滑块要足够「实」：底色用纯琥珀 + 滑块用深色，
+   否则在深色底上「开」和「关」几乎看不出区别（截图里就是这个毛病）。 */
+.bg-sw.on .bg-sw-b{background:#FF9F1C}
+.bg-sw.on .bg-sw-b::after{transform:translateX(16px);background:#151009}
+.bg-sw-t{font-size:13px;color:var(--star-text);line-height:1.35}
+.bg-sw-t em{display:block;font-style:normal;font-size:11px;color:var(--star-text-3);margin-top:2px}
 
 /* ===== 个性化设置控件 ===== */
 .theme-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
@@ -460,9 +543,10 @@ body.on-login #bg-grain{opacity:.75}
 .muted{color:var(--text-3)}
 .dim{color:var(--text-2)}
 .tag{display:inline-block;padding:3px 9px;background:rgba(245,240,232,.07);border-radius:8px;font-size:11px;color:var(--text-2);margin:0 5px 5px 0}
-.mood{font-size:19px;margin-right:6px}
+.mood{font-size:19px;margin-right:6px;display:inline-flex;align-items:baseline;gap:5px}
 /*空值时不留位 —— 心情现在默认来自星环区，没记的日记不该在日期左边空一截*/
 .mood:empty{display:none}
+.mood em{font-style:normal;font-size:12px;color:var(--text-2)}
 .chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
 
 /* ===== Hero (今日) =====
@@ -735,14 +819,7 @@ mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
 .sy-steps li{margin-bottom:4px}
 .sy-steps b{color:var(--text)}
 .sy-steps code{background:rgba(127,127,127,.16);padding:1px 5px;border-radius:5px;font-size:11.5px;word-break:break-all}
-/* 步数同步说明页 */
-.sy-t{display:block;font-size:13px;font-weight:700;color:var(--text);margin:17px 0 7px}
-.sy-t em{font-style:normal;display:inline-flex;width:19px;height:19px;border-radius:50%;background:var(--grad);color:#fff;font-size:11.5px;align-items:center;justify-content:center;margin-right:7px;vertical-align:2px}
-.sy-p{font-size:12.5px;line-height:1.85;color:var(--text-2);margin:0 0 5px}
-.sy-p b{color:var(--text)}
-.sy-p .k{background:rgba(127,127,127,.16);padding:1px 6px;border-radius:5px;font-size:11.5px;color:var(--text)}
-.sy-p a{color:var(--brand-2);font-weight:700;text-decoration:none}
-.sy-url{font-size:11.5px;word-break:break-all}
+/* v3.0：步数同步说明页删了，sy-* 那组样式随之成为孤儿 CSS，一并清掉。 */
 .me-email{font-size:16px;font-weight:600;word-break:break-all}
 .me-meta{font-size:12px;color:var(--text-3);margin-top:5px}
 .me-list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
@@ -1161,12 +1238,17 @@ const LS = {
    ⚠ 这两个值必须和 <style> 里 [data-theme=...] 声明的完全一致，
    改一处就要改两处 —— 色板圆点画的就是这两块底色本身。 */
 const THEMES = [
-  { id:'ink',  name:'墨黑', c1:'#0C0B0A', c2:'#15120E' },
-  { id:'dawn', name:'晨褐', c1:'#100C09', c2:'#1B1511' },
-  { id:'dusk', name:'夜紫', c1:'#0D0B10', c2:'#17141C' },
-  { id:'sea',  name:'深青', c1:'#090D0F', c2:'#121A1D' },
-  { id:'clay', name:'陶土', c1:'#110D0A', c2:'#1C1712' },
-  { id:'moss', name:'苔绿', c1:'#0A0D0A', c2:'#131712' }
+  /* `dot` = 粒子气质偏色（RGB 三通道加减量，作用在琥珀 #FF9F1C 上）。
+     v3.0 新增：背景设置里「粒子跟着主题走」开关打开后用它。
+     ⚠ 这些是**肉眼调过的数值**，不是公式算的 —— 六套主题底色全是深色，
+        按亮度做不出差别（实测前后完全同色），只能按「这套主题该有的气质」硬偏。
+        改主题配色时顺手看一眼这几行，不合适就调。 */
+  { id:'ink',  name:'墨黑', c1:'#0C0B0A', c2:'#15120E', dot:[  0,   0,   0] },  // 中性
+  { id:'dawn',  name:'晨褐', c1:'#100C09', c2:'#1B1511', dot:[  6,   0, -10] },  // 暖 ⇒ 红加蓝减
+  { id:'dusk', name:'夜紫', c1:'#0D0B10', c2:'#17141C', dot:[ -4, -10,  26] },  // 紫 ⇒ 蓝大力加
+  { id:'sea',  name:'深青', c1:'#090D0F', c2:'#121A1D', dot:[-10,  -2,  20] },  // 青 ⇒ 蓝加绿微减
+  { id:'clay', name:'陶土', c1:'#110D0A', c2:'#1C1712', dot:[ 12,  -6, -12] },  // 土 ⇒ 红加绿蓝减
+  { id:'moss', name:'苔绿', c1:'#0A0D0A', c2:'#131712', dot:[-16,  14,  -4] }   // 绿 ⇒ 绿加红减
 ];
 
 function applyTheme(id) {
@@ -1179,6 +1261,11 @@ function applyTheme(id) {
   const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta && bg) meta.setAttribute('content', bg);
+  // v3.0：粒子开了「跟着主题走」之后，切主题必须重算粒子色，
+  // 否则用户切完主题发现粒子没变 ⇒ 开关等于假的。
+  // ⚠ 用 setTimeout(0)：dataset.theme 刚改，上面的 --bg 是新值，
+  //    但 bgApplyDotColor 内部要再读一次 computed style，等样式表落地更稳。
+  try { if (typeof bgApplyDotColor === 'function') setTimeout(bgApplyDotColor, 0); } catch (e) {}
 }
 
 /* ================= 背景系统 =================
@@ -1198,26 +1285,124 @@ const BG_LEVELS = [
   { id:3, name:'丰富', n:38, a:.66 }
 ];
 
-// 用户底图：存的是 dataURL（压到 720 宽的 webp，一般 30~80 KB）。
-// localStorage 单键上限 ~5 MB，一张压过的图远够用，不用上云存储 ——
-// 底图是「装饰」不是「数据」，丢了重设一次就行，不值得为它加一张表。
-let bgPhotoURL = '';
+/* ---- 底图：v3.0 起支持多张 ----
+   ⛔ 容量账：localStorage 单域~5 MB，base64 比原图膨胀 33%。
+      单张压到 560 宽 webp 约 40~70 KB ⇒ **最多存 4 张**，超了给用户明确提示。
+      别改成 5 MB 上限，用户真存满了会变成 QuotaExceededError 且没有解释。*/
+const BG_MAX_PHOTOS = 4;
+const BG_PHOTO_W    = 560;      // 多图时比单图的 720 再压一点
+
+// 底图：存 dataURL 数组（v3.0 前是单字符串）。旧的单张值自动迁移成数组。
+let bgPhotos = [];
+let bgPhotoIdx = 0;             // 当前显示第几张
 let bgLevel = 2;
+let bgBlur = 0;
+
+/* 粒子颜色：主题色 × 时间色温。
+   ⛔ 第 3 项（跟主题）和第 5 项（跟时间）是**两个独立开关**，不冲突：
+      色相取自主题（第 3 项开时），明度和冷暖由时间微调（第 5 项开时）。
+      两个都关就退回固定琥珀。 */
+let bgDotFollowTheme = false;
+let bgDotFollowTime  = false;
+
+/* 时间 → 色温修正。深夜偏冷偏蓝、午后偏暖偏亮。
+   ⚠ 只改 HSL 的 S/L 和一点点 H偏移，**不改主色相** —— 主色相是主题给的，
+      时间只是「在它基础上调一调」，不然两套逻辑会打架。 */
+function bgTimeTune() {
+  /*⛔ 开关关闭时必须返回 l=1（不是 0）。l=0 会被当成「乘 0」把颜色全压成黑，
+     实测过：`--bg-dot` 直接变成 `#000000` 那种畸形值。三个字段都是「乘数」，
+     关掉 = 乘 1（等于不干预），不是乘 0。*/
+  if (!bgDotFollowTime) return { h:0, s:1, l:1 };
+  const hr = new Date().getHours();
+  // 0~5 深夜：偏冷、压暗；6~11 早晨：偏暖、提亮；12~17 午后：最亮最暖；18~23 夜晚：回落
+  let sMul = 1, lMul = 1, hShift = 0;
+  if (hr < 6)       { sMul = 0.82; lMul = 0.72; hShift = -14; }
+  else if (hr < 11) { sMul = 1.05; lMul = 1.10; hShift = +8;  }
+  else if (hr < 18) { sMul = 1.10; lMul = 1.18; hShift = +14; }
+  else              { sMul = 0.92; lMul = 0.84; hShift = -8;  }
+  return { s:sMul, l:lMul, h:hShift };
+}
+
+/* 算粒子主色并写进 CSS 变量。
+   ⚠ 主题强调色一律是琥珀（v2.7 起不变量），所以第 3 项实际不会改变色相，
+      真正有观感差别的是**饱和度和亮度**跟主题底色走（浅色主题下粒子压暗一档）。 */
+/* 降饱和度：把 RGB 往它的灰度值那边拉。t.s<1 变灰（深夜），
+   t.s>1 变艳（白天）。⛔ 不用 `hsl(from …)` 相对色语法 ——
+   部分 Android WebView 不认，认不出来的粒子会直接失去颜色变透明。 */
+function desaturate(r, g, b, s) {
+  const l = r * 0.299 + g * 0.587 + b * 0.114;
+  const f = (x) => Math.max(0, Math.min(255, l + (x - l) * s));
+  return [f(r), f(g), f(b)];
+}
+
+function bgApplyDotColor() {
+  const base = getComputedStyle(document.documentElement).getPropertyValue('--brand').trim() || '#FF9F1C';
+  const t = bgTimeTune();
+  let r = 255, g = 159, b = 28;                    // #FF9F1C
+  const m = base.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i);
+  if (m) { r = parseInt(m[1],16); g = parseInt(m[2],16); b = parseInt(m[3],16); }
+  // 第 3 项：跟主题底色走
+  // ⛔ **不要按亮度算** —— 六套主题底色全是深色（#0C0B0A ~ #131712），亮度差不到 20，
+  //    k 永远等于 1，开关等于假的（实测主题色前后一模一样）。
+  //    ⇒ 直接给每套主题一个「粒子气质」偏色：按底色该有的气质往那边挪一点。
+  //       墨黑=中性(0,0,0)、苔绿偏绿、深青偏蓝、夜紫偏紫。
+  //       数值是**肉眼验过的偏移量**，不是公式推出来的，好调也好验证。
+  if (bgDotFollowTheme) {
+    const T = (typeof THEMES !== 'undefined' ? THEMES : []).find(t => t.id === document.documentElement.dataset.theme);
+    const q = (T && T.dot) || null;
+    if (q) {
+      r = Math.max(0, Math.min(255, r + q[0]));
+      g = Math.max(0, Math.min(255, g + q[1]));
+      b = Math.max(0, Math.min(255, b + q[2]));
+    }
+  }
+  // 第 5 项：时间色温（s 走饱和度、l 走亮度、h 走一点色相偏移）
+  if (t.s !== 1) { const d = desaturate(r, g, b, t.s); r = d[0]; g = d[1]; b = d[2]; }
+  r = Math.min(255, r * t.l);
+  g = Math.min(255, g * (t.l * 0.98 + (t.h > 0 ? 0.02 : -0.02)));
+  b = Math.min(255, b * (t.l * 0.92 + (t.h > 0 ? 0.08 : -0.04)));
+  const hex = (x) => Math.round(x).toString(16).padStart(2,'0');
+  const col = `#${hex(r)}${hex(g)}${hex(b)}`;
+  document.documentElement.style.setProperty('--bg-dot', col);
+  return { base, tune: t, col };
+}
 
 function bgInit() {
   bgLevel = Number(LS.get('bgLevel', 2));
   if (!BG_LEVELS.some(l => l.id === bgLevel)) bgLevel = 2;
-  bgPhotoURL = LS.get('bgPhoto', '') || '';
-  if (bgPhotoURL) {
-    const el = $('#bg-photo');
-    if (el) el.style.backgroundImage = `url("${bgPhotoURL}")`;
-    document.body.classList.add('has-bg');
+  // ⛔ v3.0 迁移：v2.x 存的是单个 dataURL 字符串，v3.0 存数组。
+  //    老用户不清掉的话会一直走「单张」分支，新功能对他们无效。
+  const raw = LS.get('bgPhotos', null);
+  if (Array.isArray(raw)) bgPhotos = raw.filter(Boolean).slice(0, BG_MAX_PHOTOS);
+  else {
+    const old = LS.get('bgPhoto', '') || '';
+    bgPhotos = old ? [old] : [];
   }
-  const dim = Number(LS.get('bgDim', 42));
-  document.documentElement.style.setProperty('--bg-dim', (dim / 100).toFixed(2));
+  bgPhotoIdx = Math.min(Number(LS.get('bgPhotoIdx', 0)) || 0, Math.max(0, bgPhotos.length - 1));
+  bgBlur = Math.max(0, Math.min(20, Number(LS.get('bgBlur', 0)) || 0));
+  bgDotFollowTheme = !!LS.get('bgDotFollowTheme', false);
+  bgDotFollowTime  = !!LS.get('bgDotFollowTime', false);
+  bgPaint();
   // 系统开了「减少动效」就只画静态点，不给动画
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   bgBuildDots(reduce);
+}
+
+/* 把当前设置刷到 DOM（底图 / 索引 / 模糊 / 粒子色）。
+   v3.0 原来这些散在 bgInit / bgSetPhoto / bgSetDim 里各写一遍，
+   新增「切第几张」「改模糊」之后必然漏刷某一项 ⇒ 收口成一个函数。 */
+function bgPaint() {
+  const cur = bgPhotos[bgPhotoIdx] || '';
+  const el = $('#bg-photo');
+  if (el) el.style.backgroundImage = cur ? `url("${cur}")` : '';
+  document.body.classList.toggle('has-bg', !!cur);
+  const root = document.documentElement;
+  root.style.setProperty('--bg-blur', bgBlur);
+  const dim = Number(LS.get('bgDim', 42));
+  root.style.setProperty('--bg-dim', (dim / 100).toFixed(2));
+  const pos = LS.get('bgPos', '50% 50%');
+  root.style.setProperty('--bg-pos', pos);
+  bgApplyDotColor();
 }
 
 function bgBuildDots(reduce) {
@@ -1240,8 +1425,10 @@ function bgBuildDots(reduce) {
     // 负 delay：让粒子在「过去某一刻」就出发，进页面即是稳定状态，不会集体闪一下
     const neg = (-(r3 * dur)).toFixed(2);
     const op = (lv.a * (0.5 + r4 * 0.5)).toFixed(3);
+    // 每颗 hue 偏移 ±14°：全同色会像「一层噪点」，有一点点色差才像「一群星」
+    const dh = ((r5 - 0.5) * 28).toFixed(1);
     html += `<i style="left:${left}%;top:${top}%;width:${size}px;height:${size}px;`
-         +  `opacity:${op};--dx:${dx}px;animation-duration:${dur}s;animation-delay:${neg}s"></i>`;
+         +  `opacity:${op};--dx:${dx}px;--dh:${dh}deg;animation-duration:${dur}s;animation-delay:${neg}s"></i>`;
   }
   host.innerHTML = html;
   document.body.classList.toggle('no-motion', !!reduce);
@@ -1267,8 +1454,9 @@ function bgSetLevel(v) {
 /* 上传自定义底图：压到 720 宽的 webp。
    ⛔ 必须压：不压的话一张手机照片 4~6 MB，dataURL 再 base64 膨胀 33%，
    localStorage 直接写爆（QuotaExceededError），而且首屏解析这张图要几百毫秒。 */
-async function bgPickFile(file) {
+async function bgPickFile(file, maxW) {
   if (!file) return '';
+  const W = maxW || 720;
   const bmp = await createImageBitmap(file).catch(async () => {
     // 老 WebView 没有 createImageBitmap，退回 <img> 解码
     const url = URL.createObjectURL(file);
@@ -1279,7 +1467,6 @@ async function bgPickFile(file) {
       return img;
     } finally { setTimeout(() => URL.revokeObjectURL(url), 3000); }
   });
-  const W = 720;
   const scale = Math.min(1, W / (bmp.width || W));
   const w = Math.round((bmp.width || W) * scale), h = Math.round((bmp.height || W) * scale);
   const cv = document.createElement('canvas');
@@ -1298,11 +1485,73 @@ async function bgPickFile(file) {
 }
 
 async function bgSetPhoto(dataURL) {
-  bgPhotoURL = dataURL || '';
-  LS.set('bgPhoto', bgPhotoURL);
-  const el = $('#bg-photo');
-  if (el) el.style.backgroundImage = bgPhotoURL ? `url("${bgPhotoURL}")` : '';
-  document.body.classList.toggle('has-bg', !!bgPhotoURL);
+  /* v3.0：单张接口保留（内部转成「替换当前张」），设置面板的新逻辑走
+     bgAddPhoto / bgPickPhoto / bgDelPhoto。留这个是为了头像等旧调用点不用改。 */
+  if (!dataURL) { bgPhotos = []; bgPhotoIdx = 0; LS.set('bgPhotos', []); LS.set('bgPhoto',''); }
+  else { bgPhotos = [dataURL]; bgPhotoIdx = 0; LS.set('bgPhotos', bgPhotos); }
+  bgPaint();
+}
+
+/* 加一张底图（追加，不替换）。
+   ⛔ 存之前先估体积：4 张 × ~70 KB ≈ 280 KB，离 5 MB 还远，
+      但用户若连续加而我们没拦，会在第 5 张直接 QuotaExceededError 且没有解释。
+      ⇒ 硬上限 BG_MAX_PHOTOS，超了明确告诉用户。 */
+async function bgAddPhoto(dataURL) {
+  if (bgPhotos.length >= BG_MAX_PHOTOS) {
+    toastErr(`最多 ${BG_MAX_PHOTOS} 张`, '先删掉一张再加 —— 手机浏览器存不了更多底图');
+    return false;
+  }
+  // 先试着写一次，真爆了当场退回，别等用户切页面才发现底图全没了
+  try {
+    const next = bgPhotos.concat([dataURL]);
+    LS.set('bgPhotos', next);
+    bgPhotos = next;
+    bgPhotoIdx = bgPhotos.length - 1;      // 新加的直接切过去看效果
+    LS.set('bgPhotoIdx', bgPhotoIdx);
+    bgPaint();
+    return true;
+  } catch (e) {
+    toastErr('存储空间不够', '删掉一张底图再试');
+    return false;
+  }
+}
+
+function bgDelPhoto(i) {
+  if (i < 0 || i >= bgPhotos.length) return;
+  bgPhotos.splice(i, 1);
+  if (bgPhotoIdx >= bgPhotos.length) bgPhotoIdx = Math.max(0, bgPhotos.length - 1);
+  LS.set('bgPhotos', bgPhotos);
+  LS.set('bgPhotoIdx', bgPhotoIdx);
+  LS.set('bgPhoto', bgPhotos[bgPhotoIdx] || '');   // 兼容旧读法
+  bgPaint();
+}
+
+function bgSetIdx(i) {
+  if (i < 0 || i >= bgPhotos.length) return;
+  bgPhotoIdx = i;
+  LS.set('bgPhotoIdx', i);
+  bgPaint();
+}
+
+function bgSetBlur(px) {
+  const v = Math.max(0, Math.min(20, Number(px) || 0));
+  bgBlur = v;
+  LS.set('bgBlur', v);
+  document.documentElement.style.setProperty('--bg-blur', v);
+}
+
+/* 底图定位：上下左右各挪一点。存百分比。
+   ⛔ 为什么需要：图压成 560 宽后要 cover 铺满手机屏，构图必然被裁掉一截，
+      主体很容易正好被裁没。 */
+function bgNudge(dxPct, dyPct) {
+  const cur = String(LS.get('bgPos', '50% 50%')).split(/\s+/);
+  let x = parseFloat(cur[0]) || 50, y = parseFloat(cur[1]) || 50;
+  x = Math.max(0, Math.min(100, x + dxPct));
+  y = Math.max(0, Math.min(100, y + dyPct));
+  const v = `${x.toFixed(0)}% ${y.toFixed(0)}%`;
+  LS.set('bgPos', v);
+  document.documentElement.style.setProperty('--bg-pos', v);
+  return v;
 }
 
 function bgSetDim(pct) {
@@ -1311,59 +1560,141 @@ function bgSetDim(pct) {
   document.documentElement.style.setProperty('--bg-dim', (v / 100).toFixed(2));
 }
 
-/* 打开背景设置面板 */
+/* 打开背景设置面板（v3.0：多张底图 + 模糊 + 定位 + 粒子颜色两项开关） */
 function openBgSettings() {
   const lv = BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2];
+  const cur = bgPhotos[bgPhotoIdx] || '';
+  const has = bgPhotos.length > 0;
+  const dimV = Number(LS.get('bgDim', 42));
+  const blurV = bgBlur;
   openModal(`
     <div class="st-sec" style="margin-top:2px"><span class="st-sec-i">BG</span><span class="st-sec-t">背景</span><span class="st-rule" style="flex:1"></span></div>
     <div class="cat-edit" style="gap:6px">
       ${BG_LEVELS.map(l => `<button class="cat-x" data-lv="${l.id}" style="${l.id === lv.id
         ? 'background:rgba(255,159,28,.16);border:1px solid rgba(255,159,28,.4);color:#FF9F1C' : ''}">${l.name}</button>`).join('')}
     </div>
-    <div class="note" style="margin:2px 0 14px">粒子只做缓慢漂移，不占用处理器运算；系统开了「减少动效」时会自动静止。</div>
+    <div class="note" style="margin:2px 0 12px">粒子只做缓慢漂移，不占用处理器运算；系统开了「减少动效」时会自动静止。</div>
 
-    <div class="st-sec"><span class="st-sec-i">IMG</span><span class="st-sec-t">自定义底图</span><span class="st-rule" style="flex:1"></span></div>
-    <div class="bg-prev ${bgPhotoURL ? 'set' : ''}" ${bgPhotoURL ? `style="background-image:url(&quot;${bgPhotoURL}&quot;)"` : ''}>${bgPhotoURL ? '已设置 · 点击下方可更换或清除' : '还没有设置'}</div>
+    <div class="st-sec"><span class="st-sec-i">DOT</span><span class="st-sec-t">粒子颜色</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11px;color:var(--star-text-3)" id="bg-dot-now"></span></div>
+    <!-- ⛔ 开态的 class 必须是两个 class（bg-sw + on）。
+         ⛔⛔ 这段注释里**绝不能出现反引号** —— 它写在 openModal 的模板字符串内部，
+         一个反引号就提前闭合模板，node --check 直接报 missing ) after argument list。
+         写成 style="on" 是把 on 塞进内联 style，CSS 规则 .bg-sw.on 匹配不到
+         ⇒ 开关逻辑生效但视觉永远是「关」（实测踩过）。 -->
+    <label class="bg-sw${bgDotFollowTheme ? ' on' : ''}">
+      <input type="checkbox" id="bg-dot-theme" ${bgDotFollowTheme ? 'checked' : ''}>
+      <span class="bg-sw-b"></span>
+      <span class="bg-sw-t">跟着主题走<em>浅色底自动压暗粒子，免得抢文字</em></span>
+    </label>
+    <label class="bg-sw${bgDotFollowTime ? ' on' : ''}">
+      <input type="checkbox" id="bg-dot-time" ${bgDotFollowTime ? 'checked' : ''}>
+      <span class="bg-sw-b"></span>
+      <span class="bg-sw-t">跟着时间走<em>深夜偏冷偏暗，白天偏暖偏亮</em></span>
+    </label>
+
+    <div class="st-sec"><span class="st-sec-i">IMG</span><span class="st-sec-t">自定义底图</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11.5px;color:var(--star-text-3)">${bgPhotos.length}/${BG_MAX_PHOTOS}</span></div>
+    ${has ? `<div class="bg-picks" id="bg-picks">
+      ${bgPhotos.map((p, i) => `<div class="bg-pick${i === bgPhotoIdx ? ' on' : ''}" data-pi="${i}" style="background-image:url(&quot;${p}&quot;)">
+        <button class="bg-pick-del" data-del="${i}" aria-label="删除这张">×</button></div>`).join('')}
+      ${bgPhotos.length < BG_MAX_PHOTOS ? `<label class="bg-pick add" id="bg-add2" for="bg-file" role="button" tabindex="0">
+        <span>＋</span><small>再加一张</small></label>` : ''}
+    </div>` : ''}
+    <div class="bg-prev ${has ? 'set' : ''}" ${has ? `style="background-image:url(&quot;${cur}&quot;)"` : ''}>${has ? '第 ' + (bgPhotoIdx + 1) + ' 张' : '还没有设置'}</div>
     <!--⛔ label 必须写 for="bg-file"：只靠「包着 input」的隐式关联在部分 WebView
         （尤其 Android WebView 里 input 又带 pointer-events:none）点不动，
         用户会以为功能坏了。onclick 再兜一层，双保险。 -->
     <label class="st-btn st-btn-p" style="margin-top:10px;width:100%" id="bg-file-lb"
-           for="bg-file" role="button" tabindex="0">选择图片</label>
+           for="bg-file" role="button" tabindex="0">${has ? '再加一张' : '选择图片'}</label>
     <input type="file" id="bg-file" accept="image/*">
-    ${bgPhotoURL ? `<button class="btn-ghost danger" style="margin-top:8px" id="bg-clear">清除底图</button>` : ''}
+    ${has ? `<div class="st-btns" style="margin-top:8px">
+      <button class="st-btn" id="bg-prev">上一张</button>
+      <button class="st-btn" id="bg-next">下一张</button>
+    </div>
+    <button class="btn-ghost danger" style="margin-top:8px" id="bg-clear">清空全部底图</button>` : ''}
 
-    <div class="st-sec" id="bg-dim-sec"><span class="st-sec-i">DIM</span><span class="st-sec-t">底图明暗</span><span class="st-rule" style="flex:1"></span>
-      <span style="font-size:11.5px;color:var(--star-text-3)" id="bg-dim-v">${Number(LS.get('bgDim', 42))}%</span></div>
-    <input type="range" id="bg-dim" min="0" max="80" step="5" value="${Number(LS.get('bgDim', 42))}"
-      style="width:100%;height:34px;accent-color:#FF9F1C" ${bgPhotoURL ? '' : 'disabled'}>
+    <div class="st-sec" id="bg-dim-sec"><span class="st-sec-i">DIM</span><span class="st-sec-t">明暗</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11.5px;color:var(--star-text-3)" id="bg-dim-v">${dimV}%</span></div>
+    <input type="range" id="bg-dim" min="0" max="80" step="5" value="${dimV}"
+      style="width:100%;height:34px;accent-color:#FF9F1C" ${has ? '' : 'disabled'}>
+
+    <div class="st-sec"><span class="st-sec-i">BLR</span><span class="st-sec-t">模糊</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11.5px;color:var(--star-text-3)" id="bg-blur-v">${blurV}</span></div>
+    <input type="range" id="bg-blur" min="0" max="20" step="1" value="${blurV}"
+      style="width:100%;height:34px;accent-color:#FF9F1C" ${has ? '' : 'disabled'}>
+
+    <div class="st-sec"><span class="st-sec-i">POS</span><span class="st-sec-t">位置</span><span class="st-rule" style="flex:1"></span>
+      <span style="font-size:11.5px;color:var(--star-text-3)" id="bg-pos-v">${escapeHtml(LS.get('bgPos', '50% 50%'))}</span></div>
+    <div class="st-btns" style="margin-top:4px">
+      <button class="st-btn" data-nx="-8" data-ny="0">← 左</button>
+      <button class="st-btn" data-nx="8" data-ny="0">右 →</button>
+    </div>
+    <div class="st-btns" style="margin-top:6px">
+      <button class="st-btn" data-nx="0" data-ny="-8">↑ 上</button>
+      <button class="st-btn" data-nx="0" data-ny="8">↓ 下</button>
+      <button class="st-btn" data-nx="0" data-ny="0" id="bg-pos-reset">居中</button>
+    </div>
   `);
   setModalTitle('背景');
+
+  // 当前粒子色（让用户看得见开关有没有生效）
+  const dn = $('#bg-dot-now');
+  if (dn) dn.textContent = (document.documentElement.style.getPropertyValue('--bg-dot') || '#FF9F1C').trim();
+
   $$('[data-lv]').forEach(b => b.onclick = () => { bgSetLevel(b.dataset.lv); closeModal(); openBgSettings(); });
+
+  const dt = $('#bg-dot-theme');
+  if (dt) dt.onchange = () => { bgDotFollowTheme = dt.checked; LS.set('bgDotFollowTheme', bgDotFollowTheme); bgPaint();
+    dt.parentNode.classList.toggle('on', dt.checked);
+    const n2 = $('#bg-dot-now'); if (n2) n2.textContent = (document.documentElement.style.getPropertyValue('--bg-dot') || '#FF9F1C').trim(); };
+  const dti = $('#bg-dot-time');
+  if (dti) dti.onchange = () => { bgDotFollowTime = dti.checked; LS.set('bgDotFollowTime', bgDotFollowTime); bgPaint();
+    dti.parentNode.classList.toggle('on', dti.checked);
+    const n2 = $('#bg-dot-now'); if (n2) n2.textContent = (document.documentElement.style.getPropertyValue('--bg-dot') || '#FF9F1C').trim(); };
+
   const inp = $('#bg-file');
   //⛔ 兜底：label 的 for 在个别 WebView 上不触发 file 选择器（用户实测点不动），
   //   这里显式 onclick 再调一次 click()。两次都生效也无害（浏览器会忽略重复的第二次）。
   const lb = $('#bg-file-lb');
   if (lb) lb.onclick = (e) => { e.preventDefault(); inp.click(); };
+  const lb2 = $('#bg-add2');
+  if (lb2) lb2.onclick = (e) => { e.preventDefault(); inp.click(); };
   inp.onchange = async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     try {
-      const d = await bgPickFile(f);
-      await bgSetPhoto(d);
+      // 多图并存 ⇒ 压到 560 宽（原单图是 720），四张才稳在 5 MB 以内
+      const d = await bgPickFile(f, BG_PHOTO_W);
+      const ok = has ? await bgAddPhoto(d) : (await bgSetPhoto(d), true);
       closeModal();
-      openBgSettings();
-      toast('底图已更新');
+      if (ok) { openBgSettings(); toast(has ? '底图已添加' : '底图已设置'); }
     } catch (err) { toastErr('图片处理失败：' + (err && err.message ? err.message : err)); }
   };
+  $$('[data-pi]').forEach(el => el.onclick = (e) => {
+    if (e.target.closest('[data-del]')) return;
+    bgSetIdx(Number(el.dataset.pi)); closeModal(); openBgSettings();
+  });
+  $$('[data-del]').forEach(b => b.onclick = (e) => {
+    e.stopPropagation();
+    bgDelPhoto(Number(b.dataset.del)); closeModal(); openBgSettings(); toast('已删除那张');
+  });
+  const pv = $('#bg-prev'), nx = $('#bg-next');
+  if (pv) pv.onclick = () => { bgSetIdx((bgPhotoIdx - 1 + bgPhotos.length) % bgPhotos.length); closeModal(); openBgSettings(); };
+  if (nx) nx.onclick = () => { bgSetIdx((bgPhotoIdx + 1) % bgPhotos.length); closeModal(); openBgSettings(); };
   const cl = $('#bg-clear');
-  if (cl) cl.onclick = async () => { await bgSetPhoto(''); closeModal(); toast('底图已清除'); };
+  if (cl) cl.onclick = async () => { await bgSetPhoto(''); closeModal(); toast('底图已清空'); };
+
   const dim = $('#bg-dim');
-  if (dim) {
-    dim.oninput = () => {
-      $('#bg-dim-v').textContent = dim.value + '%';
-      bgSetDim(dim.value);
-    };
-  }
+  if (dim) dim.oninput = () => { $('#bg-dim-v').textContent = dim.value + '%'; bgSetDim(dim.value); };
+  const bl = $('#bg-blur');
+  if (bl) bl.oninput = () => { $('#bg-blur-v').textContent = bl.value; bgSetBlur(bl.value); };
+  $$('[data-nx]').forEach(b => b.onclick = () => {
+    const v = b.dataset.nx === '0' && b.dataset.ny === '0'
+      ? (LS.set('bgPos', '50% 50%'), document.documentElement.style.setProperty('--bg-pos', '50% 50%'), '50% 50%')
+      : bgNudge(Number(b.dataset.nx), Number(b.dataset.ny));
+    const n3 = $('#bg-pos-v'); if (n3) n3.textContent = v;
+  });
 }
 
 const getNick = () => (LS.get('nick', '') || '').trim();
@@ -1691,8 +2022,8 @@ function watchFilePick(input) {
       if (LS.get('fileHint', 0)) return;                     // 只烦一次
       LS.set('fileHint', 1);
       showSyncBar('文件选择器没弹出来',
-        '装的是旧版应用 —— 到「健康 → 手机步数同步」里重新下载安装包即可；网页版不受影响',
-        9000, openStepSync);
+        '多半是 App 版本太旧 —— 在「关于」里重新下载安装包即可；网页版不受影响',
+        9000, () => { switchTab('me'); setTimeout(() => { const v = $('#mi-ver'); if (v) v.scrollIntoView({ block: 'center' }); }, 400); });
     }, 2000);
   });
 }
@@ -1935,8 +2266,9 @@ const ST_WATER_STEP = 100;           // 自定义步进
 //    两份内容还不一样（这份有 😌 那份有 😰）—— 同一件事两个口径。
 //    MOODS 定义在文件下方，const 有 TDZ，所以这里用函数延迟取，不能直接赋值。
 const ST_WEEK_LABELS = ['一','二','三','四','五','六','日'];
-const stMoodList = () => (typeof MOODS !== 'undefined' ? MOODS
-  : ['😊','😢','😡','😐','😴','🥰','😰','🤔','💪','🎉']);
+const stMoodList = () => (typeof MOOD_LIST !== 'undefined' ? MOOD_LIST
+  : [{ f: '😊', l: '开心' }, { f: '😌', l: '平静' }, { f: '🥰', l: '心动' }]);
+const stMoodLabel = (f) => (typeof moodLabel === 'function' ? moodLabel(f) : (f || ''));
 
 /* ---- 每日一句：本地句子库 ----
    ⛔ 不用模型：模型每次输出都不同 ⇒ 同一天刷新看到的话不一样 ⇒ 用户以为 App 坏了；
@@ -2202,16 +2534,15 @@ async function renderStZone(force) {
       <div class="st-rule"></div>
       <div class="st-sec"><span class="st-sec-t">每日心情</span></div>
       <button class="st-mood-card${data.mood ? ' on' : ''}" id="st-mood-card" aria-label="记录今天的心情">
-        <span class="st-mc-face" id="st-mc-face">${data.mood ? escapeHtml(data.mood) : '·'}</span>
+        <span class="st-mc-face" id="st-mc-face">${moodFaceSVG(moodItem(data.mood) || {}, 'st-mc-svg')}</span>
         <span class="st-mc-txt">
-          <span class="st-mc-t" id="st-mood-now">${data.mood ? '今天记为 ' + escapeHtml(data.mood) : '今天还没记心情'}</span>
+          <span class="st-mc-t" id="st-mood-now">${data.mood
+            ? escapeHtml(stMoodLabel(data.mood))
+            : '今天还没记心情'}</span>
           <span class="st-mc-s">点这里挑一个</span>
         </span>
         <span class="st-mc-go">›</span>
-      </button>
-      <div class="st-mood-picks" id="st-mood-picks" style="display:none">
-        ${stMoodList().map(m => `<button class="st-mp${data.mood === m ? ' on' : ''}" data-st-mood="${m}" aria-label="心情 ${m}">${m}</button>`).join('')}
-      </div>`;
+      </button>`;
     bindStZone();
   } catch(e) {
     // 静默降级：留一条发丝线 + 一句可点重试，不惊动整页
@@ -2224,13 +2555,46 @@ async function renderStZone(force) {
 
 function bindStZone() {
   $$('[data-st-water]').forEach(b => b.onclick = () => addWater(Number(b.getAttribute('data-st-water'))));
-  $$('[data-st-mood]').forEach(b => b.onclick = () => setMood(b.getAttribute('data-st-mood')));
   const cu = $('#st-water-custom'); if (cu) cu.onclick = openWaterCustom;
   const un = $('#st-water-undo'); if (un) un.onclick = undoWater;
-  // 心情小卡片：点一下展开那一排表情
-  const mc = $('#st-mood-card');
-  const pk = $('#st-mood-picks');
-  if (mc && pk) mc.onclick = () => { pk.style.display = pk.style.display === 'none' ? 'grid' : 'none'; };
+  // 心情卡片 → 弹窗挑一个（v3.0：不再是行内展开那排小按钮）
+  const mc = $('#st-mood-card'); if (mc) mc.onclick = openMoodPicker;
+}
+
+/* 心情弹窗：大表情 + 中文标签，三列网格，底部「确定」。
+   ⛔ 走既有 openModal，不自己造浮层 —— 统一有遮罩、Esc 关闭、标题栏。
+   ⛔ 选完不立刻写库：先记在暂存里，点「确定」才提交。这样能「反悔」，
+      也避免手滑点一个就写进去还得再去数据库删。 */
+function openMoodPicker() {
+  const cur = (stData && stData.mood) || '';
+  let picked = cur;
+  openModal(`
+    <p class="mp-hint">选一个最接近今天的心情</p>
+    <div class="mp-grid" id="mp-grid">
+      ${stMoodList().map(m => `<button class="mp-opt${cur === m.f ? ' on' : ''}" data-mp="${m.f}" aria-label="${m.l}">
+        <span class="mp-face">${moodFaceSVG(m, 'mp-svg')}</span>
+        <span class="mp-l">${m.l}</span>
+      </button>`).join('')}
+    </div>
+    <div class="mp-legend">
+      ${[['joy','积极'],['calm','一般'],['low','低落'],['upset','不爽']].map(([k, t]) => {
+        const s = MOOD_SKIN[k];
+        return `<span class="mp-lg"><i style="background:${s.fill}"></i>${t}</span>`;
+      }).join('')}
+    </div>
+    <button class="btn${cur ? ' ' : ' is-off'}" id="mp-ok"${cur ? '' : ' disabled'}>确定</button>`);
+  setModalTitle('请选择心情');
+  $$('[data-mp]').forEach(b => b.onclick = () => {
+    picked = b.getAttribute('data-mp');
+    $$('[data-mp]').forEach(x => x.classList.toggle('on', x === b));
+    const ok = $('#mp-ok');
+    if (ok) { ok.disabled = false; ok.classList.remove('is-off'); }
+  });
+  $('#mp-ok').onclick = async () => {
+    closeModal();
+    if (picked === cur) return;             // 没改就别白跑一次网络
+    await setMood(picked);
+  };
 }
 
 /* 只刷新喝水那一小块，不重画整页 —— 否则输入焦点和滚动位置都会丢 */
@@ -2313,21 +2677,21 @@ async function setMood(m) {
   }
   stData.mood = next;
   const label = $('#st-mood-now');
-  if (label) label.textContent = next ? '今天记为 ' + next : '今天还没记心情';
+  //⛔ 显示中文标签而不是 emoji ——「今天记为 😊」没人知道什么意思，
+  //   「今天记为 平静」才读得懂。emoji 只留在表情盘里。
+  if (label) label.textContent = next ? stMoodLabel(next) : '今天还没记心情';
   const face = $('#st-mc-face');
-  if (face) face.textContent = next || '·';
+  //⛔ 这里原来用 textContent 塞 emoji —— 现在是 SVG，必须整体替换 innerHTML。
+  //   塞文本会把 <svg> 标签当纯文本显示成一堆尖括号。
+  if (face) face.innerHTML = moodFaceSVG(moodItem(next) || {}, 'st-mc-svg');
   const card = $('#st-mood-card');
   if (card) card.classList.toggle('on', !!next);
-  $$('[data-st-mood]').forEach(b => b.classList.toggle('on', b.getAttribute('data-st-mood') === next));
-  // 选完就把那一排收起来 —— 小卡片的意义就是「点一下 → 挑一个 → 没了」
-  const pk = $('#st-mood-picks');
-  if (pk) pk.style.display = 'none';
   //⛔ 这里原来接着调 renderDiaryList() 想让日记列表同步心情 —— 不能调：
   //   ① 记心情时人在首页，renderDiaryList 会切走 / 清掉 #st-zone，
   //      喝水量那一整块跟着消失（实测 BTN=0 就是这么来的）；
   //   ② state.silent 这个字段根本不存在。
   //   日记列表下次进「日记」页时自然会读当天心情，不用在这里推。
-  toast(next ? `心情记为 ${next}` : '已清除今天的心情');
+  toast(next ? `心情记为 ${stMoodLabel(next)}` : '已清除今天的心情');
 }
 
 /* ================= Expense ================= */
@@ -2583,7 +2947,156 @@ async function delExpense(id) {
 }
 
 /* ================= Diary ================= */
-const MOODS = ['😊','😢','😡','😐','😴','🥰','😰','🤔','💪','🎉'];
+/* ========== 心情（13 个手绘 SVG 圆脸）==============
+   唯一一份清单：emoji 字符 f 存进云端 mood 表（历史数据靠它读），
+   e/m/b/d 只决定画法，历史上同一个 f 改画法照样能读。
+   ⛔ 别换掉 f —— 云端 mood 表里存的就是它，换了老记录全部读不出来。
+   ⛔ 别用 emoji 渲染：emoji 是系统字体渲染的，安卓/iOS 长相完全不同，
+      而且给不出「黄=积极/绿=中性/蓝=消极/粉=不满」这层颜色分组。
+   源文件：_lifebook_dev/_dev/mood_faces.js（改完跑 mood_preview.py 出预览图）。
+   ⛔ 改完必须先看预览图再进页面 —— 五官比例凭想象调不出来。 */
+
+const MOOD_SKIN = {
+  joy:  { fill:'#FFD85E', ink:'#5A3B12', blush:'#FF9E7A' },   // 黄·积极
+  calm: { fill:'#B8E6A0', ink:'#2F4A1E', blush:'#8FCF78' },   // 绿·中性
+  low:  { fill:'#A8D8F0', ink:'#173D52', blush:'#7FBEE0' },   // 蓝·消极
+  upset:{ fill:'#FFB0C0', ink:'#5A1E2C', blush:'#FF8FA5' }    // 粉·不满
+};
+
+/* 五官零件库。全部返回 SVG 片段，统一 ink 颜色。
+   ⛔ 脸心 (24,24) 半径 20 ⇒ 脸内可用区大致 x∈[6,42]、y∈[6,42]。
+      装饰要放在**脸缘**（r 18~20 那一圈）才看得见 ——
+      第一版把汗滴放(35,12)，那在脸外，看不见；
+      音符放 (36,15) 也一样，整体白画。*/
+const MOOD_PARTS = {
+  /* 眼睛。t = 类型 */
+  eye(ink, t) {
+    switch (t) {
+      // 弯弯的笑眼（∪ 形）
+      case 'happy':  return `<path d="M13 22q4.5-6 9 0M26 22q4.5-6 9 0" fill="none" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>`;
+      // 眯眼（更弯更深 = 笑得更开心）
+      case 'squint': return `<path d="M13 23q4.5-8 9 0M26 23q4.5-8 9 0" fill="none" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>`;
+      // 圆睁眼
+      case 'open':   return `<ellipse cx="17.5" cy="22.5" rx="2.6" ry="3.2" fill="${ink}"/><ellipse cx="30.5" cy="22.5" rx="2.6" ry="3.2" fill="${ink}"/>`;
+      // 一高一低（不安）
+      case 'worry':  return `<ellipse cx="17.5" cy="24" rx="2.5" ry="3.1" fill="${ink}"/><ellipse cx="30.5" cy="21.5" rx="2.5" ry="3.1" fill="${ink}"/>`;
+      // 上斜（生气）
+      case 'angry':  return `<ellipse cx="17.5" cy="24" rx="2.5" ry="3" fill="${ink}"/><ellipse cx="30.5" cy="24" rx="2.5" ry="3" fill="${ink}"/>`;
+      // 闭眼（一条横线）
+      case 'closed': return `<path d="M13.5 23h8M26.5 23h8" stroke="${ink}" stroke-width="2.8" stroke-linecap="round" fill="none"/>`;
+      // 下垂眼睑（困/睡）
+      case 'droop':  return `<path d="M13 20.5q4.5 2 9 0M26 20.5q4.5 2 9 0" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+                            <path d="M13.5 24q4.5 4.5 9 0M26.5 24q4.5 4.5 9 0" stroke="${ink}" stroke-width="2.4" stroke-linecap="round" fill="none"/>`;
+      // 无神（半闭的扁椭圆）
+      case 'blank':  return `<ellipse cx="17.5" cy="23" rx="2.4" ry="1.9" fill="${ink}"/><ellipse cx="30.5" cy="23" rx="2.4" ry="1.9" fill="${ink}"/>`;
+      // 泪眼（睁大 + 上睫毛）
+      case 'cry':    return `<ellipse cx="17.5" cy="22" rx="2.7" ry="3.4" fill="${ink}"/><ellipse cx="30.5" cy="22" rx="2.7" ry="3.4" fill="${ink}"/>`;
+      // 仰视（难过时眼睛朝上）
+      case 'up':     return `<ellipse cx="17.5" cy="23.5" rx="2.5" ry="3" fill="${ink}"/><ellipse cx="30.5" cy="23.5" rx="2.5" ry="3" fill="${ink}"/>
+                            <path d="M13.5 19.5q4 2 8 0M26.5 19.5q4 2 8 0" stroke="${ink}" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+      default:       return MOOD_PARTS.eye(ink, 'open');
+    }
+  },
+  /* 嘴巴 */
+  mouth(ink, t) {
+    switch (t) {
+      case 'grin':   return `<path d="M14.5 29q9.5 9 19 0z" fill="${ink}"/>`;                    // 露齿大笑
+      case 'teeth':  return `<path d="M14.5 29.5q9.5 9 19 0z" fill="${ink}"/>
+                            <path d="M16.5 31.2q7.5 3 15 0" stroke="#fff" stroke-width="1.6" fill="none" opacity=".55"/>`;
+      case 'smile':  return `<path d="M16.5 29.5q7.5 6.5 15 0" fill="none" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>`;
+      case 'small':  return `<path d="M18.5 30.5q5.5 4 11 0" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+      case 'flat':   return `<path d="M17.5 31h13" stroke="${ink}" stroke-width="2.8" stroke-linecap="round" fill="none"/>`;
+      case 'frown':  return `<path d="M16.5 34q7.5-6.5 15 0" fill="none" stroke="${ink}" stroke-width="2.8" stroke-linecap="round"/>`;
+      case 'wavy':   return `<path d="M14.5 32q3.5-4 7 0t7 0 7 0" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+      case 'open':   return `<ellipse cx="24" cy="31.5" rx="4.6" ry="5.2" fill="${ink}"/>
+                            <ellipse cx="24" cy="34.2" rx="2.4" ry="1.8" fill="#E4708A"/>`;      // 惊/激动
+      case 'yawn':   return `<ellipse cx="24" cy="32" rx="4" ry="4.8" fill="${ink}"/>`;
+      case 'wave':   return `<path d="M14 32q3.5-4.5 7 0t7 0 7 0" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/>`;
+      case 'talk':   return `<ellipse cx="24" cy="32.5" rx="3.6" ry="4.4" fill="${ink}"/>`;
+      default:       return MOOD_PARTS.mouth(ink, 'flat');
+    }
+  },
+  /* 眉毛（压低一点，别挤到眼睛） */
+  brow(ink, t) {
+    switch (t) {
+      case 'angry':  return `<path d="M12.5 16.5l9 4M35.5 16.5l-9 4" stroke="${ink}" stroke-width="2.8" stroke-linecap="round" fill="none"/>`;
+      case 'sad':    return `<path d="M13.5 17.5q4.5-3 9-.5M26.5 17.5q4.5-3 9-.5" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" opacity=".8"/>`;
+      case 'worry':  return `<path d="M13.5 16.5q4.5-3 9-.5M26.5 18q4.5-2.5 9 0" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" opacity=".8"/>`;
+      default:       return '';
+    }
+  },
+  /* 装饰 —— ⛔ 全部落在 r∈[17,20] 的脸缘上，放脸上就是看不见。 */
+  deco(t, skin) {
+    switch (t) {
+      // 泪：眼睛外下方一点点（脸内、贴脸缘）
+      case 'tear':   return `<path d="M9.5 26q-3 4.8 0 6t3.2-4.2z" fill="#4FB8EC"/>`;
+      case 'tear2':  return `<path d="M9.5 26q-3 4.8 0 6t3.2-4.2zM38.5 26q3 4.8 0 6t-3.2-4.2z" fill="#4FB8EC"/>`;
+      // 汗：右脸颊缘，一滴
+      case 'sweat':  return `<path d="M38.5 15.5q4 5.6 0 7.2t-4.3-4.9z" fill="#57BEE4"/>`;
+      // 音符：右上脸缘
+      case 'note':   return `<g fill="#7A5AD8"><ellipse cx="38.5" cy="17" rx="3.6" ry="2.8" transform="rotate(-20 38.5 17)"/><rect x="41" y="7.5" width="2" height="10" rx=".8" transform="rotate(-16 41 15)"/></g>`;
+      // 蒸汽：左上 + 右上，两道
+      case 'steam':  return `<g fill="none" stroke="#C9556B" stroke-width="2.2" stroke-linecap="round"><path d="M10 12q3.5-4 0-7.5"/><path d="M38 12q3.5-4 0-7.5"</g>`;
+      // 红心：右上脸缘
+      case 'heart':  return `<path d="M38 7c-2.9 0-4.7 2.3-4.7 4.1 0 2.7 4.7 6.2 4.7 6.2s4.7-3.5 4.7-6.2c0-1.8-1.8-4.1-4.7-4.1z" fill="#FF6B8A"/>`;
+      // 问号：右上脸缘
+      case 'query':  return `<g fill="none" stroke="#3A7CA5" stroke-width="2.4" stroke-linecap="round"><path d="M33.5 9.5a3.8 3.8 0 0 1 3.8 3.8c0 2.1-3.4 2.6-3.4 4.5"/></g><circle cx="33.9" cy="21.5" r="1.8" fill="#3A7CA5"/>`;
+      // 闪电：右上脸缘
+      case 'bolt':   return `<path d="M39 5.5l-6.5 8.8h4.3l-2.3 7.7 7.1-9.7h-4.4z" fill="#FFA61E"/>`;
+      // 星星：右上脸缘
+      case 'spark':  return `<path d="M38.5 6.5l1.8 3.8 4.2.6-3 3 .7 4.2-3.7-1.9-3.7 1.9.7-4.2-3-3 4.2-.6z" fill="#FF9E1E"/>`;
+      // 汗+抖（疲惫）
+      case 'tired':  return `<path d="M38.5 15.5q4 5.6 0 7.2t-4.3-4.9z" fill="#57BEE4"/>
+                            <g stroke="${skin.ink}" stroke-width="2" stroke-linecap="round" fill="none" opacity=".6"><path d="M9 20v4M7 22h4"/></g>`;
+      default:       return '';
+    }
+  }
+};
+
+/* 生成一个心情脸的 SVG（不含外层 button，方便复用到卡片等处）
+   ⛔ 传空/半截对象不能崩 —— 首页卡片在「还没记心情」时就是空的，
+      这里必须给一个灰色空脸占位，而不是 throw。*/
+function moodFaceSVG(m, cls) {
+  m = m || {};
+  const s = MOOD_SKIN[m.c] || null;
+  const fill = s ? s.fill : 'rgba(245,240,232,.10)';
+  const ink = s ? s.ink : 'rgba(245,240,232,.28)';
+  const hasFace = !!(m.e && m.m);
+  return `<svg class="${cls || 'mp-svg'}" viewBox="0 0 48 48" aria-hidden="true">
+  <circle cx="24" cy="24" r="20" fill="${fill}"/>
+  ${hasFace && m.b ? MOOD_PARTS.brow(ink, m.b) : ''}
+  ${hasFace ? MOOD_PARTS.eye(ink, m.e) : ''}
+  ${hasFace ? MOOD_PARTS.mouth(ink, m.m) : ''}
+  ${hasFace && m.d ? MOOD_PARTS.deco(m.d, s || {ink}) : ''}
+</svg>`;
+}
+
+/* 13 个心情。按情绪极性分四色：
+   黄=积极 / 绿=中性 / 蓝=消极 / 粉=不满。
+   ⛔ `f`（表情字符）保留 —— 云端 mood 表存的是它，改了会让历史数据读不出来。
+   ⛔ `e/m/b/d` 只影响画法，历史上同一个 f 改了画法也照样能读。*/
+const MOOD_LIST = [
+  // 黄 · 积极
+  { f:'😊', l:'开心',   c:'joy',   e:'happy',  m:'grin'   },
+  { f:'😋', l:'美滋滋', c:'joy',   e:'squint', m:'teeth',  d:'spark' },
+  { f:'🥰', l:'心动',   c:'joy',   e:'happy',  m:'smile',  d:'heart' },
+  { f:'🤩', l:'激动',   c:'joy',   e:'open',   m:'open',   d:'note'  },
+  // 绿 · 中性
+  { f:'😐', l:'平静',   c:'calm',  e:'flat',   m:'flat'              },
+  { f:'😰', l:'焦虑',   c:'calm',  e:'worry',  m:'wave',   b:'worry', d:'sweat' },
+  { f:'😩', l:'疲惫',   c:'calm',  e:'droop',  m:'frown',  d:'tired' },
+  { f:'😴', l:'犯困',   c:'calm',  e:'closed', m:'yawn'              },
+  // 蓝 · 消极
+  { f:'😢', l:'难过',   c:'low',   e:'up',     m:'frown',  b:'sad', d:'tear'  },
+  { f:'🥱', l:'疲惫不堪', c:'low', e:'droop',  m:'wave',   d:'tear2' },
+  { f:'🫤', l:'说不清', c:'low',   e:'worry',  m:'wavy',   b:'worry', d:'query' },
+  // 粉 · 不满
+  { f:'😭', l:'委屈',   c:'upset', e:'cry',    m:'wavy',   b:'sad', d:'tear2' },
+  { f:'😡', l:'生气',   c:'upset', e:'angry',  m:'frown',  b:'angry', d:'steam' }
+];
+const MOODS = MOOD_LIST.map(m => m.f);
+const moodLabel = (f) => { const m = MOOD_LIST.find(x => x.f === f); return m ? m.l : (f || ''); };
+const moodItem = (f) => MOOD_LIST.find(x => x.f === f) || null;
 
 async function renderDiaryList() {
   const v = $('#view');
@@ -2659,7 +3172,10 @@ function paintDiaryList() {
   const q = (state.diaryQ || '').trim();
   const lq = q.toLowerCase();
   const list = q
-    ? state.diary.filter(r => (String(r.title||'') + String(r.content||'') + String(r.mood||'') + String(r.record_date||'')).toLowerCase().includes(lq))
+    // ⛔ 搜索要带上心情的**中文标签**：存的是 emoji，用户搜「难过」命中不了「😭」。
+    //   emoji 和标签都拼上 —— 复制粘贴一个表情进来也能搜到。
+    ? state.diary.filter(r => (String(r.title||'') + String(r.content||'') + String(r.mood||'')
+        + (r.mood ? stMoodLabel(r.mood) + r.mood : '') + String(r.record_date||'')).toLowerCase().includes(lq))
     : state.diary;
   let html = '';
   if (q && !list.length) {
@@ -2670,7 +3186,7 @@ function paintDiaryList() {
       const preview = excerpt(r.content, q, 72);
       html += `<div class="card card-tap" data-edit="diary" data-id="${r.id}">
         <div class="row-between">
-          <span class="mood">${r.mood||''}</span>
+          <span class="mood">${r.mood ? escapeHtml(r.mood) + '<em>' + escapeHtml(stMoodLabel(r.mood)) + '</em>' : ''}</span>
           <span class="muted" style="font-size:12px">${highlight(fmtDate(r.record_date), q)}</span>
         </div>
         ${r.title ? `<div style="margin-top:4px;font-weight:600">${highlight(r.title, q)}</div>` : ''}
@@ -3387,14 +3903,13 @@ async function openStepsForm() {
     </div>
     <div class="field"><label>每日目标（步）</label><input id="st-goal" type="number" min="1000" step="500" value="${goal}"></div>
     <div class="note" style="text-align:left;padding:4px 2px 10px">
-      网页读不到手机的健康数据（只有微信小程序才拿得到微信运动）。从手机健康 App 看一眼数字填进来，几秒钟的事；同一天改第二次会覆盖，不会重复累加。<br>
-      不想手动？<button class="btn-text" id="st-sync" style="padding:0;font-size:12px">配置手机自动同步 ›</button>
-      ${isInApp() ? ` · <button class="btn-text" id="st-calib" style="padding:0;font-size:12px">校准今日步数 ›</button>` : ''}
+      网页读不到手机的健康数据（只有微信小程序才拿得到微信运动）。从手机健康 App 看一眼数字填进来，几秒钟的事；同一天改第二次会覆盖，不会重复累加。
+      ${isInApp() ? `<br><button class="btn-text" id="st-calib" style="padding:0;font-size:12px">校准今日步数 ›</button>` : ''}
     </div>
     <button class="btn" id="st-save">保存</button>`);
   setModalTitle('记步数');
   $('#st-save').onclick = saveSteps;
-  $('#st-sync').onclick = openStepSync;
+  // v3.0：「配置手机自动同步」按钮已删（用户要求去掉这个入口）
   const calib = $('#st-calib');
   if (calib) calib.onclick = openStepCalibrate;
 }
@@ -3589,7 +4104,7 @@ const APP_VER = '1.6';
    ⛔ 两个号混成一个是用户困惑的根源 —— 界面上写着 v2.8，装的是 v1.6，
    看着像 bug 其实俩是两回事。所以「我的 → 版本」里把两者并排放，
    点的「版本」还能展开看各自管什么。 */
-const WEB_VER = '2.9';
+const WEB_VER = '3.0';
 /* 当前装在手机上的壳版本；不在 App 里跑（浏览器）时留空，不硬凑一个数字出来。
    ⛔ 用函数而不是模块加载时就求值 —— WebView 里 UA/JSBridge 有时要等一小会儿才可用，
    加载时求值会永远拿到空串（明明装了新版却显示「旧版」）。 */
@@ -3685,77 +4200,9 @@ window.lbCalibResult = async function (today, date) {
   } catch (e) { toast('校准失败，请重试'); }
 };
 
-function openStepSync() {
-  const base = location.origin + location.pathname;
-  const apk = location.origin + '/download/life-book.apk?v=' + APP_VER;
-  const demo = `${base}?steps=8321&a=1`;
-  const inApp = isInApp();
-  const av = appVersion();
-  const avWarn = inApp && verOlderThan(av, APP_VER);
-  openModal(`
-    <div class="sy-ver">当前：${inApp
-      ? `应用版本 <b>v${escapeHtml(av || '未知（旧版）')}</b>${avWarn ? ' · <span style="color:var(--amber)">旧版，建议往下重新下载安装包</span>' : ''}`
-      : '网页版（浏览器打开）'}</div>
-    <div class="note" style="text-align:left;margin-bottom:10px">
-      网页（包括"加到主屏幕"的）<b>读不到手机的步数</b>——这是浏览器的安全限制，iPhone 也一样。<br>
-      解决办法往下看，<b>第一条最省事</b>。
-    </div>
-
-    <div class="field"><label>同步链接（iPhone 快捷指令用）</label>
-      <input id="sy-url" type="text" readonly value="${escapeHtml(demo)}" class="sy-url">
-    </div>
-    <button class="btn-ghost" id="sy-copy">复制链接</button>
-
-    <div class="sy-t"><em>1</em>用安卓 App（推荐）</div>
-    ${inApp ? `
-      <p class="sy-p">你现在<b>正在用 App 版本</b>——它能自己读手机的计步器，不用再配任何东西。<br>
-        每天打开一次就自动同步当天步数。</p>
-      <p class="sy-p">计步器只告诉 App「<b>开机以来一共走了多少步</b>」，它不知道"今天"从哪一步开始。
-        所以<b>刚装那天</b>（或手机重启后）会从当时的时刻起算 —— 点下面校准一次，
-        填上手机健康 App 里的今日步数，之后每天都自动准。</p>
-      <button class="btn" id="sy-calib">校准今日步数</button>
-      ${avWarn ? `
-        <button class="btn-ghost" id="sy-apk" style="margin-top:10px">重新下载安装包 v${APP_VER}</button>
-        <p class="sy-p" style="color:var(--text-3);margin-top:8px">直接<b>覆盖安装</b>即可，不用先卸载 —— 记录都在云端，重装不丢。</p>` : ''}
-      <p class="sy-p" style="color:var(--text-3);margin-top:8px">如果步数一直不涨：手机设置 → 应用管理 → 生活手账 → 权限，把<b>「身体活动 / 健身运动」</b>打开。
-        （首次启动时如果点了"拒绝"，就会是现在这样。）</p>
-    ` : `
-      <p class="sy-p">装上之后 App 能<b>直接读手机计步器</b>，什么自动化工具都不用配，每天打开一次自动同步。</p>
-      <button class="btn" id="sy-apk">下载安装包 · 约 0.3 MB</button>
-      <p class="sy-p" style="color:var(--text-3);margin-top:8px">
-        点上面按钮下载 → 打开文件安装（会提示"未知来源"，允许即可）。<br>
-        首次启动会问「允许访问活动数据吗」，选 <b>允许</b>——读步数就靠它。
-      </p>
-    `}
-
-    <div class="sy-t"><em>2</em>iPhone：用「快捷指令」</div>
-    <ol class="sy-steps">
-      <li>打开「快捷指令」→ 右上角 <b>+</b> 新建</li>
-      <li>加操作「<b>获取健康样本</b>」：类型选<b>步数</b>，时间范围<b>今天</b>，"获取"选<b>总和</b></li>
-      <li>再加「<b>打开 URL</b>」，内容填：<code>${escapeHtml(base)}?steps=</code>，后面接上一步的结果变量，末尾补 <code>&amp;a=1</code></li>
-      <li>命名保存，例如「记步数」</li>
-      <li>要全自动：切到「<b>自动化</b>」标签 → 新建 → <b>特定时间</b> 每天 23:00 → 运行这个快捷指令，并关掉「<b>运行前询问</b>」</li>
-    </ol>
-
-    <div class="sy-t"><em>3</em>什么都不想弄</div>
-    <p class="sy-p">从手机自带的「健康」App 或微信运动看一眼数字，回「运动」页点今日步数卡片填进去，几秒钟的事。同一天改第二次会覆盖，不会重复累加。</p>
-
-    <p class="sy-p" style="color:var(--text-3);margin-top:14px">链接末尾的 <span class="k">&amp;a=1</span> 是"自动模式"：同步成功不弹窗打断，只在顶部显示结果并自动退回——给"没人盯着屏幕"的定时同步用的。手动打开时可以带上，也可以不带。</p>`);
-  setModalTitle('手机步数同步');
-  const apkBtn = $('#sy-apk');
-  if (apkBtn) apkBtn.onclick = () => { location.href = apk; };
-  const calibBtn = $('#sy-calib');
-  if (calibBtn) calibBtn.onclick = openStepCalibrate;
-  $('#sy-copy').onclick = async () => {
-    const el = $('#sy-url');
-    try { el.select(); el.setSelectionRange(0, 9999); } catch (e) {}
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) {}
-    if (!ok && navigator.clipboard) { try { await navigator.clipboard.writeText(demo); ok = true; } catch (e) {} }
-    toast(ok ? '链接已复制' : '请长按输入框手动复制');
-  };
-}
-
+// v3.0：步数同步说明页 openStepSync 已随三个入口一起移除。
+// ⛔ flushPendingSteps 保留 —— App 快捷指令靠 /?steps=…&auto=1 传数，
+//    删了接收逻辑就把 App 的自动同步打死了。已配好的指令继续静默入库。
 /* ================= Profile（我的） ================= */
 /* ================= 每周回顾（周报） ================= */
 // 周一为一周起点；全程本地时间，避免东八区凌晨算错日期
@@ -4708,7 +5155,7 @@ async function renderProfile() {
     <div class="me-list">
       <div class="me-item" id="mi-bg">
         <div class="me-ico" style="color:var(--star-a)">${ICONS.image}</div>
-        <div class="me-txt"><div class="t">粒子与底图</div><div class="s">${bgPhotoURL ? '已设自定义底图' : '无底图'} · 粒子${escapeHtml((BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2]).name)}</div></div>
+        <div class="me-txt"><div class="t">粒子与底图</div><div class="s">${bgPhotos.length ? (bgPhotos.length + ' 张底图' + (bgBlur ? ' · 模糊' + bgBlur : '')) : '无底图'} · 粒子${escapeHtml((BG_LEVELS.find(l => l.id === bgLevel) || BG_LEVELS[2]).name)}</div></div>
         <div class="me-arrow">›</div>
       </div>
     </div>
@@ -4742,19 +5189,11 @@ async function renderProfile() {
       <div class="me-item" id="mi-steps"><div class="me-ico" style="color:var(--cyan)">${ICONS.shoe}</div><div class="me-txt"><div class="t">步数</div><div class="s">App 自动同步 · 看数据在「运动」页</div></div><div class="me-count">${counts.steps} 天</div></div>
     </div>
 
-    <!-- v2.9：导出全部数据 / 导入历史数据 已移除。
-数据本来就在云端按账号隔离，登录就等于「有备份」，
-         自己导出再导入只是给自己找事做，还多了个「导出文件传丢了」的焦虑。
-         ⇒ 这一区只剩步数同步一条，标题跟着改，别再叫「设置」名不副实。 -->
-    <div class="sec">步数同步</div>
-    <div class="me-list">
-      <div class="me-item" id="mi-sync">
-        <div class="me-ico" style="color:var(--cyan)">${ICONS.shoe}</div>
-        <div class="me-txt"><div class="t">手机步数自动同步</div><div class="s">配一次快捷指令，手机把步数自动记进来</div></div>
-        <div class="me-arrow">›</div>
-      </div>
-    </div>
-
+    <!-- v3.0：「步数同步」整区移除（我的页入口 + 健康页入口 + 步数表单里那个配置按钮）。
+         ⛔ 只删 UI，**不删** flushPendingSteps —— App 快捷指令是靠
+            「/?steps=…&auto=1」这个 URL 传数进来的，删掉接收逻辑就等于把
+            App 的步数同步功能整个打死。已经配好的指令会继续静默生效（静默入库，不打扰）。
+         用户要的是「别让我到处找这个开关」，不是「让这个能力消失」。 -->
     <div class="sec">关于</div>
     <div class="me-list">
       <div class="me-item">
@@ -4784,7 +5223,6 @@ async function renderProfile() {
   if (miMonthly) miMonthly.onclick = () => { monthlyDataAt = 0; monthlyDiaryAll = false; switchTab('monthly'); };
   $('#me-avatar').onclick = openAvatarPicker;
   $('#mi-avatar').onclick = openAvatarPicker;
-  $('#mi-sync').onclick = openStepSync;
   $('#mi-nick').onclick = openNick;
   $('#mi-cats').onclick = openCats;
   $('#mi-bg').onclick = openBgSettings;
