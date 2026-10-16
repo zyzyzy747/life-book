@@ -100,6 +100,9 @@
 .st-water-n i{font-style:normal;font-size:13px;color:var(--star-text-3);
               margin-left:4px;letter-spacing:0}
 .st-water-goal{font-size:12.5px;color:var(--star-text-2);margin-top:6px}
+/*⛔ 必须 font-style:normal —— <em> 默认斜体，中文斜体很难看，
+   而且「目标 3000ml」这种数字斜体在深色底上更糊。*/
+.st-water-goal em{font-style:normal;font-variant-numeric:tabular-nums}
 .st-water-goal b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
 .st-btns{display:flex;gap:8px;margin-top:13px}
 .st-btn{flex:1;min-height:44px;border-radius:var(--star-r-md);
@@ -149,6 +152,15 @@
 /* ⛔ 两句必须各占一行 —— 它们都是 span（行内元素），
    不写 display:block 会挤在同一行，"今天记为 😊点这里挑一个" 连成一坨。 */
 .st-mc-s{display:block;font-size:11.5px;color:var(--star-text-3);margin-top:3px}
+/* v3.1：心情历史入口。做成「卡片下面一排小字」而不是塞进卡片，
+   免得和「点卡片改今天」抢同一个点击区。触摸目标 ≥32px。 */
+.st-mood-hist{
+  display:block;width:100%;text-align:right;padding:10px 2px 4px;margin-top:2px;
+  font-size:12px;color:var(--star-text-3);cursor:pointer;
+  border-top:1px solid var(--star-line);
+  -webkit-tap-highlight-color:transparent;
+}
+.st-mood-hist:active{color:var(--star-a)}
 .st-mc-go{font-size:18px;color:var(--star-text-3);flex:0 0 auto}
 
 /* 心情弹窗：三列网格，大表情 + 中文标签。
@@ -176,6 +188,30 @@
 .mp-lg i{width:9px;height:9px;border-radius:50%;display:block}
 /* 未选时确定按钮置灰 —— 截图里就是禁用的，用户得先选一个 */
 #mp-ok.is-off,.btn.is-off{opacity:.34;pointer-events:none}
+
+/* 心情历史月历（v3.1） */
+.mh-loading{font-size:12.5px;color:var(--star-text-3);text-align:center;padding:26px 0}
+.mh-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.mh-wk span{font-size:10.5px;color:var(--star-text-3);text-align:center}
+.mh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mh-cell{
+  aspect-ratio:1;border-radius:9px;background:rgba(245,240,232,.04);
+  border:1px solid transparent;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+/* ⛔ 触摸目标：7 列在 390 宽里每格 ≈48px，已经过 44px 线，别再往小缩 */
+.mh-cell:active{transform:scale(.93)}
+.mh-cell.pad{background:none;pointer-events:none}
+.mh-cell.fut{opacity:.3;pointer-events:none}
+.mh-cell.today{border-color:var(--star-a);box-shadow:0 0 0 1px rgba(255,159,28,.22)}
+.mh-svg{width:26px;height:26px;display:block}
+.mh-cell em{font-style:normal;font-size:9px;color:var(--star-text-3);line-height:1}
+.mh-dot{font-size:13px;color:var(--star-text-3);font-variant-numeric:tabular-nums}
+.mh-cell.today .mh-dot{color:var(--star-a)}
+.mh-bar{height:4px;border-radius:99px;background:rgba(245,240,232,.08);margin:14px 0 8px;overflow:hidden}
+.mh-bar i{display:block;height:100%;background:var(--star-a);border-radius:99px}
+.mh-note{font-size:11px;color:var(--star-text-3);text-align:center;margin:0}
 
 /* 今日速记：发丝线行，不是卡片 */
 .st-quick{display:flex;align-items:stretch}
@@ -2260,7 +2296,16 @@ function quickAdd(act) {
    ⛔ 命名一律 st- 前缀，且函数名都带 st 前缀，加函数前必须查重名
       （10-03 曾因月报 monthRange 覆盖同名函数、整页崩掉，见 skill）。 */
 
-const ST_WATER_GOAL = 2000;          // 每日饮水目标 ml
+const ST_WATER_GOAL_DEFAULT = 2000;  // 每日饮水目标 ml（默认值，可改）
+const ST_WATER_GOAL_MIN = 500, ST_WATER_GOAL_MAX = 5000;
+/* v3.1：目标不再写死。
+   ⛔ 所有读目标的地方必须走 stWaterGoal()，别直接用常量 —— 改了目标但
+   星环弧长/百分比/文案还按 2000 算，就成了「显示的和实际的不一样」。
+   存在 localStorage 不上云：饮水目标跟着这个人走，不该跟账号绑定（换设备重设一次即可）。*/
+const stWaterGoal = () => {
+  const v = Number(LS.get('waterGoal', ST_WATER_GOAL_DEFAULT));
+  return (v >= ST_WATER_GOAL_MIN && v <= ST_WATER_GOAL_MAX) ? v : ST_WATER_GOAL_DEFAULT;
+};
 const ST_WATER_STEP = 100;           // 自定义步进
 // ⛔ 心情只有一份清单。以前星环区用 ST_MOODS、日记表单用 MOODS，
 //    两份内容还不一样（这份有 😌 那份有 😰）—— 同一件事两个口径。
@@ -2484,8 +2529,8 @@ async function renderStZone(force) {
     const ring = stRingHTML(data.days, today);
     const ml = stWaterTotal(data);
     const q = stQuoteOfDay();
-    const pct = Math.round(ml / ST_WATER_GOAL * 100);
-    const left = Math.max(0, ST_WATER_GOAL - ml);
+    const pct = Math.round(ml / stWaterGoal() * 100);
+    const left = Math.max(0, stWaterGoal() - ml);
 
     zone.dataset.state = 'ok';
     zone.innerHTML = `
@@ -2513,12 +2558,12 @@ async function renderStZone(force) {
       <div class="st-card">
         <div class="st-water">
           <div class="st-water-arc">
-            <svg viewBox="0 0 100 100" aria-label="饮水进度">${stWaterArcHTML(ml / ST_WATER_GOAL)}</svg>
+            <svg viewBox="0 0 100 100" aria-label="饮水进度">${stWaterArcHTML(ml / stWaterGoal())}</svg>
             <div class="st-wm">${pct}</div>
           </div>
           <div class="st-water-info">
             <div class="st-water-n" id="st-water-n">${ml}<i>ml</i></div>
-            <div class="st-water-goal">目标 ${ST_WATER_GOAL}ml · 还差 <b id="st-water-left">${left}ml</b></div>
+            <div class="st-water-goal">目标 <em id="st-water-goal-n">${stWaterGoal()}</em>ml · 还差 <b id="st-water-left">${left}ml</b></div>
           </div>
         </div>
         <div class="st-btns">
@@ -2527,6 +2572,7 @@ async function renderStZone(force) {
         </div>
         <div class="st-btns">
           <button class="st-btn" id="st-water-custom">自定义</button>
+          <button class="st-btn" id="st-water-goal-btn">改目标</button>
           <button class="st-btn st-btn-undo" id="st-water-undo">撤销</button>
         </div>
       </div>
@@ -2534,15 +2580,16 @@ async function renderStZone(force) {
       <div class="st-rule"></div>
       <div class="st-sec"><span class="st-sec-t">每日心情</span></div>
       <button class="st-mood-card${data.mood ? ' on' : ''}" id="st-mood-card" aria-label="记录今天的心情">
-        <span class="st-mc-face" id="st-mc-face">${moodFaceSVG(moodItem(data.mood) || {}, 'st-mc-svg')}</span>
+        <span class="st-mc-face" id="st-mc-face">${moodFaceSVG(moodItemOrLegacy(data.mood) || { f:data.mood, l:data.mood, c:'calm' }, 'st-mc-svg')}</span>
         <span class="st-mc-txt">
           <span class="st-mc-t" id="st-mood-now">${data.mood
             ? escapeHtml(stMoodLabel(data.mood))
             : '今天还没记心情'}</span>
-          <span class="st-mc-s">点这里挑一个</span>
+          <span class="st-mc-s" id="st-mood-sub">点这里挑一个</span>
         </span>
         <span class="st-mc-go">›</span>
-      </button>`;
+      </button>
+      <button class="st-mood-hist" id="st-mood-hist">本月心情 ›</button>`;
     bindStZone();
   } catch(e) {
     // 静默降级：留一条发丝线 + 一句可点重试，不惊动整页
@@ -2556,9 +2603,13 @@ async function renderStZone(force) {
 function bindStZone() {
   $$('[data-st-water]').forEach(b => b.onclick = () => addWater(Number(b.getAttribute('data-st-water'))));
   const cu = $('#st-water-custom'); if (cu) cu.onclick = openWaterCustom;
+  const gb = $('#st-water-goal-btn'); if (gb) gb.onclick = openWaterGoal;
   const un = $('#st-water-undo'); if (un) un.onclick = undoWater;
   // 心情卡片 → 弹窗挑一个（v3.0：不再是行内展开那排小按钮）
   const mc = $('#st-mood-card'); if (mc) mc.onclick = openMoodPicker;
+  // v3.1：历史入口。⛔ 单独一个按钮，不塞进卡片里 ——
+  //   整张卡点一下已经是「改今天」，再叠一个「看历史」会让用户犹豫点哪。
+  const mh = $('#st-mood-hist'); if (mh) mh.onclick = openMoodHistory;
 }
 
 /* 心情弹窗：大表情 + 中文标签，三列网格，底部「确定」。
@@ -2601,15 +2652,19 @@ function openMoodPicker() {
 function paintStWater() {
   if (!stData) return;
   const ml = stWaterTotal(stData);
-  const pct = Math.round(ml / ST_WATER_GOAL * 100);
+  const pct = Math.round(ml / stWaterGoal() * 100);
   const n = $('#st-water-n'), l = $('#st-water-left'), wm = document.querySelector('.st-wm');
+  const gn = $('#st-water-goal-n');
   if (n) n.innerHTML = `${ml}<i>ml</i>`;
-  if (l) l.textContent = Math.max(0, ST_WATER_GOAL - ml) + 'ml';
+  if (l) l.textContent = Math.max(0, stWaterGoal() - ml) + 'ml';
+  //⛔ 目标数字也要跟着改 —— 以前它直接写在文本里，paint 只刷了「还差」，
+  //   于是改完目标会出现「目标 2000ml · 还差 3000ml」这种自相矛盾的行。
+  if (gn) gn.textContent = stWaterGoal();
   if (wm) wm.textContent = pct;
   const arc = $('#st-water-arc');
   if (arc) {
     const C = 2 * Math.PI * 42;
-    const on = C * Math.max(0, Math.min(1, ml / ST_WATER_GOAL));
+    const on = C * Math.max(0, Math.min(1, ml / stWaterGoal()));
     arc.setAttribute('stroke-dasharray', `${on.toFixed(2)} ${(C - on).toFixed(2)}`);
   }
 }
@@ -2619,12 +2674,17 @@ function paintStWater() {
 async function addWater(ml) {
   if (!ml || ml < 1) { toastErr('至少 1ml'); return; }
   const day = todayStr();
-  const { error } = await cloud.database.from('water').insert({ ml, record_date: day });
-  if (error) { toastErr(errMsg(error)); return; }
+  /*⛔⛔ 必须 .select() 才拿得到插入后的整行（含 id）。
+     以前写成 insert({ml, record_date:day}) 不带 .select() ⇒ 本地只缓存了 {ml}，
+     于是 undoWater 里 `delete().eq('id', undefined)` 打不中任何行 ——
+     表现是「撤销后数字动了，刷新一下又回来」，云端那行永远删不掉。*/
+  const res = await cloud.database.from('water').insert({ ml, record_date: day }).select();
+  if (res.error) { toastErr(errMsg(res.error)); return; }
   // 本地缓存先加上，避免等一次网络往返才看到数字动
-  if (stData && stDataDay === day) stData.waterRows = (stData.waterRows || []).concat([{ ml }]);
+  const row = (res.data && res.data[0]) || { ml };
+  if (stData && stDataDay === day) stData.waterRows = (stData.waterRows || []).concat([row]);
   paintStWater();
-  toast(`+${ml}ml`, `今天 ${stWaterTotal(stData)}ml / ${ST_WATER_GOAL}ml`);
+  toast(`+${ml}ml`, `今天 ${stWaterTotal(stData)}ml / ${stWaterGoal()}ml`);
 }
 
 async function undoWater() {
@@ -2632,6 +2692,14 @@ async function undoWater() {
   if (!stData || stDataDay !== day || !(stData.waterRows || []).length) { toastErr('今天还没有记录'); return; }
   const rows = stData.waterRows;
   const last = rows[rows.length - 1];
+  /*⛔ 拿不到 id 就**别假装删成功** —— 直接改本地会让「刷新后数字回来」，
+     用户只会以为是 bug。给一句能行动的提示。*/
+  if (!last || !last.id) {
+    toastErr('这条记录对不上号，撤销不了');
+    // 顺手把今天的行重新拉一遍，让本地缓存跟云端对齐（下一条就能正常撤销）
+    try { await renderStZone(true); } catch (e) {}
+    return;
+  }
   const { error } = await cloud.database.from('water').delete().eq('id', last.id).select();
   if (error) { toastErr(errMsg(error)); return; }
   stData.waterRows = rows.slice(0, -1);
@@ -2653,6 +2721,149 @@ function openWaterCustom() {
     closeModal();
     await addWater(v);
   };
+}
+
+/* 改每日饮水目标（v3.1：目标不再写死 2000）
+   走预设档位 + 自由输入：多数人选档位就够，偶尔要精确填。 */
+function openWaterGoal() {
+  const cur = stWaterGoal();
+  const preset = [1500, 2000, 2500, 3000];
+  openModal(`
+    <p class="mp-hint">选一个，或者直接填数字</p>
+    <div class="st-btns" style="margin-bottom:12px">
+      ${preset.map(v => `<button class="st-btn${v === cur ? ' st-btn-p' : ''}" data-wg="${v}">${v}ml</button>`).join('')}
+    </div>
+    <div class="field"><label>每日目标（ml）</label>
+      <input id="wg-ml" type="number" inputmode="numeric" min="${ST_WATER_GOAL_MIN}" max="${ST_WATER_GOAL_MAX}" step="100" value="${cur}"></div>
+    <div class="msg" id="wg-msg"></div>
+    <div class="st-btns" style="margin-top:8px">
+      <button class="st-btn" id="wg-reset">恢复默认 ${ST_WATER_GOAL_DEFAULT}ml</button>
+    </div>
+    <button class="btn" id="wg-save">保存</button>`);
+  setModalTitle('每日饮水目标');
+  const msg = $('#wg-msg'), inp = $('#wg-ml');
+  $$('[data-wg]').forEach(b => b.onclick = () => {
+    inp.value = b.getAttribute('data-wg');
+    $$('[data-wg]').forEach(x => x.classList.toggle('st-btn-p', x === b));
+  });
+  inp.oninput = () => $$('[data-wg]').forEach(x => x.classList.remove('st-btn-p'));
+  $('#wg-reset').onclick = () => { inp.value = ST_WATER_GOAL_DEFAULT; inp.oninput(); };
+  $('#wg-save').onclick = () => {
+    const v = parseInt(inp.value, 10);
+    if (!isFinite(v)) { showMsg(msg, '填一个数字', 'err'); return; }
+    if (v < ST_WATER_GOAL_MIN || v > ST_WATER_GOAL_MAX) {
+      showMsg(msg, `范围 ${ST_WATER_GOAL_MIN}~${ST_WATER_GOAL_MAX}ml`, 'err'); return;
+    }
+    LS.set('waterGoal', v);
+    closeModal();
+    //⛔ 只刷喝水这一小块，别重画整页 —— 会丢掉滚动位置
+    paintStWater();
+    toast('目标已改为 ' + v + 'ml');
+  };
+}
+
+/* 心情历史（v3.1）
+   ⛔ 动机：心情一直存着云端 mood 表（按 record_date），但界面上只看得到今天 ——
+      「昨天记的今天还在」这件事没法查，等于没记录。这条补上历史视图。
+   ⛔ 只读+可补记：格子点一下能改那天的（错记了要能改），但不做删除（心情本来无所谓）。 */
+async function openMoodHistory() {
+  const cur = todayStr();
+  const { start, end } = monthRange();
+  openModal(`<div class="mh-loading">正在读这个月的心情…</div>`);
+  setModalTitle('心情历史');
+  const res = await cloud.database.from('mood').select('*')
+    .gte('record_date', start).lt('record_date', end).limit(40);
+  if (res.error) { closeModal(); toastErr(errMsg(res.error)); return; }
+  const rows = res.data || [];
+  const byDay = {};
+  rows.forEach(r => { if (r && r.record_date) byDay[r.record_date] = r.mood; });
+
+  const y = new Date().getFullYear(), m = new Date().getMonth();
+  const first = new Date(y, m, 1).getDay();      // 0=周日
+  const days = new Date(y, m + 1, 0).getDate();
+  const lead = (first === 0 ? 7 : first);       // 让周一排第一
+  let cells = '';
+  for (let i = 0; i < lead; i++) cells += '<div class="mh-cell pad"></div>';
+  let n = 0;
+  for (let d = 1; d <= days; d++) {
+    const ds = `${y}-${pad2(m+1)}-${pad2(d)}`;
+    const f = byDay[ds];
+    if (f) n++;
+    const isToday = ds === cur;
+    const isFuture = ds > cur;
+    cells += `<button class="mh-cell${isToday ? ' today' : ''}${isFuture ? ' fut' : ''}"
+      data-mh-day="${ds}" ${isFuture ? 'disabled' : ''} aria-label="${d}日 ${f ? moodLabel(f) : '未记'}">
+      ${f ? moodFaceSVG(moodItemOrLegacy(f) || { f:f, l:f, c:'calm' }, 'mh-svg') : `<span class="mh-dot">${d}</span>`}
+      <em>${d}</em></button>`;
+  }
+  const total = days;
+  const rate = Math.round(n / total * 100);
+  openModal(`
+    <p class="mp-hint">这个月记了 <b>${n}</b> 天 · 共 ${total} 天</p>
+    <div class="mh-wk">${['一','二','三','四','五','六','日'].map(x => `<span>${x}</span>`).join('')}</div>
+    <div class="mh-grid" id="mh-grid">${cells}</div>
+    <div class="mh-bar"><i style="width:${rate}%"></i></div>
+    <p class="mh-note">点某一天可以补记或改掉 · 没记的是空格子</p>`);
+  setModalTitle('心情历史');
+  $$('[data-mh-day]').forEach(el => el.onclick = async () => {
+    const ds = el.getAttribute('data-mh-day');
+    const old = byDay[ds] || '';
+    const picked = await pickMoodOne(old);
+    if (!picked) return;                                  // 用户取消
+    if (picked === old) {
+      if (!old) { toastErr('那天本来就没有心情'); return; }
+      const { error } = await cloud.database.from('mood').delete().eq('record_date', ds).select();
+      if (error) { toastErr(errMsg(error)); return; }
+      toast(`${Number(ds.slice(8,10))} 日的心情已清除`);
+    } else {
+      /*⛔ 不用 .upsert() —— 本文件 setMood 里明确写着「不依赖 upsert 语法
+        （各 SDK 支持不一）」。补记走「先按日期查有没有，有就 update 没有就 insert」。*/
+      const q = await cloud.database.from('mood').select('id').eq('record_date', ds).limit(1);
+      if (q.error) { toastErr(errMsg(q.error)); return; }
+      const has = q.data && q.data[0];
+      const r = has
+        ? await cloud.database.from('mood').update({ mood: picked }).eq('id', has.id).select()
+        : await cloud.database.from('mood').insert({ mood: picked, record_date: ds }).select();
+      if (r.error) { toastErr(errMsg(r.error)); return; }
+      toast(`${Number(ds.slice(8,10))} 日记为 ${moodLabel(picked)}`);
+    }
+    closeModal();
+    // 补记的如果是今天，同步刷新首页卡片
+    if (ds === cur) { try { await renderStZone(true); } catch (e) {} }
+    else setTimeout(openMoodHistory, 120);
+  });
+}
+
+/* 单选一个心情（复用弹窗里的网格，但换成「点完就走」的即时模式） */
+function pickMoodOne(preselect) {
+  return new Promise(resolve => {
+    openModal(`
+      <div class="mp-grid" id="mo-grid">
+        ${stMoodList().map(m => `<button class="mp-opt${preselect === m.f ? ' on' : ''}" data-mo="${m.f}" aria-label="${m.l}">
+          <span class="mp-face">${moodFaceSVG(m, 'mp-svg')}</span>
+          <span class="mp-l">${m.l}</span>
+        </button>`).join('')}
+      </div>
+      <button class="btn" id="mo-cancel">返回</button>`);
+    setModalTitle('选心情');
+    let picked = preselect;
+    $$('[data-mo]').forEach(b => b.onclick = () => {
+      picked = b.getAttribute('data-mo');
+      $$('[data-mo]').forEach(x => x.classList.toggle('on', x === b));
+    });
+    $('#mo-cancel').onclick = () => { closeModal(); resolve(null); };
+    // 点遮罩关闭 = 取消
+    const bg = $('#modal-bg');
+    const old = bg.onclick;
+    bg.onclick = (e) => {
+      if (e.target.id === 'modal-bg') { closeModal(); resolve(null); }
+      else if (old) old(e);
+    };
+    setTimeout(() => {
+      const first = $('#mo-grid .mp-opt');
+      if (first) first.click();
+    }, 0);
+  });
 }
 
 /* 心情：一天一条，重复点同一个 = 清除 */
@@ -2683,7 +2894,7 @@ async function setMood(m) {
   const face = $('#st-mc-face');
   //⛔ 这里原来用 textContent 塞 emoji —— 现在是 SVG，必须整体替换 innerHTML。
   //   塞文本会把 <svg> 标签当纯文本显示成一堆尖括号。
-  if (face) face.innerHTML = moodFaceSVG(moodItem(next) || {}, 'st-mc-svg');
+  if (face) face.innerHTML = moodFaceSVG(moodItemOrLegacy(next) || { f:next, l:next, c:'calm' }, 'st-mc-svg');
   const card = $('#st-mood-card');
   if (card) card.classList.toggle('on', !!next);
   //⛔ 这里原来接着调 renderDiaryList() 想让日记列表同步心情 —— 不能调：
@@ -3097,6 +3308,21 @@ const MOOD_LIST = [
 const MOODS = MOOD_LIST.map(m => m.f);
 const moodLabel = (f) => { const m = MOOD_LIST.find(x => x.f === f); return m ? m.l : (f || ''); };
 const moodItem = (f) => MOOD_LIST.find(x => x.f === f) || null;
+/* v3.1 兜底：云端 mood 表里可能有**老清单的表情**（v2.9 之前是
+   😌 🤔 💪 🎉 这几个，代码里已经删了，但历史数据还在）。
+   ⇒ 不认识的脸不能显示成「空格子」—— 那看着像「那天没记心情」，
+      而实际上记了。给一张问号脸 + 原字符，label 显示原字符本身。*/
+const MOOD_LEGACY = {
+  '😌': '平静', '🤔': '沉思', '💪': '有劲', '🎉': '庆祝',
+  '😮': '孤独', '🙃': '还行'
+};
+const moodItemOrLegacy = (f) => {
+  const m = moodItem(f);
+  if (m) return m;
+  const lbl = MOOD_LEGACY[f];
+  // e/m 都是「不确定」的类型：一高一低的眼睛 + 波浪嘴，视觉上就是"说不清"
+  return lbl ? { f, l: lbl, c: 'low', e: 'worry', m: 'wave', d: 'query', b: 'worry' } : null;
+};
 
 async function renderDiaryList() {
   const v = $('#view');
@@ -3186,7 +3412,7 @@ function paintDiaryList() {
       const preview = excerpt(r.content, q, 72);
       html += `<div class="card card-tap" data-edit="diary" data-id="${r.id}">
         <div class="row-between">
-          <span class="mood">${r.mood ? escapeHtml(r.mood) + '<em>' + escapeHtml(stMoodLabel(r.mood)) + '</em>' : ''}</span>
+          <span class="mood">${r.mood ? escapeHtml(r.mood) + '<em>' + escapeHtml(moodItemOrLegacy(r.mood) ? moodItemOrLegacy(r.mood).l : r.mood) + '</em>' : ''}</span>
           <span class="muted" style="font-size:12px">${highlight(fmtDate(r.record_date), q)}</span>
         </div>
         ${r.title ? `<div style="margin-top:4px;font-weight:600">${highlight(r.title, q)}</div>` : ''}
@@ -4104,7 +4330,7 @@ const APP_VER = '1.6';
    ⛔ 两个号混成一个是用户困惑的根源 —— 界面上写着 v2.8，装的是 v1.6，
    看着像 bug 其实俩是两回事。所以「我的 → 版本」里把两者并排放，
    点的「版本」还能展开看各自管什么。 */
-const WEB_VER = '3.0';
+const WEB_VER = '3.1';
 /* 当前装在手机上的壳版本；不在 App 里跑（浏览器）时留空，不硬凑一个数字出来。
    ⛔ 用函数而不是模块加载时就求值 —— WebView 里 UA/JSBridge 有时要等一小会儿才可用，
    加载时求值会永远拿到空串（明明装了新版却显示「旧版」）。 */
