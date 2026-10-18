@@ -81,8 +81,8 @@
 ```
 .
 ├── index.html# 页面骨架，只 2.7 KB
-├── app.34.js               # 主程序（约 253 KB）
-├── app.34.css              # 样式（约 57 KB）
+├── app.35.js               # 主程序（约 253 KB）
+├── app.35.css              # 样式（约 57 KB）
 ├── sw.js                   # Service Worker：app.* / sdk 走cache-first
 ├── sdk.index.global.js     # 云服务客户端 SDK（随页面分发）
 ├── download/               # 已签名的 Android 安装包
@@ -93,10 +93,10 @@
 
 ### ⛔ 改代码必须同步改文件名版本号
 
-`app.34.js` 里的 `32` 是**缓存键**，不是装饰。改了内容但URL 没变，
+`app.35.js` 里的 `32` 是**缓存键**，不是装饰。改了内容但URL 没变，
 Service Worker 会把旧代码一直用着 —— 表现为「改了没生效」，且极难排查。
 
-正确做法：改内容时 `app.34.js` → `app.34.js`，同步更新 `index.html` 里的
+正确做法：改内容时 `app.35.js` → `app.35.js`，同步更新 `index.html` 里的
 `src` / `href` 和 `sw.js` 里的 `VER` 与 `ASSETS`。
 
 ## 数据模型
@@ -118,7 +118,7 @@ python -m http.server8000
 # 然后打开 http://127.0.0.1:8000/
 ```
 
-连后端还需要在 `app.34.js` 里配置云服务的 `publishableKey`（见下）。
+连后端还需要在 `app.35.js` 里配置云服务的 `publishableKey`（见下）。
 
 ## 打包 Android 壳
 
@@ -126,7 +126,7 @@ python -m http.server8000
 
 ## 说明
 
-- `app.34.js` 里含有云服务的 **publishable key**（`wbpk_…`）。它按设计就是给客户端用的
+- `app.35.js` 里含有云服务的 **publishable key**（`wbpk_…`）。它按设计就是给客户端用的
   公开标识，权限由服务端 RLS 兜底—— 拿到它也读不到别人的数据。仓库里的版本与线上一致。
 - 壳工程**不含**签名证书（`*.jks` 已在 `.gitignore` 中），打包脚本从环境变量读 keystore 口令。
   首次运行会自动生成自签名证书，但**用它签出来的包无法覆盖安装线上版本**（签名不同）。
