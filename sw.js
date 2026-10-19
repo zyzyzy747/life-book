@@ -16,10 +16,10 @@
       旧缓存自然失效，不需要手动清。
    ⛔ 不要缓存 index.html 到永久：那样会永远看不到新版本。
 */
-const VER = 'v311';
+const VER = 'v314';
 const ASSETS = [
-  './app.311.js',
-  './app.311.css',
+  './app.314.js',
+  './app.314.css',
   './sdk.index.global.js'
 ];
 
