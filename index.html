@@ -11,7 +11,7 @@
 <title>生活手账</title>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9J2cnIHgxPScwJyB5MT0nMCcgeDI9JzEnIHkyPScxJz48c3RvcCBvZmZzZXQ9JzAnIHN0b3AtY29sb3I9JyM3QjhDRkYnLz48c3RvcCBvZmZzZXQ9JzEnIHN0b3AtY29sb3I9JyNCMDZCRkYnLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzI0JyBmaWxsPSd1cmwoI2cpJy8+PGcgZmlsbD0nbm9uZScgc3Ryb2tlPScjZmZmJyBzdHJva2Utd2lkdGg9JzgnIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHJlY3QgeD0nMjYnIHk9JzIwJyB3aWR0aD0nNDgnIGhlaWdodD0nNjAnIHJ4PScxMScvPjxwYXRoIGQ9J000MSAzMHY0MCcvPjxwYXRoIGQ9J001MSA2Mmw3IDcgMTUtMTYnLz48L2c+PC9zdmc+">
 
-<link rel="stylesheet" href="app.315.css">
+<link rel="stylesheet" href="app.316.css">
 </head>
 <body>
 <div id="bg-photo"></div>
@@ -22,7 +22,7 @@
 <div id="root"></div>
 <script src="sdk.index.global.js"></script>
 
-<script src="app.315.js"></script>
+<script src="app.316.js"></script>
 <script src="sw.js"></script>
 <script>
 /* Service Worker：让 app.js/app.css 走浏览器本地缓存。
@@ -33,8 +33,22 @@
       偷换会把用户正在填的表单重置，比不更新糟糕得多。*/
 (function(){
   if (!('serviceWorker' in navigator)) return;
+
+  /*⛔⛔⛔ 2026-10-19 修：安卓 App 里 WebView 长期存活，浏览器**几小时甚至一天
+     才检查一次 SW 更新** ⇒ App 永远卡在旧版本（用户实测：App 里 v3.11，
+     浏览器里已经是 v3.15）。
+     ⇒ 每次打开都主动 reg.update() + 清掉旧缓存。
+     ⛔ 不能偷偷 replace()：那会把用户正在填的表单重置。
+        只在这里确保「下次打开就是新版」。*/
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js').then(function(reg){
+    /* ⛔ sw.js 自己没版本号，浏览器可能连它都按缓存不发。
+       加上时间戳当 query ⇒ 每次都是新URL ⇒ 一定回源拿最新的 sw.js。
+       （配合 sw.js 里的 skipWaiting，新 SW 才会立刻夺权。）*/
+    var swUrl = 'sw.js?u=' + Date.now();
+    navigator.serviceWorker.register(swUrl).then(function(reg){
+      // ① 主动检查更新（这是关键，浏览器默认不会频繁查）
+      try { reg.update(); } catch (e) {}
+
       reg.addEventListener('updatefound', function(){
         var nw = reg.installing;
         if (!nw) return;
@@ -45,6 +59,18 @@
         });
       });
     }).catch(function(){/* 失败就算了 */});
+
+    // ② 每次打开顺手把「旧版本缓存名」清掉。
+    //    缓存名就是 sw.js 里的 VER（v315 这种）⇒ 认前缀 v\d+ 即可。
+    //    正常情况下 activate 已经清过；这里兜底防「SW 压根没更新」的情况。
+    if (window.caches && caches.keys) {
+      caches.keys().then(function(keys){
+        var live = keys.filter(function(k){ return /^v\d+$/.test(k); });
+        if (live.length > 1) {
+          Promise.all(live.slice(0, -1).map(function(k){ return caches.delete(k); }));
+        }
+      }).catch(function(){});
+    }
   });
 })();
 </script>
