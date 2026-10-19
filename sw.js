@@ -16,17 +16,24 @@
       旧缓存自然失效，不需要手动清。
    ⛔ 不要缓存 index.html 到永久：那样会永远看不到新版本。
 */
-const VER = 'v315';
+const VER = 'v316';
 const ASSETS = [
-  './app.315.js',
-  './app.315.css',
+  './app.316.js',
+  './app.316.css',
   './sdk.index.global.js'
 ];
 
 self.addEventListener('install', (e) => {
-  // 只预缓存不 waitUntil 阻塞 —— 慢的话反而拖慢首次打开
+  /* ⛔⛔⛔ 2026-10-19 修：安卓 App 的 WebView 长期存活，
+     没有 skipWaiting 的话新 SW 会一直卡在 waiting —— 旧 SW 继续管着页面，
+     App 永远停在旧版本（用户实测 App=v3.11、浏览器=v3.15）。
+     ⇒ install 时立刻 skipWaiting，新缓存一装好就夺权。
+     ⛔ 为什么不偷换页面：App 里用户可能正在填表单，
+        这里只换「缓存内容」和「接管权」，不主动 reload 当前页面，
+        换完等用户下次打开就是新版（index.html 是 network-first，会拿新的）。*/
   e.waitUntil(
     caches.open(VER).then((c) => Promise.allSettled(ASSETS.map((u) => c.add(u))))
+      .then(() => self.skipWaiting())
   );
 });
 
