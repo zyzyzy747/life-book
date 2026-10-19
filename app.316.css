@@ -1,0 +1,915 @@
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  /* ⚠ 全站只允许一个强调色。v2.7 起把「主题色」从强调色改成「底色色温」——
+     6 套主题改的是 --bg/--bg-2（都很暗，不抢戏），--brand 恒为琥珀。
+     之前 --brand 跟着主题走，导致同一页里星环是琥珀、按钮是粉紫、图标是绿的，
+     视觉锚点散在四处，这就是「配色不好看」的根因，不是某几个控件没调好。 */
+  --bg:#0C0B0A;--bg-2:#15120E;         /* 暖调近黑：OLED 上纯黑边缘发绿 */
+  --card:rgba(245,240,232,.045);--card-hi:rgba(245,240,232,.078);
+  --line:rgba(245,240,232,.085);--line-hi:rgba(245,240,232,.17);
+  --text:#F5F0E8;--text-2:#9A9186;--text-3:#6B6459;
+  /* --brand 是「主色」的通用入口，全站 90+ 处引用它。锁死成琥珀 = 一次改全站生效。 */
+  --brand:#FF9F1C;--brand-2:#E8890C;
+  --brand-rgb:255,159,28;--brand2-rgb:232,137,12;
+  --grad:linear-gradient(135deg,#FFB454,#F0913C);   /* 同色系微渐变，不做撞色 */
+  /* 语义色：全部降饱和一档，别跟琥珀抢。支出红 / 收入绿要能一眼分开，所以色相保留。 */
+  --out:#E8695F;--in:#4FB98A;--pink:#E08A96;--amber:#FFB454;--cyan:#5FB4C4;
+  --r:18px;--r-sm:14px;
+  /* 「星环」版新令牌（2026-10-14）。设计调性 = Brutally minimal × 杂志编辑：
+     暖调近黑打底（非纯黑，OLED 上边缘发绿）、单一琥珀强调色、发丝线分栏代替卡片堆砌、
+     圆角只留 3 档。⚠ 强调色走 --star-a 而不是 --brand，因为 6 套主题色可选，
+     用主题色当强调会让 11 张页面失去统一视觉锚点。 */
+  --star-a:var(--brand);                       /* 琥珀：全站唯一强调色，锁死，不跟主题走 */
+  --star-a-soft:rgba(255,159,28,.14);
+  --star-a-line:rgba(255,159,28,.34);
+  --star-line:rgba(245,240,232,.085);        /* 发丝线 */
+  --star-line-hi:rgba(245,240,232,.16);
+  --star-text:#F5F0E8;                       /* 暖调近白，不是纯白 */
+  --star-text-2:#9A9186;
+  --star-text-3:#6B6459;
+  --star-r-lg:28px;--star-r-md:14px;--star-r-pill:99px;   /* 圆角只有 3 档 */
+  --star-display:"Songti SC","STSong","Noto Serif CJK SC","Source Han Serif SC",
+                 "Noto Serif SC",SimSun,Georgia,serif;    /* 系统衬线，零网络加载 */
+  --star-ease:cubic-bezier(.16,1,.3,1);
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+
+/* ===== 星环版组件（今日页 02/03/04 区块）=====
+   ⚠ 命名统一 st- 前缀，不改既有类名 —— 6 个页面共用一套样式，
+   动 .card / .hero 这类会牵连报表页。 */
+.st-sec{display:flex;align-items:center;gap:9px;margin:22px 0 13px}
+.st-sec-i{font-family:var(--star-display);font-size:11px;color:var(--star-a);
+          letter-spacing:.1em;opacity:.85}
+.st-sec-t{font-size:11.5px;letter-spacing:.18em;color:var(--star-text-3)}
+.st-rule{height:1px;background:var(--star-line)}
+
+/* 记录星环：31 段弧 = 31 天，点亮 = 当天有记录，断签是灰的缺口 */
+.st-ring-wrap{display:flex;flex-direction:column;align-items:center;padding:30px 0 22px}
+.st-ring-box{position:relative;width:272px;height:272px}
+.st-ring-box svg{display:block;width:100%;height:100%;transform:rotate(-90deg)}
+.st-ring-c{position:absolute;inset:0;display:flex;flex-direction:column;
+          align-items:center;justify-content:center;pointer-events:none}
+.st-ring-n{font-family:var(--star-display);font-size:76px;line-height:.9;
+          font-weight:400;color:var(--star-text);letter-spacing:-.04em;
+          font-variant-numeric:tabular-nums}
+.st-ring-u{font-size:10.5px;letter-spacing:.2em;color:var(--star-text-3);margin-top:9px}
+.st-ring-sub{font-size:12.5px;color:var(--star-text-2);margin-top:13px}
+.st-ring-sub b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
+
+/* 每日一句：左侧琥珀竖线 + 大衬线 */
+.st-quote{padding:4px 0 8px 16px;position:relative}
+.st-quote::before{content:"";position:absolute;left:0;top:4px;bottom:8px;width:2px;
+                  background:var(--star-a);opacity:.55;border-radius:2px}
+.st-quote-z{font-family:var(--star-display);font-size:22px;line-height:1.45;
+            letter-spacing:-.015em;color:var(--star-text)}
+.st-quote-e{font-family:var(--star-display);font-size:13.5px;font-style:italic;
+            line-height:1.5;color:var(--star-text-2);margin-top:8px}
+.st-quote-a{font-size:11.5px;color:var(--star-text-3);margin-top:8px;letter-spacing:.05em}
+
+/* 卡片 */
+.st-card{background:rgba(245,240,232,.032);border:1px solid var(--star-line);
+         border-radius:var(--star-r-lg);padding:17px 17px 15px;position:relative;overflow:hidden}
+.st-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+                 background:linear-gradient(168deg,rgba(245,240,232,.028),transparent 52%)}
+
+/* 喝水 */
+.st-water{display:flex;align-items:center;gap:16px}
+.st-water-arc{position:relative;width:86px;height:86px;flex:0 0 auto}
+.st-water-arc svg{width:100%;height:100%;transform:rotate(-90deg)}
+.st-water-arc .st-wm{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;font-family:var(--star-display);font-size:21px;
+  color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.st-water-info{flex:1;min-width:0}
+.st-water-n{font-family:var(--star-display);font-size:32px;line-height:1;
+            color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.st-water-n i{font-style:normal;font-size:13px;color:var(--star-text-3);
+              margin-left:4px;letter-spacing:0}
+.st-water-goal{font-size:12.5px;color:var(--star-text-2);margin-top:6px}
+/*⛔ 必须 font-style:normal —— <em> 默认斜体，中文斜体很难看，
+   而且「目标 3000ml」这种数字斜体在深色底上更糊。*/
+.st-water-goal em{font-style:normal;font-variant-numeric:tabular-nums}
+.st-water-goal b{color:var(--star-a);font-weight:500;font-variant-numeric:tabular-nums}
+.st-btns{display:flex;gap:8px;margin-top:13px}
+.st-btn{flex:1;min-height:44px;border-radius:var(--star-r-md);
+        background:rgba(245,240,232,.055);border:1px solid var(--star-line-hi);
+        color:var(--star-text);font-size:14px;
+        transition:transform .16s var(--star-ease),background .16s var(--star-ease);
+        display:flex;align-items:center;justify-content:center;gap:6px}
+.st-btn:active{transform:scale(.965);background:var(--star-a-soft)}
+.st-btn-p{background:var(--star-a-soft);border-color:var(--star-a-line);color:var(--star-a)}
+.st-btn-undo{flex:0 0 auto;padding:0 15px;font-size:12.5px;color:var(--star-text-2)}
+
+/* v2.9：本周七格（.st-mood-week / .st-mood-c / .st-mood-e / .st-mood-d）已随
+   心情小卡片一起下线，样式和渲染一起删，别留孤儿 CSS。 */
+.st-mood-now{font-size:12.5px;color:var(--star-text-2);margin-top:14px}
+.st-mood-now b{color:var(--star-text);font-weight:500}
+/* ⛔ 10 个 44px 按钮 + 左侧文字在同一行必然挤爆（文字被压成竖排单字）
+   ⇒ 标题在上、按钮在下两行块布局，永不互相挤压 */
+.st-mood-picks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.st-mp{width:100%;height:44px;border-radius:var(--star-r-md);background:rgba(245,240,232,.055);
+       border:1px solid transparent;font-size:19px;line-height:1;
+       display:flex;align-items:center;justify-content:center;
+       transition:transform .16s var(--star-ease),border-color .16s var(--star-ease)}
+.st-mp:active{transform:scale(.9)}
+.st-mp.on{border-color:var(--star-a);background:var(--star-a-soft)}
+
+/* 心情小卡片：一枚大表情 + 一句状态，点整张都能进选择。
+   v2.9 起心情改成这种形态 —— 原来的「本周七格 + 一行 10 个按钮」占掉大半屏，
+   每天就为了点一下表情，结果得先滑过七列格子。 */
+.st-mood-card{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;width:100%;
+  border-radius:var(--star-r-md);background:rgba(245,240,232,.04);
+  border:1px solid var(--star-line);text-align:left;
+  transition:transform .16s var(--star-ease),border-color .16s var(--star-ease);
+}
+.st-mood-card:active{transform:scale(.985)}
+.st-mood-card.on{border-color:var(--star-a-line);background:var(--star-a-soft)}
+.st-mc-face{
+  width:52px;height:52px;flex:0 0 auto;border-radius:50%;
+  background:rgba(245,240,232,.06);border:1px solid var(--star-line);
+  display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;
+  overflow:hidden;      /* SVG 脸自带圆底，外圈这层就不需要再圆一次 */
+}
+.st-mc-face .st-mc-svg{width:100%;height:100%;display:block}
+.st-mood-card.on .st-mc-face{background:rgba(255,159,28,.14);border-color:var(--star-a-line)}
+.st-mc-txt{flex:1;min-width:0}
+.st-mc-t{display:block;font-size:14px;color:var(--star-text);line-height:1.3}
+/* ⛔ 两句必须各占一行 —— 它们都是 span（行内元素），
+   不写 display:block 会挤在同一行，"今天记为 😊点这里挑一个" 连成一坨。 */
+.st-mc-s{display:block;font-size:11.5px;color:var(--star-text-3);margin-top:3px}
+/* v3.1：心情历史入口。做成「卡片下面一排小字」而不是塞进卡片，
+   免得和「点卡片改今天」抢同一个点击区。触摸目标 ≥32px。 */
+.st-mood-hist{
+  display:block;width:100%;text-align:right;padding:10px 2px 4px;margin-top:2px;
+  font-size:12px;color:var(--star-text-3);cursor:pointer;
+  border-top:1px solid var(--star-line);
+  -webkit-tap-highlight-color:transparent;
+}
+.st-mood-hist:active{color:var(--star-a)}
+.st-mc-go{font-size:18px;color:var(--star-text-3);flex:0 0 auto}
+
+/* 心情弹窗：三列网格，大表情 + 中文标签。
+   13 个表情在 390 宽里放三列 ⇒ 每格 ~110px，emoji 给到 30px 才不至于看不清。
+   触摸目标由 .mp-opt 整体撑到 ≥88px，远超 44px 下限。 */
+.mp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 16px}
+.mp-opt{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  padding:11px 4px 9px;min-height:96px;border-radius:var(--star-r-md);
+  background:rgba(245,240,232,.045);border:1px solid transparent;
+  transition:transform .14s var(--star-ease),background .18s,border-color .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.mp-opt:active{transform:scale(.94)}
+.mp-opt.on{background:rgba(255,159,28,.15);border-color:rgba(255,159,28,.45)}
+/* SVG 脸：撑满整格。原来 .mp-f 是 30px 的 emoji，现在换 SVG，尺寸跟着格走 */
+.mp-face{display:block;line-height:0}
+.mp-svg{width:46px;height:46px;display:block}
+.mp-l{font-size:11.5px;color:var(--star-text-2);line-height:1.2;text-align:center;margin-top:2px}
+.mp-opt.on .mp-l{color:var(--star-a)}
+.mp-hint{font-size:12px;color:var(--star-text-3);text-align:center;margin:0 0 12px}
+/* 图例：告诉用户颜色是按情绪分的，不然「为什么蓝色代表难过」没人知道 */
+.mp-legend{display:flex;justify-content:center;gap:12px;margin:2px 0 16px;flex-wrap:wrap}
+.mp-lg{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--star-text-3)}
+.mp-lg i{width:9px;height:9px;border-radius:50%;display:block}
+/* 未选时确定按钮置灰 —— 截图里就是禁用的，用户得先选一个 */
+#mp-ok.is-off,.btn.is-off{opacity:.34;pointer-events:none}
+
+/* 心情历史月历（v3.1） */
+.mh-loading{font-size:12.5px;color:var(--star-text-3);text-align:center;padding:26px 0}
+.mh-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.mh-wk span{font-size:10.5px;color:var(--star-text-3);text-align:center}
+.mh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.mh-cell{
+  aspect-ratio:1;border-radius:9px;background:rgba(245,240,232,.04);
+  border:1px solid transparent;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+/* ⛔ 触摸目标：7 列在 390 宽里每格 ≈48px，已经过 44px 线，别再往小缩 */
+.mh-cell:active{transform:scale(.93)}
+.mh-cell.pad{background:none;pointer-events:none}
+.mh-cell.fut{opacity:.3;pointer-events:none}
+.mh-cell.today{border-color:var(--star-a);box-shadow:0 0 0 1px rgba(255,159,28,.22)}
+.mh-svg{width:26px;height:26px;display:block}
+.mh-cell em{font-style:normal;font-size:9px;color:var(--star-text-3);line-height:1}
+.mh-dot{font-size:13px;color:var(--star-text-3);font-variant-numeric:tabular-nums}
+.mh-cell.today .mh-dot{color:var(--star-a)}
+.mh-bar{height:4px;border-radius:99px;background:rgba(245,240,232,.08);margin:14px 0 8px;overflow:hidden}
+.mh-bar i{display:block;height:100%;background:var(--star-a);border-radius:99px}
+.mh-note{font-size:11px;color:var(--star-text-3);text-align:center;margin:0}
+
+/* 今日速记：发丝线行，不是卡片 */
+.st-quick{display:flex;align-items:stretch}
+.st-qk{flex:1;padding:13px 0 12px;text-align:center;position:relative;
+       border-radius:var(--star-r-md)}
+.st-qk+.st-qk::before{content:"";position:absolute;left:0;top:14px;bottom:13px;
+                      width:1px;background:var(--star-line)}
+.st-qk-n{font-family:var(--star-display);font-size:23px;line-height:1;
+         color:var(--star-text);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.st-qk-n.has{color:var(--star-a)}
+.st-qk-t{font-size:11px;color:var(--star-text-3);margin-top:6px;letter-spacing:.06em}
+
+/* 动效降级 */
+@media (prefers-reduced-motion:reduce){
+  .st-btn,.st-mp,.st-mood-card{transition:none}
+}
+
+/* ===== 主题 =====
+   v2.7 起主题只改「底色色温」，不再改强调色。6 套都是刻意压暗的暖-中性色，
+   差异克制到「换个氛围」而不是「换个世界」，全站强调色始终是琥珀。
+   ⚠ 改这里必须同步改 THEMES 数组（第 ~1040 行）里的 name / c，否则
+   「我的」页色板圆点会和实际底色对不上。 */
+[data-theme="ink"]   {--bg:#0C0B0A;--bg-2:#15120E}   /* 墨黑（默认） */
+[data-theme="dawn"]  {--bg:#100C09;--bg-2:#1B1511}   /* 晨褐 */
+[data-theme="dusk"]  {--bg:#0D0B10;--bg-2:#17141C}   /* 夜紫 */
+[data-theme="sea"]   {--bg:#090D0F;--bg-2:#121A1D}   /* 深青 */
+[data-theme="clay"]  {--bg:#110D0A;--bg-2:#1C1712}   /* 陶土 */
+[data-theme="moss"]  {--bg:#0A0D0A;--bg-2:#131712}   /* 苔绿 */
+
+/* ===== 背景层 =====
+   三层，从下到上：
+     #bg-photo  用户自定义底图（localStorage 存 dataURL，可关）
+     #bg-grain   颗粒噪点（SVG feTurbulence 一次性生成，data URI）
+     #bg-dots    粒子星点（canvas 一次性画出静态点位，CSS 动画做漂移）
+   ⛔ 绝不用 requestAnimationFrame 每帧重绘 —— 单文件 App 开 6 个页面
+   常驻 WebView，跑 rAF 会持续占 GPU，在低端机上直接把滚动拖卡。
+   粒子只需要「位置随机 + 缓慢漂移」，一次性生成后交给 CSS transform 即可。 */
+
+/* 用户自定义底图：铺满 + 压暗，保证文字可读 */
+#bg-photo{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-position:var(--bg-pos,50% 50%);background-size:cover;background-repeat:no-repeat;
+  opacity:0;transition:opacity .5s ease;
+  /*⛔ 模糊要放大再向左上挪 —— 否则 blur 会把边缘也吃进来，露出底色一圈。
+     scale 的倍数要跟着 --bg-blur 走：blur 8px 时放大 1.06 就够盖住边缘。 */
+  filter:blur(calc(var(--bg-blur,0) * 1px));
+  transform:scale(calc(1 + var(--bg-blur,0) * 0.011));
+  will-change:filter;
+}
+body.has-bg #bg-photo{opacity:var(--bg-dim,.42)}
+/* 底图上再压一层暖调渐变，避免自定义图片把琥珀强调色衬得发灰 */
+#bg-veil{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;
+  background:linear-gradient(180deg,rgba(12,11,10,.30),rgba(12,11,10,.72));
+  transition:opacity .5s ease;
+}
+body.has-bg #bg-veil{
+  /* ⛔ 顶/底两层都要够厚：只有 42% 压暗时，亮色底图（白天拍的照）会让
+     文字区对比度掉下来，标题被底图吃掉（截图里"先天下之忧"那行就糊了）。
+     这里给到 .40→.86，比原来更沉。 */
+  opacity:1;
+  background:linear-gradient(180deg,rgba(12,11,10,.40),rgba(12,11,10,.86));
+}
+
+/* 颗粒：给纯色底一点纸感，避免大面积近黑显得「塑料」 */
+#bg-grain{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.045'/%3E%3C/svg%3E");
+}
+
+/* 粒子星点：位置由 JS 随机写进 inline style，漂移交 CSS。
+   ⚠ keyframes 里两帧都要写**完整** transform（浏览器不会为 transform
+   做「未列出的属性保持不变」的插值补全）—— 中间那帧只改 opacity 的话，
+   位移会退化成 0 → 0，粒子只闪不飘。
+   --dx 是每颗粒子各自的横向振幅（JS 随机给），两端取正负号 = 从一侧漂到另一侧再回来。 */
+#bg-dots{position:fixed;inset:0;z-index:0;pointer-events:none}
+#bg-dots i{
+  /*⛔ 粒子颜色不再写死 var(--star-a)（永远是琥珀，六套主题下长得一模一样）。
+     改读 --bg-dot：JS 按「主题色 × 时间色温」算出来写进 :root。*/
+  position:absolute;border-radius:50%;background:var(--bg-dot, #FF9F1C);
+  /* 每颗粒子 hue 偏移 ±14°，全部同一个颜色会像「一层噪点」而不是「一群星」 */
+  filter:hue-rotate(var(--dh,0deg));
+  animation-name:bd;animation-timing-function:ease-in-out;animation-iteration-count:infinite;
+  will-change:transform,opacity;
+}
+@keyframes bd{
+  0%   {transform:translate3d(calc(var(--dx,6px) * -1), 12px, 0) scale(.82);opacity:.14}
+  50%  {transform:translate3d(var(--dx,6px), -14px, 0) scale(1.1);opacity:.68}
+  100% {transform:translate3d(calc(var(--dx,6px) * -1), 12px, 0) scale(.82);opacity:.14}
+}
+/* ⛔ 必须给**负的** animation-delay 打散相位：全部 delay=0 就是整片同起同落，
+   看着像屏幕在亮灭而不是有粒子在飘。JS 里给的是 -(r*dur) 秒。 */
+body.no-motion #bg-dots i{animation:none;opacity:.34}
+
+/* 背景设置控件 */
+.bg-prev{
+  height:96px;border-radius:var(--r-sm);background:var(--card) center/cover no-repeat;
+  border:1px solid var(--line);display:flex;align-items:flex-end;padding:8px 10px;
+  color:var(--text-3);font-size:11.5px;
+}
+.bg-prev.set{border-color:rgba(255,159,28,.4)}
+/* 隐藏 file input 但**保留可点区域**：用 clip 裁掉视觉但保留布局，
+   别用 pointer-events:none —— 部分 WebView 里 label→input 的点击链会因此断掉。 */
+#bg-file{
+  position:absolute;width:1px;height:1px;opacity:0;
+  overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+}
+#bg-file-lb{cursor:pointer}
+.bg-picks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 4px}
+.bg-pick{aspect-ratio:9/14;border-radius:10px;border:1px solid var(--line);overflow:hidden;position:relative}
+.bg-pick.on{border-color:var(--star-a);box-shadow:0 0 0 2px rgba(255,159,28,.18)}
+.bg-pick.on::after{content:'✓';position:absolute;right:3px;top:3px;width:15px;height:15px;border-radius:50%;
+  background:var(--star-a);color:#151009;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.bg-pick span{position:absolute;left:0;right:0;bottom:0;padding:3px 0 4px;text-align:center;font-size:10px;
+  background:rgba(12,11,10,.72);color:var(--text-2)}
+/* v3.0：删除角标。⛔ 不能用 .bg-pick span 承载（那条规则是给「再加一张」的字加底衬的），
+   各自独立类名，别复用。 */
+.bg-pick-del{
+  position:absolute;right:2px;top:2px;width:20px;height:20px;border-radius:50%;border:0;z-index:2;
+  background:rgba(12,11,10,.78);color:#fff;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-pick-del:active{background:var(--out)}
+.bg-pick.add{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border-style:dashed;cursor:pointer;background:rgba(245,240,232,.04);
+}
+.bg-pick.add span{position:static;background:none;color:var(--star-a);font-size:20px;padding:0;line-height:1}
+.bg-pick.add small{font-size:9.5px;color:var(--star-text-3)}
+
+/* 开关行：整行可点，label 包 input + 视觉滑块 + 文案。
+   ⛔ input 用 appearance:none + opacity:0 藏起来，**不能 display:none** ——
+      display:none 的表单控件在部分 WebView 里点label 不触发。 */
+.bg-sw{
+  display:flex;align-items:center;gap:11px;padding:11px 12px;margin-bottom:8px;cursor:pointer;
+  border-radius:var(--star-r-md);background:rgba(245,240,232,.04);border:1px solid var(--star-line);
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-sw input{position:absolute;opacity:0;width:1px;height:1px}
+.bg-sw-b{
+  flex:0 0 auto;width:38px;height:22px;border-radius:99px;position:relative;
+  background:rgba(245,240,232,.14);transition:background .2s;
+}
+.bg-sw-b::after{
+  content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;
+  background:#F5F0E8;transition:transform .2s var(--star-ease);
+}
+.bg-sw.on{background:rgba(255,159,28,.1);border-color:var(--star-a-line)}
+/* ⛔ 开启态的滑块要足够「实」：底色用纯琥珀 + 滑块用深色，
+   否则在深色底上「开」和「关」几乎看不出区别（截图里就是这个毛病）。 */
+.bg-sw.on .bg-sw-b{background:#FF9F1C}
+.bg-sw.on .bg-sw-b::after{transform:translateX(16px);background:#151009}
+.bg-sw-t{font-size:13px;color:var(--star-text);line-height:1.35}
+.bg-sw-t em{display:block;font-style:normal;font-size:11px;color:var(--star-text-3);margin-top:2px}
+
+/* ===== 个性化设置控件 ===== */
+.theme-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+/* 主题色板：6 套底色都很暗，光填一个色块在深色面板上根本分不出来。
+   改成「上下双色对分」—— 上半是 bg、下半是 bg-2，中间一道发丝线，
+   于是六颗点各自有可辨的明度/色温差，选中态再叠一圈琥珀。 */
+.theme-dot{aspect-ratio:1;border-radius:14px;border:1px solid var(--line);
+           transition:transform .16s,border-color .16s;position:relative;overflow:hidden}
+.theme-dot::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;
+                  background:rgba(245,240,232,.22)}
+.theme-dot.on{border-color:var(--star-a);box-shadow:0 0 0 2px rgba(255,159,28,.2)}
+.theme-dot:active{transform:scale(.93)}
+.cat-edit{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.cat-x{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;background:rgba(245,240,232,.07);border-radius:9px;font-size:12px;color:var(--text-2)}
+.cat-x em{font-style:normal;color:var(--text-3);font-size:15px;line-height:1}
+
+/* ===== 月份切换 ===== */
+.month-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.month-nav{width:44px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--text-2);font-size:17px;flex:0 0 auto}
+.month-nav:active{background:var(--card-hi)}
+.month-nav:disabled{opacity:.28}
+.month-cur{flex:1;text-align:center;font-size:15px;font-weight:700}
+
+/* ===== 降低动效偏好（系统开启时关闭动画） ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+html,body{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+/* 背景三层在 #bg-* 上，body 只剩纯底色 */
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit;background:none;border:none;outline:none}
+select option{background:#15120E;color:var(--text)}
+a{color:var(--brand);text-decoration:none}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+/* ⛔ #root 必须显式 z-index:1：背景三层是 position:fixed;z-index:0，
+   #root 是普通流元素，没有 z-index 就会被 fixed 层盖住（点不到按钮）。
+   position:relative 是必需的 —— 只有 z-index 不生效。 */
+#root{position:relative;z-index:1;min-height:100%}
+
+/* ===== Header ===== */
+.hd{
+  position:sticky;top:var(--neth,0px);z-index:20;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:calc(var(--safe-top) + 13px) 18px 12px;
+  background:rgba(12,11,10,.74);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  border-bottom:1px solid var(--line);
+}
+/* 断网提示条：放在 #root 外面（登录页也要有），sticky 粘顶。
+   它出现时 .hd 要用 --neth 让位 —— 两个元素都是 sticky top:0，不抬一手会互相压住。
+   高度由 JS 实测写入（横条高度随安全区变），别在 CSS 里猜。 */
+.net-bar{
+  position:sticky;top:0;z-index:30;display:none;
+  align-items:center;justify-content:center;gap:7px;
+  padding:calc(var(--safe-top) + 8px) 14px 8px;
+  background:var(--grad);color:#241703;
+  font-size:12.5px;font-weight:700;letter-spacing:.01em;
+}
+.net-bar.on{display:flex}
+
+/* 顶部栏：杂志编辑风 —— 站名用衬线体（与星环数字同一套展示字），
+   不再用渐变文字。紫蓝渐变在深底上发灰、缩小后糊成一团，是「配色不好看」最显眼的一处。
+   「手账」二字用琥珀实色做重音，比彩色渐变更稳，也和星环呼应。 */
+.brand{font-family:var(--star-display);font-size:20px;font-weight:600;letter-spacing:.02em;color:var(--star-text);line-height:1.1}
+.brand em{font-style:normal;color:var(--star-a);font-weight:700}
+.brand.hi{line-height:1.3}
+.brand .hi-t{display:block;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHe",sans-serif;
+             font-size:10.5px;font-weight:500;color:var(--star-text-3);letter-spacing:.18em;margin-bottom:2px}
+/* 头像：从实心渐变球改成「描边圈 + 暖白字母」。实心球在小尺寸下就是一团糊色。 */
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(245,240,232,.06);
+  border:1px solid var(--star-line-hi);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--star-text);font-weight:600;font-size:14px;flex:0 0 auto;
+  letter-spacing:.02em;
+}
+.avatar:active{transform:scale(.93)}
+.avatar svg{width:18px;height:18px;stroke-width:1.7;color:var(--star-text-2)}
+/* 自定义头像：图片铺满圆形，皮肤立绘按脸部位置取景 */
+.avatar,.me-avatar{overflow:hidden}
+.av-img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.view{flex:1;padding:16px 16px calc(146px + var(--safe-bottom));max-width:680px;margin:0 auto;width:100%}
+.view>*{animation:fade .26s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Tab bar ===== */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;display:flex;
+  background:rgba(12,11,10,.86);backdrop-filter:blur(24px) saturate(140%);-webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-top:1px solid var(--line);padding:6px 4px calc(6px + var(--safe-bottom));z-index:20;
+}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:var(--text-3);font-size:10.5px;transition:color .18s}
+.tab .pill{width:44px;height:27px;border-radius:14px;display:flex;align-items:center;justify-content:center;transition:background .18s}
+.tab svg{width:21px;height:21px;stroke-width:1.7}
+.tab.active{color:#fff}
+.tab.active .pill{background:rgba(var(--brand-rgb),.18)}
+.tab:active .pill{background:rgba(245,240,232,.07)}
+
+/* ===== Login ===== */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative}
+/* 登录页氛围：两团琥珀/暖白光晕缓慢游走。
+   这是**两团纯 CSS radial-gradient**（不是 canvas、不是滤镜），所以合成器能直接
+   插值 transform，滚动和不动的输入框都不掉帧。
+   ⚠ 别用 filter:blur() 做这种大面积光晕 —— blur 要按像素跑，1080p 上单帧就能吃掉几毫秒。 */
+.login-wrap::before,.login-wrap::after{
+  content:'';position:absolute;border-radius:50%;pointer-events:none;
+  filter:none;
+}
+.login-wrap::before{
+  width:min(420px,86vw);height:min(420px,86vw);top:-8%;left:-14%;
+  background:radial-gradient(circle,rgba(255,159,28,.15),rgba(255,159,28,.04) 52%,transparent 72%);
+  animation:bgFloat1 19s ease-in-out infinite;
+}
+.login-wrap::after{
+  width:min(360px,74vw);height:min(360px,74vw);bottom:-6%;right:-12%;
+  background:radial-gradient(circle,rgba(245,240,232,.10),rgba(245,240,232,.025) 55%,transparent 74%);
+  animation:bgFloat2 25s ease-in-out infinite;
+}
+@keyframes bgFloat1{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  50%    {transform:translate3d(24px,32px,0) scale(1.1)}
+}
+@keyframes bgFloat2{
+  0%,100%{transform:translate3d(0,0,0) scale(1.04)}
+  50%    {transform:translate3d(-28px,-24px,0) scale(1)}
+}
+/* 登录页粒子更亮一档：这里没有内容要读，可以更「有空气」 */
+body.on-login #bg-dots i{opacity:.72}
+body.on-login #bg-grain{opacity:.75}
+/* ⛔ 光晕在登录卡下面，必须让卡片不透明地压住它，否则 backdrop-filter
+   会在两层叠加的半透明上取样，看着发灰 */
+.login-card{
+  position:relative;z-index:1;
+  width:100%;max-width:390px;background:rgba(245,240,232,.05);
+  border:1px solid var(--line);border-radius:24px;padding:30px 24px 26px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+.login-logo{
+  width:56px;height:56px;border-radius:18px;background:var(--grad);margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(var(--brand-rgb),.35);
+}
+.login-logo svg{width:26px;height:26px;stroke:#fff;stroke-width:7;stroke-linecap:round}
+.login-title{font-size:23px;font-weight:700;text-align:center;letter-spacing:-.02em}
+.login-sub{color:var(--text-3);font-size:13px;text-align:center;margin-top:5px;margin-bottom:24px}
+.login-tabs{display:flex;background:rgba(245,240,232,.05);border-radius:12px;padding:4px;margin-bottom:20px;gap:2px}
+.login-tab{flex:1;padding:8px 4px;border-radius:9px;color:var(--text-3);font-size:13px;text-align:center;transition:.18s}
+.login-tab.active{background:rgba(245,240,232,.09);color:#fff;font-weight:600}
+
+/* ===== Form ===== */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--text-3);margin-bottom:7px;padding-left:2px}
+.inp,.field input,.field textarea,.field select{
+  width:100%;padding:13px 14px;background:rgba(245,240,232,.05);
+  border:1px solid var(--line);border-radius:13px;font-size:15px;transition:.16s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  border-color:rgba(var(--brand-rgb),.55);background:rgba(var(--brand-rgb),.07);
+}
+.field textarea{resize:vertical;min-height:88px;line-height:1.6}
+/* 正文够长才写得舒服：起步就 8 行左右，写多了自己往上长（上限半屏，再多就内部滚动） */
+.field textarea.grow{min-height:158px;resize:none;overflow:hidden}
+.field-row{display:flex;gap:10px;align-items:flex-end}
+.field-row .field{flex:1;min-width:0}
+.btn{
+  width:100%;padding:14px;border-radius:14px;background:var(--grad);color:#241703;
+  font-weight:600;font-size:15px;box-shadow:0 8px 22px rgba(0,0,0,.42);
+  transition:transform .12s,opacity .12s;margin-top:4px;
+}
+.btn:active{transform:scale(.985);opacity:.9}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn-ghost{
+  width:100%;padding:13px;border-radius:14px;border:1px solid var(--line-hi);
+  color:var(--text-2);font-size:15px;background:rgba(245,240,232,.03);margin-top:10px;
+}
+.btn-ghost.danger{color:var(--out);border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.06)}
+.btn-text{padding:8px;color:var(--text-3);font-size:13px}
+.btn-text:active{color:var(--text)}
+.btn-code{
+  padding:13px 15px;background:rgba(245,240,232,.06);border:1px solid var(--line-hi);
+  border-radius:13px;color:var(--brand);font-size:13px;white-space:nowrap;flex:0 0 auto;margin-bottom:14px;
+}
+.btn-code:disabled{color:var(--text-3);cursor:not-allowed}
+.msg{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:13px;display:none;line-height:1.5}
+.msg.show{display:block}
+.msg.err{background:rgba(232,105,95,.13);color:#F3B5AF;border:1px solid rgba(232,105,95,.24)}
+.msg.ok{background:rgba(79,185,138,.13);color:#9ADEC0;border:1px solid rgba(79,185,138,.24)}
+
+/* ===== Section / Card ===== */
+/* 小节标题改成杂志式的「细字 + 短琥珀标记」，跟星环区的 .st-sec-i 同一套语言 */
+.sec{font-size:11.5px;color:var(--star-text-3);margin:24px 2px 11px;font-weight:600;letter-spacing:.18em;
+     display:flex;align-items:center;gap:8px}
+.sec::before{content:'';width:12px;height:1px;background:var(--star-a);opacity:.7;flex:0 0 auto}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:16px 17px;margin-bottom:10px;
+}
+.card-tap:active{background:var(--card-hi)}
+.row{display:flex;align-items:center;gap:10px}
+.row .grow{flex:1;min-width:0}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.amt-out{color:var(--out);font-weight:700;font-size:17px}
+.amt-in{color:var(--in);font-weight:700;font-size:17px}
+.muted{color:var(--text-3)}
+.dim{color:var(--text-2)}
+.tag{display:inline-block;padding:3px 9px;background:rgba(245,240,232,.07);border-radius:8px;font-size:11px;color:var(--text-2);margin:0 5px 5px 0}
+.mood{font-size:19px;margin-right:6px;display:inline-flex;align-items:baseline;gap:5px}
+/*空值时不留位 —— 心情现在默认来自星环区，没记的日记不该在日期左边空一截*/
+.mood:empty{display:none}
+.mood em{font-style:normal;font-size:12px;color:var(--text-2)}
+.chip{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+
+/* ===== Hero (今日) =====
+   原来是大面积琥珀色晕染 + 紫蓝渐变描边，卡片感重、把下面的星环压住了。
+   改成「发丝线框 + 极淡琥珀晕」：数字仍是全页最大的一处视觉重量，但容器本身退到背景里。 */
+.hero{
+  background:radial-gradient(120% 130% at 8% -20%, rgba(var(--brand-rgb),.14), transparent 62%);
+  border:1px solid var(--line);border-radius:var(--r-lg);padding:22px 20px 20px;margin-bottom:2px;
+}
+.hero-label{font-size:11.5px;color:var(--star-text-3);letter-spacing:.16em;text-transform:none}
+.hero-num{font-family:var(--star-display);font-size:44px;font-weight:400;letter-spacing:-.03em;
+          margin:6px 0 16px;color:var(--star-text);font-variant-numeric:tabular-nums;line-height:1}
+.hero-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px 10px;
+           border-top:1px solid var(--star-line);padding-top:15px}
+.hero-grid .k{display:block;font-size:11px;color:var(--text-3);margin-bottom:2px}
+.hero-grid .v{font-size:15px;font-weight:700}
+
+/* ===== Stats ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:6px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px}
+.stat .label{font-size:12px;color:var(--text-3)}
+.stat .value{font-size:21px;font-weight:700;margin-top:3px;letter-spacing:-.01em}
+.stat .sub{font-size:11px;color:var(--text-3);margin-top:1px}
+
+/* ===== Check-in (今日状态) ===== */
+.check-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.check{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 10px;text-align:center}
+.check .ico{font-size:20px;display:block;margin-bottom:5px}
+.check .ico svg{width:21px;height:21px;display:block;margin:0 auto 6px;color:var(--text-3);stroke-width:1.8}
+.check.on .ico svg{color:var(--in)}
+.check .t{font-size:11px;color:var(--text-3);margin-bottom:3px}
+.check .v{font-size:14px;font-weight:700}
+.check.on{border-color:rgba(53,217,155,.35);background:rgba(53,217,155,.09)}
+.check.on .v{color:var(--in)}
+.check.off .v{color:var(--text-3)}
+
+/* ===== Quick ===== */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.quick{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 4px;text-align:center;color:var(--text-2);font-size:11px;transition:.14s;
+}
+.quick:active{background:var(--card-hi);transform:scale(.97)}
+.quick .ico{width:24px;height:24px;display:block;margin:0 auto 6px;color:var(--brand)}
+.quick svg{width:24px;height:24px;display:block;margin:0 auto 7px;color:var(--brand);stroke-width:1.8}
+
+/* ===== FAB =====
+   从「紫色圆角方块 + 紫蓝渐变」改成「琥珀实心圆 + 近黑图标」。
+   圆角方块在这个 UI 里没有对应物（其余元素不是方形容器）⇒ 看着像个贴上去的控件；
+   而全站唯一的实心琥珀正好落在「今天记一笔」这个主动作上，视觉锚点唯一。 */
+.fab{
+  position:fixed;right:17px;bottom:calc(78px + var(--safe-bottom));
+  width:54px;height:54px;border-radius:50%;background:var(--star-a);color:#241703;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 22px rgba(0,0,0,.5);z-index:15;transition:transform .12s;
+}
+.fab svg{width:23px;height:23px;stroke-width:2.4}
+.fab:active{transform:scale(.9)}
+
+/* ===== Modal ===== */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(3px);z-index:40;display:none;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{
+  width:100%;max-width:680px;background:#15120E;
+  border-top-left-radius:24px;border-top-right-radius:24px;border:1px solid var(--line);
+  padding:8px 18px calc(20px + var(--safe-bottom) + var(--kb,0px));
+  max-height:calc(92vh - var(--kb,0px));overflow-y:auto;animation:slideUp .26s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 0 14px}
+.modal-title{font-size:17px;font-weight:700}
+.btn-close{width:30px;height:30px;border-radius:50%;background:rgba(245,240,232,.07);color:var(--text-2);font-size:17px;display:flex;align-items:center;justify-content:center}
+.grab{width:38px;height:4px;border-radius:2px;background:rgba(245,240,232,.18);margin:8px auto 0}
+
+/* ===== Charts ===== */
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px 8px;margin-bottom:6px}
+.chart-title{font-size:12px;color:var(--text-3);margin:0 4px 8px}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{font-variant-numeric:tabular-nums}
+.chart-legend{display:flex;gap:16px;justify-content:center;margin-top:4px;font-size:11px;color:var(--text-3)}
+.chart-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.bar-stack{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:grid;grid-template-columns:58px 1fr 66px;align-items:center;gap:9px;font-size:12px}
+.bar-track{height:9px;border-radius:5px;background:rgba(245,240,232,.06);overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;background:var(--grad)}
+.bar-row .nm{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .vl{text-align:right;color:var(--text-2);font-variant-numeric:tabular-nums;font-size:11px}
+
+/* ===== Segmented control ===== */
+.seg{display:flex;gap:4px;background:rgba(245,240,232,.05);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.seg button{flex:1;height:34px;border-radius:9px;font-size:13px;color:var(--text-2);font-weight:600;display:flex;align-items:center;justify-content:center;gap:5px}
+.seg button.on{background:var(--grad);color:#fff}
+.seg button svg{width:15px;height:15px}
+
+/* ===== Streak / 徽章 ===== */
+.streak{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,rgba(255,180,84,.16),rgba(255,122,89,.06));border:1px solid rgba(255,180,84,.28);border-radius:var(--r);padding:14px 16px;margin-bottom:6px}
+.streak .flame{color:var(--amber);flex:0 0 auto}
+.streak .flame svg{width:27px;height:27px;stroke-width:1.7;display:block}
+.streak .big{font-size:25px;font-weight:800;color:var(--amber);letter-spacing:-.02em;line-height:1.1}
+.streak .lb{font-size:11px;color:var(--text-3);margin-top:1px}
+.streak .side{margin-left:auto;text-align:right;font-size:11px;color:var(--text-3);line-height:1.65}
+
+/* ===== Search ===== */
+.search{position:relative;margin-bottom:12px}
+.search input{width:100%;padding-left:36px;padding-right:34px}
+.search .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-3);pointer-events:none}
+.search .si svg{width:100%;height:100%;display:block}
+.search .clr{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:rgba(245,240,232,.08);color:var(--text-3);font-size:13px;display:flex;align-items:center;justify-content:center}
+mark{background:rgba(255,180,84,.3);color:#fff;border-radius:3px;padding:0 2px}
+
+/* ===== Steps ===== */
+.step-hero{background:linear-gradient(140deg,rgba(79,209,224,.2),rgba(91,224,149,.07) 60%,rgba(245,240,232,.04));border:1px solid rgba(79,209,224,.26);border-radius:22px;padding:17px 20px 16px;margin-bottom:6px;transition:transform .12s}
+.step-hero:active{transform:scale(.99)}
+.step-top{display:flex;align-items:baseline;justify-content:space-between}
+.step-num{font-size:33px;font-weight:800;letter-spacing:-.03em;color:#fff}
+.step-track{height:8px;border-radius:4px;background:rgba(245,240,232,.1);overflow:hidden;margin-top:11px}
+.step-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--in))}
+.step-hint{font-size:11px;color:var(--text-3);margin-top:7px;line-height:1.6}
+.step-calib{margin-top:8px;border-top:1px solid rgba(245,240,232,.09);padding-top:7px}
+.step-calib .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
+/* 步数卡里的「距离 / 消耗」—— 按步数折算出来的，UI 上必须写明是估算 */
+.step-extra{display:flex;align-items:flex-end;gap:26px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(245,240,232,.09)}
+.step-extra .m{display:flex;flex-direction:column;gap:3px}
+.step-extra .m i{font-style:normal;font-size:11px;color:var(--text-3)}
+.step-extra .m b{font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.step-extra .m b em{font-style:normal;font-size:11px;font-weight:600;color:var(--text-3);margin-left:3px}
+.step-extra .adj{margin-left:auto}
+.step-extra .adj .btn-text{padding:0;font-size:11.5px;color:var(--cyan)}
+
+
+/* Toast
+   ⭐ 收起位必须"几何上一定出屏"：旧写法是 top:66px+safe-top 配 translateY(-190%)，
+   而 toast 有两三行（标题 + 换行后的说明）时高度约 68px，-190% 只上移 129px，
+   顶部起点又是 66px + 安全区 ⇒ 底部还剩三四十像素留在屏幕最顶端，
+   变成一条挂在状态栏上、只有刷新页面才会消失的"胶囊"（还正好挡住状态栏）。
+   现在改成 top:0 + translateY(calc(-100% - 24px))：无论自身多高、安全区多大都在屏外；
+   再加 visibility/pointer-events —— 光靠 opacity 是挡不住点击的。 */
+.toast{
+  position:fixed;left:50%;top:0;transform:translate(-50%,calc(-100% - 24px));
+  opacity:0;visibility:hidden;pointer-events:none;
+  background:rgba(22,19,15,.97);border:1px solid rgba(245,240,232,.14);color:var(--star-text);
+  padding:10px 17px 10px 13px;border-radius:99px;font-size:13px;font-weight:600;z-index:120;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);
+  transition:transform .34s cubic-bezier(.2,.9,.3,1),opacity .2s ease,visibility .34s;
+  display:flex;align-items:center;gap:9px;max-width:92vw
+}
+.toast.show{transform:translate(-50%,calc(var(--safe-top) + 66px));opacity:1;visibility:visible;pointer-events:auto}
+/* 出错提示：红描边 + 叹号，一眼和普通成功提示分开 */
+.toast.err{border-color:rgba(232,105,95,.55)}
+.toast .ti{
+  width:23px;height:23px;border-radius:50%;flex:0 0 auto;
+  background:var(--out);color:#2A0A08;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;line-height:1
+}
+/* 成功提示：琥珀圆点（v2.7 取代原来的宠物立绘） */
+.toast .tdot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--star-a);margin:0 7px}
+.toast .tt{line-height:1.35}
+.toast .tt i{display:block;font-style:normal;font-size:10.5px;color:var(--text-3);font-weight:500;margin-top:1px}
+/* 自动同步结果条：手机端自动化打开本页（?steps=…&a=1）时显示，一眼就能看到结果 */
+/* 收起位同样用 translateY(-100% - 30px)：只要 top 参与定位，安全区一大就可能漏一条在屏顶 */
+.sync-bar{
+  position:fixed;left:14px;right:14px;top:0;z-index:70;
+  display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:17px;
+  color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-2));
+  box-shadow:0 12px 30px rgba(0,0,0,.42);
+  font-size:13.5px;font-weight:700;line-height:1.4;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(calc(-100% - 30px));
+  transition:opacity .26s,transform .3s cubic-bezier(.2,.8,.3,1),visibility .3s;
+}
+.sync-bar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(calc(var(--safe-top) + 10px))}
+.sync-bar .ico{width:28px;height:28px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(245,240,232,.24)}
+.sync-bar .ico svg{width:17px;height:17px}
+.sync-bar i{display:block;font-style:normal;font-size:11px;font-weight:500;opacity:.88;margin-top:2px}
+/* 中间那段文字要能撑开，否则「×」会被长文本挤出条外 */
+.sync-bar>div:nth-child(2){flex:1;min-width:0}
+.sync-bar.tappable{cursor:pointer}
+.sync-bar .sb-x{
+  flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:0;
+  background:rgba(245,240,232,.2);color:#fff;font-size:17px;line-height:1;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.sync-bar .sb-x:active{background:rgba(245,240,232,.36)}
+
+/* ===== Empty / Loader ===== */
+.empty{text-align:center;padding:52px 16px;color:var(--text-3);font-size:13px;line-height:1.7}
+.empty .ico{font-size:40px;margin-bottom:12px;opacity:.5}
+.loader{display:inline-block;width:15px;height:15px;border:2px solid var(--line-hi);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== Profile (我的) =====
+   大头像也从实心渐变球改成描边圈 —— 和顶部栏小头像同一套语言。
+   72px 的实心渐变球在小尺寸下就是一块糊色，放大到 72px 也只是更大的糊色。 */
+.me-hero{text-align:center;padding:26px 16px 22px}
+.me-avatar{
+  width:72px;height:72px;border-radius:50%;margin:0 auto 14px;
+  background:rgba(245,240,232,.05);border:1px solid var(--star-line-hi);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--star-text);font-size:28px;font-weight:600;letter-spacing:.02em;
+}
+.me-avatar svg{width:32px;height:32px;stroke-width:1.5;color:var(--star-text-2)}
+.me-avatar:active{transform:scale(.95)}
+.me-avatar{cursor:pointer;transition:transform .16s}
+/* 头像选择器 */
+.av-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:4px 0 2px}
+.av-opt{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 6px 9px;text-align:center;transition:border-color .16s,background .16s}
+.av-opt.on{border-color:var(--brand);background:rgba(var(--brand-rgb),.1)}
+.av-opt.on .av-name{color:var(--brand)}
+/* 缩略图底：描边圈而不是实心渐变球 —— 和顶部栏头像同一套语言 */
+.av-thumb{width:52px;height:52px;margin:0 auto 7px;border-radius:50%;overflow:hidden;
+          background:rgba(245,240,232,.05);border:1px solid var(--line-hi);
+          display:flex;align-items:center;justify-content:center;color:var(--text-2)}
+.av-thumb svg{width:24px;height:24px;stroke-width:1.7}
+.av-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* 「邮箱首字母」那张卡的字母：琥珀，和站名重音一致 */
+.av-letter{font-size:20px;font-weight:600;color:var(--brand);letter-spacing:.02em}
+.av-name{font-size:11.5px;color:var(--text-2);line-height:1.3}
+/* 文件选择：把透明 input 铺满整块按钮区域。
+   用户点到的一定是 file 控件本身 = 浏览器眼中的"真用户手势"，
+   WebView / 微信里才不会因为「JS 调的 click() 没有用户激活」而静默失效。
+   注意 ⛔ 不能用 display:none —— 隐藏掉的 input 点了不弹选择器。 */
+.file-pick{position:relative;overflow:hidden;display:block;cursor:pointer}
+.file-pick>input[type=file]{
+  position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+/* ===== 标签选择器（随手记）===== */
+.tagpick{display:flex;flex-wrap:wrap;gap:8px}
+.tchip{
+  padding:8px 13px;border-radius:11px;border:1px solid var(--line-hi);
+  background:rgba(245,240,232,.04);color:var(--text-2);font-size:13px;line-height:1.2;transition:.15s;
+}
+.tchip.on{background:rgba(var(--brand-rgb),.18);border-color:rgba(var(--brand-rgb),.6);color:#fff;font-weight:600}
+.tchip.add{border-style:dashed;color:var(--brand)}
+.tchip.mgr{border-style:dashed;color:var(--text-3)}
+.tchip.mgr.on{background:rgba(255,107,107,.16);border-color:rgba(255,107,107,.5);border-style:solid;color:#fff}
+/* 管理态：每个标签里长出一个小 ×（只从"候选池"里去掉，历史记录不动） */
+.tchip{position:relative}
+.tagpick.mgr .tchip:not(.add):not(.mgr){padding-right:29px}
+.tagpick.mgr .tchip.on{opacity:.75}
+.tchip .tx{
+  display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;border-radius:50%;background:var(--out);color:#fff;
+  font-size:11px;line-height:16px;text-align:center;font-style:normal;font-weight:700;
+}
+.tagpick.mgr .tchip .tx{display:block}
+.taghint{display:none;font-size:11.5px;color:var(--text-3);margin-top:9px;line-height:1.6}
+.taghint.show{display:block}
+.tagnew{display:none;gap:8px;margin-top:10px;align-items:center}
+.tagnew.show{display:flex}
+.tagnew input{flex:1;min-width:0}
+.tagnew button{
+  padding:13px 16px;border-radius:13px;background:var(--grad);color:#fff;
+  font-size:13px;font-weight:600;flex:0 0 auto;
+}
+/* 列表页标签筛选条 */
+.tagbar{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch}
+.tagbar::-webkit-scrollbar{display:none}
+.filter{
+  flex:0 0 auto;padding:7px 13px;border-radius:99px;border:1px solid var(--line-hi);
+  font-size:12px;color:var(--text-2);background:rgba(245,240,232,.03);transition:.15s;
+}
+.filter.on{background:rgba(var(--brand-rgb),.2);border-color:rgba(var(--brand-rgb),.55);color:#fff;font-weight:600}
+/* 同步说明里的步骤与代码 */
+.sy-ver{
+  font-size:12.5px;color:var(--text-2);background:rgba(245,240,232,.04);
+  border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin:2px 0 12px;
+}
+.sy-steps{margin:0;padding-left:20px;font-size:12.5px;line-height:1.75;color:var(--text-2)}
+.sy-steps li{margin-bottom:4px}
+.sy-steps b{color:var(--text)}
+.sy-steps code{background:rgba(127,127,127,.16);padding:1px 5px;border-radius:5px;font-size:11.5px;word-break:break-all}
+/* v3.0：步数同步说明页删了，sy-* 那组样式随之成为孤儿 CSS，一并清掉。 */
+.me-email{font-size:16px;font-weight:600;word-break:break-all}
+.me-meta{font-size:12px;color:var(--text-3);margin-top:5px}
+.me-list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.me-item{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line)}
+.me-item:last-child{border-bottom:none}
+.me-item:active{background:var(--card-hi)}
+.me-ico{width:32px;height:32px;border-radius:10px;background:rgba(245,240,232,.07);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:15px}
+.me-ico svg{width:17px;height:17px}
+.me-txt{flex:1;min-width:0}
+.me-txt .t{font-size:14.5px}
+.me-txt .s{font-size:11.5px;color:var(--text-3);margin-top:1px}
+.me-arrow{color:var(--text-3);font-size:15px}
+.me-count{font-size:13px;font-weight:700;color:var(--brand)}
+.note{font-size:11.5px;color:var(--text-3);text-align:center;padding:6px 20px 0;line-height:1.7}
+hr.div{border:none;border-top:1px solid var(--line);margin:14px 0}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:600;background:rgba(var(--brand-rgb),.16);color:var(--brand)}
+
+/* ===== 每周回顾 ===== */
+.wk-back{display:flex;align-items:center;gap:6px;width:fit-content;margin-bottom:14px;padding:7px 13px;
+  background:var(--card);border:1px solid var(--line);border-radius:11px;color:var(--text-2);font-size:12.5px}
+.wk-nav{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.wk-nav .rg{flex:1;text-align:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.wk-nav .rg em{font-style:normal;font-size:11px;font-weight:600;color:var(--text-3);margin-left:6px}
+.wk-nav button{width:33px;height:33px;flex:0 0 auto;border-radius:11px;background:var(--card);border:1px solid var(--line);
+  color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center}
+.wk-nav button:disabled{opacity:.3}
+.wk-hero{background:linear-gradient(140deg,rgba(var(--brand-rgb),.24),rgba(var(--brand2-rgb),.10) 60%,rgba(245,240,232,.04));
+  border:1px solid rgba(var(--brand-rgb),.26);border-radius:22px;padding:18px 18px 16px}
+.wk-hero .lbl{font-size:12px;color:rgba(245,240,232,.72);letter-spacing:.03em}
+.wk-hero .big{font-size:31px;font-weight:800;letter-spacing:-.03em;color:#fff;margin:3px 0 13px}
+.wk-hero .g{display:grid;grid-template-columns:repeat(2,1fr);gap:11px 8px;
+  border-top:1px solid rgba(245,240,232,.12);padding-top:13px}
+.wk-hero .g .k{display:block;font-size:11px;color:rgba(245,240,232,.6);margin-bottom:2px}
+.wk-hero .g .v{font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.wk-delta{font-weight:700}
+.wk-up{color:var(--out)}.wk-dn{color:var(--in)}.wk-flat{color:var(--text-3)}
+.nr{display:inline-block;font-size:11.5px;font-weight:600;color:var(--amber);
+  background:rgba(255,180,84,.11);border:1px solid rgba(255,180,84,.3);border-radius:8px;padding:2px 8px}
+.st-tb{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+.st-tb th,.st-tb td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.st-tb th:first-child,.st-tb td:first-child{text-align:left}
+.st-tb thead th{font-size:11px;color:var(--text-3);font-weight:600}
+.st-tb tbody tr:last-child td{border-bottom:none;font-weight:700}
+.wk-days{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.wk-day{font-size:11.5px;padding:4px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--text-2)}
+.wk-day.on{border-color:rgba(var(--brand-rgb),.5);background:rgba(var(--brand-rgb),.13);color:#fff;font-weight:600}
+.wk-day.off{color:var(--text-3);border-style:dashed}
+.wk-diary{list-style:none}
+.wk-diary li{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line)}
+.wk-diary li:last-child{border-bottom:none}
+.wk-diary .dd{flex:0 0 44px;font-size:11.5px;font-weight:700;color:var(--brand);padding-top:1px;font-variant-numeric:tabular-nums}
+.wk-diary li{cursor:pointer;align-items:flex-start}
+.wk-diary li:active{background:rgba(var(--brand-rgb),.07)}
+.wk-diary .tt{flex:1 1 auto;min-width:0;font-size:12.5px;line-height:1.55;color:var(--text-2)}
+.wk-diary .tt .sum{display:block}
+.wk-diary .tt .sum.pending{color:var(--text-3)}
+.wk-diary .more{flex:0 0 auto;font-size:11px;color:var(--brand);opacity:.9;padding-top:1px;white-space:nowrap}
+/* 摘要没跑出来时的说明行：不然用户只能看到一个不动的「正在读原文」 */
+.wk-sumfail{display:flex;align-items:center;gap:6px;margin:2px 2px 10px;
+  font-size:11.5px;line-height:1.6;color:var(--text-3)}
+.wk-sumfail .btn-text{padding:4px 2px;font-size:11.5px;color:var(--brand)}
+.rd-sum{margin:2px 0 12px;padding:10px 12px;border-radius:10px;background:rgba(var(--brand-rgb),.10);font-size:13px;line-height:1.7}
+.rd-body{font-size:13.5px;line-height:1.95;color:var(--text-2);white-space:pre-wrap;word-break:break-word}
+.rd-meta{margin-top:14px;font-size:11px;color:var(--text-3)}
+.wk-verdict{background:linear-gradient(140deg,rgba(var(--brand-rgb),.14),rgba(var(--brand2-rgb),.10));
+  border:1px solid rgba(var(--brand-rgb),.3);border-radius:18px;padding:16px 17px;margin-top:18px}
+.wk-verdict .t{font-size:13px;font-weight:700;margin-bottom:7px}
+.wk-verdict p{margin:0;font-size:12.5px;line-height:1.85;color:var(--text-2)}
+.wk-verdict .wc{font-size:10.5px;color:var(--text-3);margin-top:9px}
