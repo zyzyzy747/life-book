@@ -43,6 +43,124 @@ const state = { expense: [], diary: [], life: [], sport: [], health: [], steps: 
 /* ================= Helpers ================= */
 const $ = (s, p=document) => p.querySelector(s);
 const $$ = (s, p=document) => [...p.querySelectorAll(s)];
+
+/* ============================================================
+   ⛔⛔⛔ 2026-10-27：**本地优先（Local-First）数据层**
+   ------------------------------------------------------------
+   为什么必须有：
+     平台侧数据面（PostgREST）**写入立即可见、读取滞后数小时**。
+     ⇒ 只信云端 ⇒ 用户重进 App 看到的是几小时前的数据
+       ⇒ 表现为「刚记的又没了」「数据在回退」「网页和 App 不一样」。
+
+   怎么做：
+     · **本地缓存**：每次云端读到 → 合并进 localStorage；
+       每次本地写入 → 立刻进缓存（打 _local 标记 + _localTs 时间戳）
+     · **读取**：本地缓存 ∪ 云端结果，
+       同一个 id 取「更新的那份」（updated_at > created_at > _localTs）
+     · 云端滞后时，本地那份更新 ⇒ 不会被旧数据覆盖 ⇒ **不回退**
+
+   ⚠️ 关键细节：
+     1) 乐观行（还没拿到服务器 id/created_at）用 `_localTs = Date.now()`，
+        否则 created_at 为空 ⇒ 会被云端那份"看起来更新"的旧行覆盖。
+     2) 合并是**按 id**的，不是按内容。
+     3) 本地缓存只留最近 N 行，避免 localStorage 爆掉。
+   ============================================================ */
+const LC_MAX_ROWS = 500;
+
+/* 一行数据的"新鲜度"：越大越新 */
+function lcFresh(r) {
+  if (!r) return 0;
+  const u = Number(r.updated_at || 0);
+  if (u) return u;
+  const c = Date.parse(r.created_at || '');
+  if (!isNaN(c)) return c;
+  if (r._localTs) return r._localTs;
+  return 0;
+}
+
+/* 合并两组行：同 id 取更新的那份 */
+function lcMerge(local, cloud) {
+  const byId = new Map();
+  const put = (r) => {
+    if (!r || r.id === undefined || r.id === null) return;
+    const k = String(r.id);
+    const old = byId.get(k);
+    if (!old) { byId.set(k, r); return; }
+    byId.set(k, lcFresh(r) >= lcFresh(old) ? r : old);
+  };
+  (local || []).forEach(put);
+  (cloud || []).forEach(put);
+  return [...byId.values()];
+}
+
+/* 把云端读到的行合并进本地缓存（返回合并后的完整集合） */
+function lcPut(table, rows) {
+  const key = 'lc_' + table;
+  const old = LS.get(key, []);
+  const merged = lcMerge(old, rows);
+  // 只留最近的 N 行（按新鲜度倒序）
+  merged.sort((a, b) => lcFresh(b) - lcFresh(a));
+  LS.set(key, merged.slice(0, LC_MAX_ROWS));
+  return merged;
+}
+
+/* 本地写入后立刻进缓存（乐观更新用，_localTs 保证不被旧云端行覆盖） */
+function lcPutLocal(table, row) {
+  if (!row || row.id === undefined || row.id === null) return row;
+  const r = Object.assign({}, row);
+  if (!r._localTs) r._localTs = Date.now();
+  const key = 'lc_' + table;
+  const old = LS.get(key, []);
+  const merged = lcMerge(old, [r]);
+  merged.sort((a, b) => lcFresh(b) - lcFresh(a));
+  LS.set(key, merged.slice(0, LC_MAX_ROWS));
+  return r;
+}
+
+/* 从本地缓存移除一行（删除操作必须调，否则删掉的行会被合回来） */
+function lcRemove(table, id) {
+  const key = 'lc_' + table;
+  const rows = LS.get(key, []);
+  if (!Array.isArray(rows) || !rows.length) return;
+  const k = String(id);
+  LS.set(key, rows.filter(r => String(r.id) !== k));
+}
+
+/* ⛔⛔⛔ 2026-10-27：星环用的本地数据（秒开时先画） */
+function lcDaysForRing() {
+  const today = todayStr();
+  const out = [];
+  ['expense','diary','life','sport','health','steps'].forEach(tb => {
+    lcRowsFor(tb, r => String(r.record_date || '') === today).forEach(r => out.push({ table: tb, record_date: r.record_date }));
+  });
+  // 去重（一天只算一次）
+  const seen = new Set();
+  return out.filter(x => {
+    const k = String(x.record_date);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).map(x => ({ record_date: x.record_date }));
+}
+
+/* 本地缓存里今天的饮水量（ml 之和） */
+function lcWaterTotal(today) {
+  return lcRowsFor('water', r => String(r.record_date || '') === today)
+    .reduce((s, r) => s + (Number(r.ml) || 0), 0);
+}
+
+/* 读本地缓存（可按字段过滤） */
+function lcGet(table, filter) {
+  const rows = LS.get('lc_' + table, []);
+  if (!Array.isArray(rows)) return [];
+  if (!filter) return rows;
+  return rows.filter(filter);
+}
+
+/* 取本地缓存里某张表某天/某月的数据（云端读不到时兜底） */
+function lcRowsFor(table, pred) {
+  return lcGet(table, pred);
+}
 const pad2 = (n) => String(n).padStart(2, '0');
 // 全部用本地时间，避免 UTC 在东八区凌晨算错日期
 const localDateStr = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
@@ -182,6 +300,7 @@ async function fetchActiveDays() {
 // ⛔ 旧值还有 'skin:<皮肤id>'（借伙伴立绘当头像）。宠物已下线、pet/ 目录已删，
 //    留着这个分支只会让老用户看到永久 404 的破图 ⇒ 读到就在 loadAvatar 里洗回默认。
 let avatarVal = '';
+let cloudNick = '';           // 云端昵称（跨设备共用）；localStorage 那份只做秒开
 let avatarURL = '';           // avatarVal==='upload' 时解析出的可显示地址（签名 URL）
 let avatarBusy = false;
 
@@ -215,8 +334,10 @@ async function loadAvatar() {
   avatarVal = LS.get('avatar', '') || '';
   if (avatarVal === 'upload') await resolveAvatarURL();
   try {
-    const r = await cloud.database.from('profile').select('avatar').limit(1).maybeSingle();
+    const r = await cloud.database.from('profile').select('avatar,nick').limit(1).maybeSingle();
     if (r && !r.error && r.data) {
+      cloudNick = (r.data.nick || '').trim();
+      if (cloudNick) LS.set('nick', cloudNick);
       let v = r.data.avatar || '';
       // 宠物立绘头像已下线：老用户的 skin:xxx 洗成默认，并顺手改回云端，别每次登录都再洗一遍
       if (v.indexOf('skin:') === 0) {
@@ -798,7 +919,7 @@ function openBgSettings() {
   });
 }
 
-const getNick = () => (LS.get('nick', '') || '').trim();
+const getNick = () => (cloudNick || LS.get('nick', '') || '').trim();
 const greeting = () => {
   const h = new Date().getHours();
   if (h < 6) return '夜深了'; if (h < 11) return '早上好';
@@ -1371,7 +1492,7 @@ function renderApp() {
       ${nick
         ? `<div class="brand hi"><span class="hi-t">${escapeHtml(greeting())}</span><em>${escapeHtml(nick)}</em></div>`
         : `<div class="brand">生活<em>手账</em></div>`}
-      <div class="avatar" id="btn-me" title="我的">${avatarInner(currentUser && currentUser.email)}</div>
+      <div class="avatar" id="btn-me" title="我的">${avatarInner(getNick() || '我')}</div>
     </div>
     <main class="view" id="view"></main>
     <nav class="tab-bar">
@@ -2024,6 +2145,15 @@ async function fetchStData(force) {
       wrows = wrows.concat(wmiss);
     }
   }
+  /*⛔⛔⛔ 2026-10-27 本地优先：喝水的本地缓存也要合进来。
+     云端读不到今天的 water ⇒ 数字会回退（用户报"点了+500再进就没了"）。 */
+  lcPut('water', wrows);
+  const wLocal = lcRowsFor('water', r => String(r.record_date || '') === today);
+  if (wLocal.length) {
+    const wids2 = new Set(wrows.map(r => String(r.id)));
+    const wmiss2 = wLocal.filter(r => !wids2.has(String(r.id)));
+    if (wmiss2.length) wrows = wrows.concat(wmiss2);
+  }
   out.waterRows = wrows;
   /*⛔⛔⛔ 2026-10-24：云端真的读到了 ⇒ 撤掉喝水的护栏。
      否则护栏会一直留着（24 小时）⇒ 用户撤销的水又被补回来。 */
@@ -2047,7 +2177,15 @@ async function fetchStData(force) {
     }
     if (!stMoodPending && stData && stDataDay === today && stData.mood) stMoodPending = stData.mood;
   }
-  out.mood = (m && !m.error && m.data && m.data.mood) || stMoodPending;
+  /*⛔⛔⛔ 2026-10-27 本地优先：心情也走本地缓存。 */
+  if (m && !m.error && m.data) lcPut('mood', [m.data]);
+  const mLocal = lcRowsFor('mood', r => String(r.record_date || '') === today);
+  let localMood = '';
+  if (mLocal.length) {
+    mLocal.sort((a, b) => lcFresh(b) - lcFresh(a));
+    localMood = mLocal[0].mood || '';
+  }
+  out.mood = (m && !m.error && m.data && m.data.mood) || stMoodPending || localMood;
   /*⛔⛔⛔ 2026-10-24：云端真的读到了 ⇒ 撤掉心情的护栏（同上）。 */
   if (m && !m.error && m.data && m.data.id) pendingConfirm('mood', [m.data]);
   // ⛔ 整条 mood 记录（含 id）要留着：改心情时靠 id 走 update，
@@ -2134,6 +2272,19 @@ async function renderStZone(force) {
   const zone = $('#st-zone');
   if (!zone) return;
   if (zone.dataset.state !== 'ok') zone.innerHTML = '<div class="st-rule"></div><div class="empty"><span class="loader"></span></div>';
+  /*⛔⛔⛔ 2026-10-27 秒开：**先用本地缓存把星环画出来**，
+     再后台拉云端。云端滞后数小时 ⇒ 等云端就等于让用户盯着转圈。
+     ⇒ 本地有的先画上，等云端回来再覆盖更新。 */
+  try {
+    const lcDays = lcDaysForRing();
+    if (lcDays.length) {
+      const today0 = todayStr();
+      const ml0 = lcWaterTotal(today0);
+      zone.dataset.state = 'ok';
+      zone.innerHTML = stRingHTML(lcDays, today0);
+      paintStWater(ml0);   // ⛔ 秒开：先用本地缓存的量画出来
+    }
+  } catch (e) { /* 本地缓存读不了就照常等云端 */ }
   try {
     const data = await fetchStData(force);
     if (!zone.isConnected) return;              // 用户已经切走了，别往废弃节点里写
@@ -2164,44 +2315,7 @@ async function renderStZone(force) {
         <div class="st-quote-e">“${escapeHtml(q.e)}”</div>
         <div class="st-quote-a">— ${escapeHtml(q.a)}</div>
       </div>
-
-      <div class="st-rule"></div>
-      <div class="st-sec"><span class="st-sec-t">喝水量</span></div>
-      <div class="st-card">
-        <div class="st-water">
-          <div class="st-water-arc">
-            <svg viewBox="0 0 100 100" aria-label="饮水进度">${stWaterArcHTML(ml / stWaterGoal())}</svg>
-            <div class="st-wm">${pct}</div>
-          </div>
-          <div class="st-water-info">
-            <div class="st-water-n" id="st-water-n">${ml}<i>ml</i></div>
-            <div class="st-water-goal">目标 <em id="st-water-goal-n">${stWaterGoal()}</em>ml · 还差 <b id="st-water-left">${left}ml</b></div>
-          </div>
-        </div>
-        <div class="st-btns">
-          <button class="st-btn st-btn-p" data-st-water="200">+ 200ml</button>
-          <button class="st-btn st-btn-p" data-st-water="500">+ 500ml</button>
-        </div>
-        <div class="st-btns">
-          <button class="st-btn" id="st-water-custom">自定义</button>
-          <button class="st-btn" id="st-water-goal-btn">改目标</button>
-          <button class="st-btn st-btn-undo" id="st-water-undo">撤销</button>
-        </div>
-      </div>
-
-      <div class="st-rule"></div>
-      <div class="st-sec"><span class="st-sec-t">每日心情</span></div>
-      <button class="st-mood-card${data.mood ? ' on' : ''}" id="st-mood-card" aria-label="记录今天的心情">
-        <span class="st-mc-face" id="st-mc-face">${moodFaceSVG(moodItemOrLegacy(data.mood) || { f:data.mood, l:data.mood, c:'calm' }, 'st-mc-svg')}</span>
-        <span class="st-mc-txt">
-          <span class="st-mc-t" id="st-mood-now">${data.mood
-            ? escapeHtml(stMoodLabel(data.mood))
-            : '今天还没记心情'}</span>
-          <span class="st-mc-s" id="st-mood-sub">点这里挑一个</span>
-        </span>
-        <span class="st-mc-go">›</span>
-      </button>
-      <button class="st-mood-hist" id="st-mood-hist">本月心情 ›</button>`;
+    `;
     bindStZone();
   } catch(e) {
     // 静默降级：留一条发丝线 + 一句可点重试，不惊动整页
@@ -2261,9 +2375,11 @@ function openMoodPicker() {
 }
 
 /* 只刷新喝水那一小块，不重画整页 —— 否则输入焦点和滚动位置都会丢 */
-function paintStWater() {
-  if (!stData) return;
-  const ml = stWaterTotal(stData);
+/* ⛔⛔⛔ 2026-10-27：ml 可以外部传入（秒开时传本地缓存里的量，
+   此时 stData 还没从云端回来）。传了就用它，没传才用 stData 算。 */
+function paintStWater(mlOverride) {
+  if (mlOverride === undefined && !stData) return;
+  const ml = mlOverride !== undefined ? Number(mlOverride) || 0 : stWaterTotal(stData);
   const pct = Math.round(ml / stWaterGoal() * 100);
   const n = $('#st-water-n'), l = $('#st-water-left'), wm = document.querySelector('.st-wm');
   const gn = $('#st-water-goal-n');
@@ -2302,6 +2418,8 @@ async function addWater(ml) {
         保证「这一笔刚写的」能被护住。 */
   const wid = row.id || ('tmp-' + day + '-' + Date.now());
   if (!row.id) row.id = wid;
+  /*⛔⛔⛔ 2026-10-27 本地优先：立刻进本地缓存 ⇒ 重进 App 数字还在。 */
+  lcPutLocal('water', row);
   guardPending('water', row, wid);     // ⛔ 护栏：别被下一次 fetchStData 冲掉
   paintStWater();
   toast(`+${ml}ml`, `今天 ${stWaterTotal(stData)}ml / ${stWaterGoal()}ml`);
@@ -2329,7 +2447,7 @@ async function undoWater() {
      localStorage 里还留着这条 ⇒ 下次 pendingSave 或刷新后 pendingLoad
      又把它恢复 ⇒ 「撤销了却又回来」。
      unguardPending 会同时清 map + pendingData 并持久化。 */
-  if (last && last.id) unguardPending('water', last.id);
+  if (last && last.id) { unguardPending('water', last.id); lcRemove('water', last.id); }
   paintStWater();
   toast(`已撤销 ${Number(last.ml) || 0}ml`);
   setTimeout(() => { try { fetchStData(true).then(paintStWater); } catch (e) {} }, 1200);
@@ -2579,6 +2697,7 @@ async function setMood(m) {
        `else if (stData.moodRow && stData.moodRow.id) unguardPending(...)`
        永远判假 ⇒ **护栏撤不掉** ⇒ 已删除的心情被护栏补回来。 */
     unguardPending('mood', exist);
+    lcRemove('mood', exist);
     stData.moodRow = null;
   }
   stData.mood = next;
@@ -2593,7 +2712,10 @@ async function setMood(m) {
        ⇒ 现在存真实 id + 整行（id/mood/record_date）。 */
   if (next) {
     const mid = (stData && stData.moodRow && stData.moodRow.id) || 0;
-    if (mid) guardPending('mood', { id: mid, mood: next, record_date: day }, mid);
+    const mrow = { id: mid || ('tmp-mood-' + day), mood: next, record_date: day };
+    /*⛔⛔⛔ 2026-10-27 本地优先：立刻进本地缓存 ⇒ 重进 App 心情还在。 */
+    lcPutLocal('mood', mrow);
+    if (mid) guardPending('mood', mrow, mid);
   }
   const label = $('#st-mood-now');
   //⛔ 显示中文标签而不是 emoji ——「今天记为 😊」没人知道什么意思，
@@ -2739,6 +2861,11 @@ function afterWrite(t, stateKey, id, res, payload, repaint, sortKey) {
   const full = back ? Object.assign({}, payload || {}, back)
                      : Object.assign({}, payload || {});
   if (realId && !full.id) full.id = realId;
+  /*⛔⛔⛔ 2026-10-27 本地优先：**写入成功后立刻进本地缓存**。
+     不进缓存的话，这行要等"下一次云端查询"才进缓存；
+     而云端查询滞后 ⇒ 缓存里一直没有它 ⇒ 重进 App 就没了。
+     ⇒ 这一步是"点了+500再进没了"的直接解药。 */
+  if (realId) lcPutLocal(t, full);
   applyLocalRow(t, stateKey, realId, (realId ? full : null), payload, sortKey);
   try { repaint(); } catch (e) {}
   setTimeout(() => { try { repaint(true); } catch (e) {} }, 1200);
@@ -2779,17 +2906,31 @@ async function renderExpenseList(force) {
   if (state.expView === 'chart') return renderExpenseChart();
   if (!state.expYM) state.expYM = monthStr();
   const ym = state.expYM;
+  const { start, end } = rangeOfYM(ym);   // ⛔ 提到 try 外面：秒开时也要用
 
   // 这个月的旧数据已经画过 ⇒ 先把旧的摆上去（秒开），再后台拉最新的
-  const cached = state.expenseSig && state.expenseYM === ym ? state.expense : null;
+  /*⛔⛔⛔ 2026-10-27 **秒开**：内存没有 ⇒ 先用**本地缓存**画出来，
+     后台再拉云端合并重画。刷新页面后内存是空的，但本地缓存还在
+     ⇒ 立刻就能看到上次的数据，不用干等云端（云端还滞后数小时）。 */
+  let cached = (state.expenseSig && state.expenseYM === ym) ? state.expense : null;
+  if (!cached) {
+    const lc = lcRowsFor('expense', r => String(r.record_date || '') >= start && String(r.record_date || '') < end);
+    if (lc.length) {
+      cached = lc;
+      state.expense = lc.slice();
+      state.expenseYM = ym;
+    }
+  }
   if (cached) paintExpenseList();
   else v.innerHTML = loadingHTML();
 
   try {
-    const { start, end } = rangeOfYM(ym);
     const { data, error } = await cloud.database.from('expense').select('*').gte('record_date', start).lt('record_date', end).order('record_date', { ascending: false }).order('created_at', { ascending: false });
     if (error) throw error;
-    let list = data || [];
+    /*⛔⛔⛔ 2026-10-27 本地优先：云端读到的合进本地缓存，
+       再用「本地 ∪ 云端」作为最终列表 ⇒ 云端滞后时不会回退。 */
+    lcPut('expense', data || []);
+    let list = lcMerge(lcRowsFor('expense', r => String(r.record_date || '') >= start && String(r.record_date || '') < end), data || []);
     /*⛔⛔⛔ 2026-10-23：**必须先把 state.expenseYM 设成当前月份，再调 keepPending**。
        keepPending 里有一句 `if (ym && state[stateKey+'YM'] !== ym) return cloudList;`
        —— 它比对的就是 state.expenseYM。
@@ -3166,14 +3307,21 @@ async function renderDiaryList(force) {
   // ⛔ 已经站在日记页、搜索框也建好了 ⇒ 绝不能走 paintDiaryAll ——
   //    它会重建整个 #view（连输入框一起换掉），正在拼的中文就没落点了。
   //    #dq 不存在只可能是"刚从别的 tab 切过来"（各 tab 共用 #view，DOM 早被冲了）。
-  const cached = state.diarySig ? state.diary : null;
+  /*⛔⛔⛔ 2026-10-27 秒开：内存没有 ⇒ 先用本地缓存画出来（见记账页同款说明）。 */
+  let cached = state.diarySig ? state.diary : null;
+  if (!cached) {
+    const lc = lcRowsFor('diary');
+    if (lc.length) { cached = lc; state.diary = lc.slice(); state.diarySig = 'lc'; }
+  }
   if (cached) { if (state.diary.length && $('#dq')) paintDiaryList(); else paintDiaryAll(); }
   else v.innerHTML = loadingHTML();
 
   try {
     const { data, error } = await cloud.database.from('diary').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(LIMIT_LIST);
     if (error) throw error;
-    let list = data || [];
+    /*⛔⛔⛔ 2026-10-27 本地优先（见记账页同款说明）。 */
+    lcPut('diary', data || []);
+    let list = lcMerge(lcRowsFor('diary'), data || []);
     list = keepPending('diary', 'diary', list);     // 乐观更新的护栏
     const sig = rowsSig(list);
     const same = sig === state.diarySig;
@@ -3394,14 +3542,21 @@ function openHiddenTags() {
 async function renderLifeList(force) {
   const v = $('#view');
   // 有旧数据就先把旧的摆上去（秒开），再后台拉最新的
-  const cached = state.lifeSig ? state.life : null;
+  /*⛔⛔⛔ 2026-10-27 秒开（见记账页同款说明）。 */
+  let cached = state.lifeSig ? state.life : null;
+  if (!cached) {
+    const lc = lcRowsFor('life');
+    if (lc.length) { cached = lc; state.life = lc.slice(); state.lifeSig = 'lc'; }
+  }
   if (cached) paintLifeList();
   else v.innerHTML = loadingHTML();
 
   try {
     const { data, error } = await cloud.database.from('life').select('*').order('record_date', { ascending: false }).order('created_at', { ascending: false }).limit(LIMIT_LIST);
     if (error) throw error;
-    let list = data || [];
+    /*⛔⛔⛔ 2026-10-27 本地优先。 */
+    lcPut('life', data || []);
+    let list = lcMerge(lcRowsFor('life'), data || []);
     list = keepPending('life', 'life', list);      // 乐观更新的护栏
     const sig = rowsSig(list);
     const same = sig === state.lifeSig;
@@ -3634,7 +3789,11 @@ function stepSectionHTML() {
   const today = todayStr();
   const list = state.steps || [];
   const stepToday = list.find(r => String(r.record_date) === today) || null;
-  const goal = Number(stepToday && stepToday.goal) || Number(LS.get('stepGoal', 8000)) || 8000;
+  /*⛔⛔⛔ 2026-10-27：**目标以 localStorage 为准**（本地优先）。
+     原来云端 stepToday.goal 优先 ⇒ 平台侧读滞后时，
+     改了目标但云端还是旧值 ⇒ 界面显示旧目标 ⇒ 用户说"目标选不上"。
+     ⇒ 改成：localStorage 的 stepGoal 优先，云端只在本地没有时兜底。 */
+  const goal = Number(LS.get('stepGoal', 0)) || Number(stepToday && stepToday.goal) || 8000;
   const stepNow = stepToday ? Number(stepToday.steps) : 0;
   const pct = goal ? Math.min(100, stepNow / goal * 100) : 0;
   const rows = [];
@@ -3674,7 +3833,12 @@ function stepSectionHTML() {
 async function renderSportList(force) {
   const v = $('#view');
   // 有旧数据就先把旧的摆上去（秒开），再后台拉最新的
-  const cached = state.sportSig ? true : null;
+  /*⛔⛔⛔ 2026-10-27 秒开（见记账页同款说明）。 */
+  let cached = state.sportSig ? true : null;
+  if (!cached) {
+    const lc = lcRowsFor('sport');
+    if (lc.length) { cached = true; state.sport = lc.slice(); state.sportSig = 'lc'; }
+  }
   if (cached) paintSportList();
   else v.innerHTML = loadingHTML();
 
@@ -3686,7 +3850,11 @@ async function renderSportList(force) {
     ]);
     if (sp.error) throw sp.error;
     if (st.error) throw st.error;
-    state.sport = keepPending('sport', 'sport', sp.data || []);   // 乐观更新的护栏
+    /*⛔⛔⛔ 2026-10-27 本地优先（见记账页同款说明）。 */
+    lcPut('sport', sp.data || []);
+    lcPut('steps', st.data || []);
+    state.sport = keepPending('sport', 'sport',
+      lcMerge(lcRowsFor('sport'), sp.data || []));   // 乐观更新的护栏
     state.steps = (st.data || []).slice().sort((a,b) => String(a.record_date) < String(b.record_date) ? 1 : -1);
     // 这一页同时吃 sport 和 steps 两份数据，指纹要一起算
     const sig = rowsSig(state.sport) + '\u0001' + rowsSig(state.steps);
@@ -3830,6 +3998,9 @@ async function saveSport(id) {
    调用顺序很重要：必须先 unguardPending，否则复查时 keepPending 会把刚删的补回来。*/
 async function finishDelete(tbl, stateKey, id, repaint) {
   unguardPending(tbl, id);
+  /*⛔⛔⛔ 2026-10-27 本地优先：**删除也要从本地缓存移除**。
+     不移除的话，下一次读取时 lcMerge 会把它合回来 ⇒ 删不掉。 */
+  lcRemove(tbl, id);
   if (Array.isArray(state[stateKey])) {
     state[stateKey] = state[stateKey].filter(x => String(x.id) !== String(id));
   }
@@ -3881,14 +4052,20 @@ async function renderHealthList(force) {
   if (!state.heYM) state.heYM = monthStr();
   const ym = state.heYM;
 
+  const curR = rangeOfYM(ym);
+  const prvR = rangeOfYM(shiftYM(ym, -1));
+
   // 这个月的旧数据已经画过 ⇒ 先把旧的摆上去（秒开），再后台拉最新的
-  const cached = state.healthSig && state.healthYM === ym ? true : null;
+  /*⛔⛔⛔ 2026-10-27 秒开（见记账页同款说明）。 */
+  let cached = state.healthSig && state.healthYM === ym ? true : null;
+  if (!cached) {
+    const lc = lcRowsFor('health', r => String(r.record_date || '') >= curR.start && String(r.record_date || '') < curR.end);
+    if (lc.length) { cached = true; state.health = lc.slice(); state.healthYM = ym; state.healthSig = 'lc'; }
+  }
   if (cached) paintHealthList();
   else v.innerHTML = loadingHTML();
 
   try {
-    const curR = rangeOfYM(ym);
-    const prvR = rangeOfYM(shiftYM(ym, -1));
     const [cur, prv] = await Promise.all([
       cloud.database.from('health').select('*').gte('record_date', curR.start).lt('record_date', curR.end).order('record_date', { ascending: false }).order('created_at', { ascending: false }),
       cloud.database.from('health').select('*').gte('record_date', prvR.start).lt('record_date', prvR.end)
@@ -3897,7 +4074,11 @@ async function renderHealthList(force) {
     /*⛔⛔⛔ 2026-10-23：同记账页 —— 必须先设 state.healthYM 再调 keepPending，
        否则护栏会因「月份不匹配」被整个跳过（首次进页面时 healthYM 是 undefined）。 */
     state.healthYM = ym;
-    state.health = keepPending('health', 'health', cur.data || [], ym);   // 乐观更新的护栏
+    /*⛔⛔⛔ 2026-10-27 本地优先。 */
+    lcPut('health', cur.data || []);
+    state.health = keepPending('health', 'health',
+      lcMerge(lcRowsFor('health', r => String(r.record_date || '') >= curR.start && String(r.record_date || '') < curR.end),
+              cur.data || []), ym);   // 乐观更新的护栏
     // 环比要用到上个月的合计，一起缓存下来 —— 否则秒开时这一格会先显示 0
     state.healthPrvTimes = (prv.data || []).reduce((s,r)=>s+Number(r.times||0),0);
     const sig = rowsSig(state.health) + '\u0001' + state.healthPrvTimes;
@@ -4250,7 +4431,7 @@ const APP_VER = '1.6';
    ⛔ 两个号混成一个是用户困惑的根源 —— 界面上写着 v2.8，装的是 v1.6，
    看着像 bug 其实俩是两回事。所以「我的 → 版本」里把两者并排放，
    点的「版本」还能展开看各自管什么。 */
-const WEB_VER = '3.26';
+const WEB_VER = '3.28';
 /* 当前装在手机上的壳版本；不在 App 里跑（浏览器）时留空，不硬凑一个数字出来。
    ⛔ 用函数而不是模块加载时就求值 —— WebView 里 UA/JSBridge 有时要等一小会儿才可用，
    加载时求值会永远拿到空串（明明装了新版却显示「旧版」）。 */
@@ -4597,7 +4778,7 @@ async function ensureDiarySummaries(rows, done) {
     const model = await diaryModel(ac.signal);
     if (!model) { diarySumFailAt = Date.now(); return; }
     const list = need
-      .map(r => `【${r.id}】${String(r.content || '').replace(/\s+/g, ' ').trim().slice(0, 600)}`)
+      .map((r, i) => `【${i + 1}】${String(r.content || '').replace(/\s+/g, ' ').trim().slice(0, 600)}`)
       .join('\n');
     const sys = '你在帮「生活手账」写周报。把每篇日记压成一句中文摘要，20 个字以内，'
       + '只说当天最主要的一件事或状态，像朋友随口一提；不要「这篇日记」「记录了」这类铺垫，'
@@ -4616,8 +4797,8 @@ async function ensureDiarySummaries(rows, done) {
     }
     const obj = parseSumJSON(buf);
     let hit = 0;
-    need.forEach(r => {
-      const v = String(obj[String(r.id)] || '').trim();
+    need.forEach((r, i) => {
+      const v = String(obj[String(i + 1)] || '').trim();
       if (v) { putDiarySum(r, v); hit++; }
     });
     if (!hit) diarySumFailAt = Date.now();
@@ -5251,8 +5432,8 @@ async function renderProfile() {
 
   v.innerHTML = `
     <div class="me-hero">
-      <div class="me-avatar" id="me-avatar" title="点头像换">${avatarInner(email)}</div>
-      <div class="me-email">${escapeHtml(email)}</div>
+      <div class="me-avatar" id="me-avatar" title="点头像换">${avatarInner(nick || '我')}</div>
+      <div class="me-email">${escapeHtml(nick || '我')}</div>
       <div class="me-meta">已登录 · 数据已同步到云端</div>
       <div class="muted" style="font-size:11.5px;margin-top:8px">点头像可以换</div>
     </div>
@@ -5351,11 +5532,6 @@ async function renderProfile() {
         <div class="me-txt"><div class="t">版本</div><div class="s" id="me-ver-txt">页面 v${WEB_VER}${appVerShown() ? ' · App v' + appVerShown() : ''}${uid ? ' · ID ' + escapeHtml(String(uid).slice(0,8)) : ''}</div></div>
         <div class="me-arrow">›</div>
       </div>
-      <div class="me-item" id="mi-diag">
-        <div class="me-ico" style="color:var(--text-3)">🩺</div>
-        <div class="me-txt"><div class="t">诊断</div><div class="s">排查问题用：显示每张表读到了几条、数据格式对不对。截图发我即可</div></div>
-        <div class="me-arrow">›</div>
-      </div>
       <div class="me-item" id="mi-ver-why" style="display:none">
         <div class="me-txt" style="padding:2px 0 8px">
           <div class="s" style="line-height:1.75">
@@ -5410,12 +5586,30 @@ function openNick() {
     <button class="btn" id="n-save">保存</button>
     ${cur ? '<button class="btn-ghost danger" id="n-clear">清除昵称</button>' : ''}`);
   setModalTitle('我的昵称');
+  const saveNickToCloud = async (v) => {
+    try {
+      const q = await cloud.database.from('profile').select('id').limit(1).maybeSingle();
+      if (q && q.data && q.data.id) {
+        await cloud.database.from('profile').update({ nick: v }).eq('id', q.data.id).select();
+      } else {
+        await cloud.database.from('profile').insert({ nick: v }).select();
+      }
+    } catch (e) { console.warn('昵称同步失败', e); }
+  };
   $('#n-save').onclick = () => {
-    LS.set('nick', $('#n-name').value.trim().slice(0, 12));
+    const v = $('#n-name').value.trim().slice(0, 12);
+    cloudNick = v;
+    LS.set('nick', v);
+    saveNickToCloud(v);
     closeModal(); renderApp(); switchTab('me');
   };
   const clr = $('#n-clear');
-  if (clr) clr.onclick = () => { LS.set('nick', ''); closeModal(); renderApp(); switchTab('me'); };
+  if (clr) clr.onclick = () => {
+    cloudNick = '';
+    LS.set('nick', '');
+    saveNickToCloud('');
+    closeModal(); renderApp(); switchTab('me');
+  };
 }
 
 function openCats() {
