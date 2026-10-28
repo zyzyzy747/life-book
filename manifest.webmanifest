@@ -1,0 +1,9 @@
+{
+  "name": "生活手账",
+  "short_name": "手账",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C0B0A",
+  "theme_color": "#0C0B0A",
+  "icons": []
+}
