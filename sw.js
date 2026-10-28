@@ -16,14 +16,14 @@
    ⛔⛔⛔ 2026-10-24：**文件名改回固定的 app.js / app.css**。
       之前用的是 app.js 这种带版本号的名字 ⇒ 每发一版就多两个文件，
       GitHub 仓库和托管目录都被历史版本堆满（一次清理了 31 个）。
-      ⇒ 现在：文件名固定，版本走 URL 查询参数 `app.js?v=3.26`。
+      ⇒ 现在：文件名固定，版本走 URL 查询参数 `app.js?v=3.28`。
         · CDN/浏览器按完整 URL（含查询参数）缓存 ⇒ 改了 ?v 就是新 URL ⇒ 一定拿新的
         · 仓库永远只有 app.js / app.css 两个文件 ⇒ 不会再乱
       ⇒ VER 仍然必须递增：它是 **缓存名**，SW 换了缓存名才会清掉旧缓存。
    ⛔ 不要缓存 index.html 到永久：那样会永远看不到新版本。
 */
-const VER = 'v326';
-const APP_VER = '3.26';   // 与 index.html 里 app.js?v= 的值保持一致
+const VER = 'v1793205102778';
+const APP_VER = '1793205102778';   // 与 index.html 里 app.js?v= 的值保持一致
 const ASSETS = [
   './app.js',
   './app.css',
@@ -50,7 +50,7 @@ self.addEventListener('activate', (e) => {
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== VER).map((k) => caches.delete(k))))
       /*⛔⛔⛔ 2026-10-24：再清掉**当前缓存里带 ?v= 的旧条目**。
-         app.js?v=3.25 和 app.js?v=3.26 是两个不同的 URL ⇒ 各存一份
+         app.js?v=3.25 和 app.js?v=3.28 是两个不同的 URL ⇒ 各存一份
          ⇒ 不清的话每发一版就多一份 311KB。 */
       .then(() => caches.open(VER).then((c) => c.keys()).then((reqs) => {
         const stale = reqs.filter(r => {
@@ -70,6 +70,8 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== location.origin) return;      // 只管自己的域
+  // ⛔ 自建版：API 与鉴权请求绝不进 SW 缓存，否则读到的是第一次的旧结果
+  if (url.pathname.startsWith('/.cloud/') || url.pathname.startsWith('/auth/')) return;
 
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
 
@@ -87,9 +89,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  /*⛔⛔⛔ 2026-10-24：带 ?v= 的请求（app.js?v=3.26）走 **stale-while-revalidate**。
+  /*⛔⛔⛔ 2026-10-24：带 ?v= 的请求（app.js?v=3.28）走 **stale-while-revalidate**。
      为什么要单独处理：
-       · 页面里引的是 `app.js?v=3.26`，这个 URL 与预缓存的 `./app.js` **不是同一个**
+       · 页面里引的是 `app.js?v=3.28`，这个 URL 与预缓存的 `./app.js` **不是同一个**
          ⇒ `caches.match(req)` 匹配不到 ⇒ 会每次都回源（慢，但至少是最新的）
        · 优化：先给缓存（快），同时后台更新（下次就是新的）
        · 离线时回落到 `./app.js`（预缓存那份）⇒ 离线仍可用
