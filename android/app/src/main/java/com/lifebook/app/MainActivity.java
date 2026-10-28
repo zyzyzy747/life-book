@@ -42,7 +42,7 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     /** 站点域名。判断站内跳转用，站外链接丢给系统浏览器。 */
-    private static final String HOST = "life-book-18142.app.workbuddy.host";
+    private static final String HOST = "life.zyzyzy747.ccwu.cc";
     /**
      * 壳打开的入口地址：`?app=1` + **当天的日期**。
      *
@@ -174,7 +174,7 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri u = req.getUrl();
                 String host = u == null ? null : u.getHost();
-                if (host != null && (host.equals(HOST) || host.endsWith(".workbuddy.host"))) {
+                if (host != null && (host.equals(HOST) || host.endsWith(".ccwu.cc"))) {
                     return false;               // 站内：自己加载
                 }
                 try {
@@ -189,6 +189,15 @@ public class MainActivity extends Activity {
                 offline.setVisibility(View.GONE);
                 web.setVisibility(View.VISIBLE);
                 flush();
+                // ⛔ 每次打开都清掉旧版 Service Worker 缓存。
+                // 起因（2026-10-19/20）：安卓 WebView 长期存活，浏览器默认
+                // 一天才查一次 SW 更新 ⇒ App 永远卡在旧版本（用户实测 v3.11，
+                // 而网页端已经 v3.15）⇒ 表现为「添加/删除有延迟、
+                // 数据看着没存上」—— 其实跑的是旧代码。
+                // 网页层已经加了 skipWaiting + reg.update()，这里是**兜底**：
+                // 万一网页层没生效（老 SW 卡在 waiting、CDN 给了旧 HTML），
+                // 这一层至少保证下次打开不是旧缓存。
+                purgeStaleCaches();
             }
 
             @Override
@@ -198,6 +207,30 @@ public class MainActivity extends Activity {
                 }
             }
         });
+    }
+
+    /** 清掉 Service Worker 缓存。只留名字形如 v123 的**最后一个**（最新的那个）。 */
+    private void purgeStaleCaches() {
+        try {
+            web.evaluateJavascript(
+                "(function(){try{"
+                + "if(!self.caches||!caches.keys)return 'nocaches';"
+                + "caches.keys().then(function(ks){"
+                + "var live=ks.filter(function(k){return /^v[0-9]+$/.test(k);});"
+                + "if(live.length<2)return 'ok:'+live.length;"
+                + "var doomed=live.slice(0,-1);"
+                + "return Promise.all(doomed.map(function(k){return caches.delete(k);}))"
+                + ".then(function(){return 'purged:'+doomed.length;});"
+                + "});}catch(e){return 'err:'+e;}})()",
+                new ValueCallback<String>() {
+                    @Override
+                    public void onReceiveValue(String value) {
+                        android.util.Log.i("LifeBook", "purgeStaleCaches=" + value);
+                    }
+                });
+        } catch (Exception e) {
+            android.util.Log.w("LifeBook", "purgeStaleCaches failed", e);
+        }
     }
 
     private void buildOffline() {
