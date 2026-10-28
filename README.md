@@ -86,7 +86,6 @@
 ├── sw.js                   # Service Worker
 ├── sdk.index.global.js     # 兼容层：顶替原云服务 SDK
 ├── manifest.webmanifest    # 添加主屏幕用
-├── download/               # 已签名的 Android 安装包
 └── android/                # Android 壳工程，见 android/README.md
 ```
 
