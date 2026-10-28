@@ -19,24 +19,22 @@ import zipfile
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-# 路径都可用环境变量覆盖，换机器不用改代码
-SDK = os.environ.get("ANDROID_SDK", r"D:\android-sdk")
+SDK = r"D:\android-sdk"
 BT = os.path.join(SDK, "build-tools", "35.0.0")
 ANDROID_JAR = os.path.join(SDK, "platforms", "android-35", "android.jar")
-JAVA_HOME = os.environ.get("JAVA_HOME", r"D:\jdk21")
+JAVA_HOME = r"D:\jdk21"
 
-PROJ = os.path.dirname(os.path.abspath(__file__))
+PROJ = r"D:\work\workbuddy\life-book-android"
 APP = os.path.join(PROJ, "app")
 SRC = os.path.join(APP, "src", "main")
 BUILD = os.path.join(PROJ, "build")
 
 KS = os.path.join(PROJ, "life-book.jks")
-# keystore 口令不进仓库：本地先 set LIFEBOOK_KS_PASS=*** 再跑
-KS_PASS = os.environ.get("LIFEBOOK_KS_PASS", "")
-KS_ALIAS = os.environ.get("LIFEBOOK_KS_ALIAS", "lifebook")
+KS_PASS = "lifebook2026"
+KS_ALIAS = "lifebook"
 
-VERSION_CODE = "7"
-VERSION_NAME = "1.6"
+VERSION_CODE = "9"
+VERSION_NAME = "1.8"
 MIN_SDK = "26"
 TARGET_SDK = "35"
 
@@ -83,9 +81,7 @@ def main():
         if not os.path.exists(p):
             raise SystemExit("缺少 %s：%s" % (what, p))
     print("   环境检查通过")
-    if not KS_PASS:
-        raise SystemExit("请先设置环境变量 LIFEBOOK_KS_PASS（keystore 口令）再打包；"
-                         "首次运行会按下面的参数自动生成一个自签名证书")
+
     if os.path.isdir(BUILD):
         shutil.rmtree(BUILD, ignore_errors=True)
     os.makedirs(BUILD)
