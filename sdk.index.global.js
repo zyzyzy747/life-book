@@ -280,6 +280,20 @@
     return null;
   }
 
+  function decodeJwtUser(at) {
+    /* 本地解 JWT payload：离线且会话里没有 user 对象时，用 token 里的
+       sub/email 兜住登录门禁 —— 否则电脑一关机就被丢回登录页。 */
+    try {
+      var p = String(at || '').split('.');
+      if (p.length < 2) return null;
+      var b = p[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) b += '=';
+      var payload = JSON.parse(atob(b));
+      if (!payload || !payload.sub) return null;
+      return { id: payload.sub, email: payload.email || null, role: payload.role || null };
+    } catch (e) { return null; }
+  }
+
   function makeSession(j) {
     if (!j) return null;
     var u = pickUserFrom(j);
@@ -295,7 +309,12 @@
 
   var auth = {
     getSession: async function () {
-      return { data: session || null, error: null };
+      var s = session;
+      if (s && s.access_token && !(s.user && s.user.id)) {
+        var u = decodeJwtUser(s.access_token);
+        if (u) s = Object.assign({}, s, { user: u });
+      }
+      return { data: s || null, error: null };
     },
 
     getUser: async function () {
