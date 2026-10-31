@@ -1174,8 +1174,13 @@ function renderLogin() {
     const email = $('#pwd-email').value.trim();
     const pass = $('#pwd-pass').value;
     if (!email || !pass) { showMsg(msg, '请填邮箱和密码'); return; }
+    /* 2026-10-31：离线时登录接口必然不通，先拦住，别让人反复试 */
+    if (navigator.onLine === false) { showMsg(msg, '离线状态无法登录 —— 请联网后重试'); return; }
     const { data, error } = await cloud.auth.signInWithPassword({ email, password: pass });
-    if (error) { showMsg(msg, errMsg(error)); return; }
+    if (error) {
+      if (error && error.code === 'NETWORK') { showMsg(msg, '网络不可达：离线时登录不了（联网后再试）'); return; }
+      showMsg(msg, errMsg(error)); return;
+    }
     currentUser = data.user; logAuth('登录成功', data.user.email); renderApp();
   };
   $('#to-reset').onclick = () => {
@@ -1778,20 +1783,34 @@ async function renderHome() {
       cloud.database.from('expense').select('*').gte('record_date', monthStart).lt('record_date', monthEnd)
     ]);
 
+    /* 离线兜底：取数失败时用本地缓存算，绝不拿 0 冒充数据 */
+    const _offRows = (res, tb, pred) => (res && !res.error && Array.isArray(res.data)) ? res.data : lcRowsFor(tb, pred);
+    const _expToday = _offRows(exp, 'expense', r => String(r.record_date) === today);
+    const _expMonth = _offRows(monthExp, 'expense', r => String(r.record_date) >= monthStart && String(r.record_date) < monthEnd);
+    const fromCache = !!((exp && exp.error) || (monthExp && monthExp.error));
     let todayOut = 0, todayIn = 0;
-    if (exp.data) exp.data.forEach(r => { if (r.kind === 'out') todayOut += Number(r.amount); else todayIn += Number(r.amount); });
+    _expToday.forEach(r => { if (r.kind === 'out') todayOut += Number(r.amount); else todayIn += Number(r.amount); });
     let monthOut = 0, monthIn = 0;
-    if (monthExp.data) monthExp.data.forEach(r => { if (r.kind === 'out') monthOut += Number(r.amount); else monthIn += Number(r.amount); });
-    const hasDiary = !!(dia.data && dia.data.id);
-    const sportCount = sp.data ? sp.data.length : 0;
-    const lifeCount = li.data ? li.data.length : 0;
-    const stepRec = (stepRes && !stepRes.error && stepRes.data) ? stepRes.data : null;
+    _expMonth.forEach(r => { if (r.kind === 'out') monthOut += Number(r.amount); else monthIn += Number(r.amount); });
+    /* ⛔ 首页自己也要写缓存：缓存原本只在列表页写入，首页从没进过缓存，
+       导致"只逛过首页的离线会话"依然是 0。这里把成功读到的行补进去。 */
+    if (exp && !exp.error && Array.isArray(exp.data)) lcPut('expense', exp.data);
+    if (monthExp && !monthExp.error && Array.isArray(monthExp.data)) lcPut('expense', monthExp.data);
+    if (dia && !dia.error && dia.data && dia.data.id) lcPut('diary', [dia.data]);
+    if (sp && !sp.error && Array.isArray(sp.data)) lcPut('sport', sp.data);
+    if (li && !li.error && Array.isArray(li.data)) lcPut('life', li.data);
+    if (stepRes && !stepRes.error && stepRes.data) lcPut('steps', [stepRes.data]);
+    const hasDiary = (dia && !dia.error && dia.data && dia.data.id) ? true : lcRowsFor('diary', r => String(r.record_date) === today).length > 0;
+    const sportCount = (sp && !sp.error && Array.isArray(sp.data)) ? sp.data.length : lcRowsFor('sport', r => String(r.record_date) === today).length;
+    const lifeCount = (li && !li.error && Array.isArray(li.data)) ? li.data.length : lcRowsFor('life', r => String(r.record_date) === today).length;
+    const stepRec = (stepRes && !stepRes.error && stepRes.data) ? stepRes.data : (lcRowsFor('steps', r => String(r.record_date) === today)[0] || null);
     const d = new Date();
 
     v.innerHTML = `
       <div class="hero">
         <div class="hero-label">今日支出 · ${d.getMonth()+1}月${d.getDate()}日</div>
         <div class="hero-num num">¥${fmtMoney(todayOut)}</div>
+        ${fromCache ? '<div class="hero-label" style="color:#e0a24a">离线 · 显示本地缓存</div>' : ''}
         <div class="hero-grid">
           <div><span class="k">今日收入</span><span class="v" style="color:var(--in)">+¥${fmtMoney(todayIn)}</span></div>
           <div><span class="k">本月支出</span><span class="v num">¥${fmtMoney(monthOut)}</span></div>
@@ -2286,7 +2305,27 @@ async function renderStZone(force) {
     }
   } catch (e) { /* 本地缓存读不了就照常等云端 */ }
   try {
-    const data = await fetchStData(force);
+    let data;
+    try { data = await fetchStData(force); }
+    catch (e) { data = { days: new Set(), waterRows: [], mood: '' }; }
+    /* 离线兜底：云端取不到就用本地缓存画星环，别清成 0 天。
+       ⛔ days 是 Set 不是数组，赋值必须也给 Set，否则后面 .has() 会炸。 */
+    if (!data.days || data.days.size === 0) {
+      try {
+        /* 按整月扫缓存（lcDaysForRing 只算今天，离线下不够用） */
+        const _now = new Date();
+        const _ms = localDateStr(new Date(_now.getFullYear(), _now.getMonth(), 1));
+        const _me = localDateStr(new Date(_now.getFullYear(), _now.getMonth() + 1, 1));
+        const _set = new Set();
+        ['expense','diary','life','sport','health','steps'].forEach(function (t) {
+          lcGet(t).forEach(function (r) {
+            const d = String(r.record_date || '');
+            if (d && d >= _ms && d < _me) _set.add(d);
+          });
+        });
+        if (_set.size) data.days = _set;
+      } catch (e) {}
+    }
     if (!zone.isConnected) return;              // 用户已经切走了，别往废弃节点里写
     const today = todayStr();
     const ring = stRingHTML(data.days, today);
