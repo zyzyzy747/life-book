@@ -22,8 +22,8 @@
       ⇒ VER 仍然必须递增：它是 **缓存名**，SW 换了缓存名才会清掉旧缓存。
    ⛔ 不要缓存 index.html 到永久：那样会永远看不到新版本。
 */
-const VER = 'v1793207046195';
-const APP_VER = '1793207046195';   // 与 index.html 里 app.js?v= 的值保持一致
+const VER = 'v1793435510997';
+const APP_VER = '1793435510997';   // 与 index.html 里 app.js?v= 的值保持一致
 const ASSETS = [
   './app.js',
   './app.css',
