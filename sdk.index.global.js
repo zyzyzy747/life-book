@@ -747,11 +747,105 @@
         'box-shadow:0 2px 10px rgba(0,0,0,.4)',
         'pointer-events:none', 'letter-spacing:.02em'
       ].join(';');
+      // ⛔ 2026-11-09：原来是 pointer-events:none，角标点不动 ⇒ 用户只知道
+      //   「2 条同步失败」却看不到是什么、也没法重试。改成可点开诊断面板。
+      badgeEl.style.pointerEvents = 'auto';
+      badgeEl.style.cursor = 'pointer';
+      badgeEl.title = '点开看详情';
+      badgeEl.onclick = function () { showQueuePanel(); };
       document.body.appendChild(badgeEl);
     }
     badgeEl.textContent = dead
       ? (pending ? pending + ' 条待同步 · ' + dead + ' 条失败' : dead + ' 条同步失败')
       : pending + ' 条待同步';
+  }
+
+  /* ---------- 队列详情面板（点角标打开） ---------- */
+  function showQueuePanel() {
+    idbAll().then(function (ops) {
+      ops.sort(function (a, b) { return (a.seq || 0) - (b.seq || 0); });
+      var dead = ops.filter(function (o) { return o.status === 'dead'; });
+      var pend = ops.filter(function (o) { return o.status !== 'dead'; });
+
+      var wrap = document.createElement('div');
+      wrap.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:10000',
+        'background:rgba(0,0,0,.72)', 'display:flex', 'align-items:flex-end'
+      ].join(';');
+
+      var box = document.createElement('div');
+      box.style.cssText = [
+        'width:100%', 'max-height:78vh', 'overflow:auto',
+        'background:#15171C', 'color:#E7E9F3',
+        'border-radius:16px 16px 0 0', 'padding:16px 16px 24px',
+        'font:13px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'
+      ].join(';');
+
+      var rows = '';
+      function rowOf(o, isDead) {
+        var py = '';
+        try { py = JSON.stringify(o.payload || {}); } catch (e) { py = '(读不出)'; }
+        if (py && py.length > 180) py = py.slice(0, 180) + '…';
+        var color = isDead ? '#E08A6A' : '#E8C07A';
+        return '<div style="border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px;margin-bottom:8px">'
+          + '<div style="font-weight:600;color:' + color + '">'
+          + escapeHtml_(String(o.table)) + ' · ' + escapeHtml_(String(o.method))
+          + (isDead ? ' <span style="color:#E08A6A">失败</span>' : ' <span style="color:#E8C07A">待同步</span>')
+          + '</div>'
+          + '<div style="opacity:.72;font-size:12px;margin-top:4px">第 ' + (o.attempts || 0) + ' 次 · '
+          + (o.at ? new Date(o.at).toLocaleString('zh-CN') : '时间未知') + '</div>'
+          + (o.lastError ? '<div style="opacity:.85;font-size:12px;color:#E08A6A;margin-top:4px">' + escapeHtml_(o.lastError) + '</div>' : '')
+          + '<div style="opacity:.55;font-size:11px;margin-top:6px;word-break:break-all">' + escapeHtml_(py) + '</div>'
+          + '</div>';
+      }
+
+      if (dead.length) {
+        rows += '<div style="font-weight:700;margin:4px 0 8px;color:#E08A6A">失败的 ' + dead.length + ' 条</div>';
+        dead.forEach(function (o) { rows += rowOf(o, true); });
+      }
+      if (pend.length) {
+        rows += '<div style="font-weight:700;margin:14px 0 8px;color:#E8C07A">待同步的 ' + pend.length + ' 条</div>';
+        pend.forEach(function (o) { rows += rowOf(o, false); });
+      }
+      if (!ops.length) rows = '<div style="opacity:.7">队列是空的</div>';
+
+      box.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+        + '<div style="font-size:16px;font-weight:700">同步队列</div>'
+        + '<button id="lb-q-close" style="background:none;border:0;color:#9AA3B8;font-size:22px;padding:0 6px">×</button>'
+        + '</div>' + rows
+        + '<div style="display:flex;gap:10px;margin-top:16px">'
+        + '<button id="lb-q-retry" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(232,192,122,.4);background:rgba(232,192,122,.12);color:#E8C07A;font-size:14px">全部重试</button>'
+        + '<button id="lb-q-drop" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(224,116,116,.4);background:rgba(224,116,116,.12);color:#E08A6A;font-size:14px">丢弃失败项</button>'
+        + '</div>';
+
+      wrap.appendChild(box);
+      wrap.onclick = function (e) { if (e.target === wrap) wrap.remove(); };
+      document.body.appendChild(wrap);
+
+      box.querySelector('#lb-q-close').onclick = function () { wrap.remove(); };
+      box.querySelector('#lb-q-retry').onclick = async function () {
+        // 把 dead 重置为 pending，再跑一次
+        for (var i = 0; i < dead.length; i++) {
+          dead[i].status = 'pending';
+          dead[i].attempts = 0;
+          dead[i].lastError = '';
+          await idbPut(dead[i]);
+        }
+        wrap.remove();
+        syncNow();
+      };
+      box.querySelector('#lb-q-drop').onclick = async function () {
+        for (var i = 0; i < dead.length; i++) { await idbDel(dead[i].seq); }
+        wrap.remove();
+        updateBadge();
+      };
+    });
+  }
+
+  function escapeHtml_(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
 
   function updateBadge() {
