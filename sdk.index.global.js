@@ -675,8 +675,20 @@
       });
       var r = await http(base, { method: 'POST', body: [body], prefer: 'return=representation' });
       if (r.ok) return { ok: true };
-      // 409 = 唯一冲突 ⇒ 这笔之前已经写成功了，只是响应丢了
-      if (r.status === 409) return { ok: true };
+      /* ⛔ 409 有两种含义，必须区分（2026-11-09）：
+         ① 撞 client_op_id ⇒ 这笔**确实写过了**，只是响应丢了 ⇒ 当成功，丢弃。
+         ② 撞「同一天已有记录」这类业务唯一键（如 steps 的 owner_id+record_date）
+            ⇒ 这笔**没写进去**，而且多半是过期的小数值（那天已有更准的记录）。
+            以前一律当成功 ⇒ 用户以为同步了 169 步，其实那天是 1071 步。
+         判据：去查同 client_op_id 的行在不在。在 ⇒ ①；不在 ⇒ ②，判为不可重试的死项，
+         并把原因写清楚，让用户在队列面板里看到并选择丢弃。 */
+      if (r.status === 409) {
+        var dup = null;
+        try { dup = await http(base + '?client_op_id=eq.' + encodeURIComponent(op.clientOpId)); } catch (e) {}
+        if (dup && dup.ok && Array.isArray(dup.data) && dup.data.length) return { ok: true };
+        return { retryable: false, conflict: true,
+                 error: { message: '该日期已有记录，这条是过期的小值（已丢弃，原记录更准）', code: '409-BIZ' } };
+      }
       return { retryable: r.netError || r.status >= 500, error: r.error };
     }
 
