@@ -686,6 +686,21 @@
         var dup = null;
         try { dup = await http(base + '?client_op_id=eq.' + encodeURIComponent(op.clientOpId)); } catch (e) {}
         if (dup && dup.ok && Array.isArray(dup.data) && dup.data.length) return { ok: true };
+
+        /* ⛔ 2026-11-09：steps 的「过期小值」自动静默丢弃，不用用户手动点。
+           特征：同一天已有记录 且 这条数值更小 ⇒ 那天已经涨上去了，这条毫无价值。
+           判据：查 steps 该 record_date 的现有值，>= 本条的就丢。 */
+        if (op.table === 'steps') {
+          try {
+            var d = (op.payload && op.payload.record_date) || '';
+            var cur = d ? await http(base + '?record_date=eq.' + encodeURIComponent(d) + '&limit=1') : null;
+            var existing = (cur && cur.ok && Array.isArray(cur.data) && cur.data[0]) ? Number(cur.data[0].steps) : null;
+            if (existing !== null && existing >= Number(op.payload.steps || 0)) {
+              return { ok: true, autoDropped: true };   // 静默丢弃：不写不报错
+            }
+          } catch (e) { /* 查不到就按普通冲突处理 */ }
+        }
+
         return { retryable: false, conflict: true,
                  error: { message: '该日期已有记录，这条是过期的小值（已丢弃，原记录更准）', code: '409-BIZ' } };
       }
